@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<title>Testing</title>
+<style>
+  main {
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    justify-content: center;
+  }
+
+  #counter {
+    height: max-content;
+    width: 200px;
+    background: tomato;
+    padding: 1.2rem;
+  }
+
+  .increment, .decrement {
+    margin-top: .5rem;
+  }
+</style>
+
+<main>
+  <div id="counter">
+    Count: <strong class="count">0</strong><br/>
+    <button type="button" class="increment">Increment</button><br/>
+    <button type="button" class="decrement">Decrement</button>
+  </div>
+</main>
+
+<script type="module">
+  import { parse } from './dslw.js';
+
+  console.time('parse1');
+  parse`
+    #counter .count {
+      text: ${1};
+    }
+  `;
+  console.timeEnd('parse1');
+</script>
+
+<!--
+<script type="module">
+  import dsl from './dsl.js';
+
+  function update({ count, increment, decrement }) {
+    return dsl`
+      #counter .count {
+        text: ${count};
+      }
+
+      #counter .increment {
+        event: click ${increment};
+      }
+
+      #counter .decrement {
+        event: click ${decrement};
+      }
+    `;
+  }
+
+  let refresh = () => {
+    update(data)(document.body);
+  };
+
+  let data = {
+    count: 0,
+    increment() {
+      data.count++;
+      refresh();
+    },
+    decrement() {
+      data.count--;
+      refresh();
+    }
+  };
+
+  refresh();
+</script>
+-->
