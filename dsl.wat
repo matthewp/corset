@@ -2,7 +2,7 @@
 ;; https://developer.mozilla.org/en-US/docs/WebAssembly/Understanding_the_text_format
 
 (module
-  (import "js" "mem" (memory 1))
+  (import "env" "mem" (memory 1))
 
   (global $memstack_ptr (mut i32) (i32.const 32768))
   (global $tag_rule_start i32 (i32.const 1))
@@ -30,11 +30,10 @@
 
   (func $identifierToken (param $t i32) (result i32)
     (local $val i32)
-    (local.set $val (i32.const 1))
+    (local.set $val (i32.const 1)) ;; default to true
     (block $b1
-      (br_if $b1 (call $between (local.get $t) (i32.const 97) (i32.const 122)))
-      (br_if $b1 (i32.eq (local.get $t) (i32.const 35))) ;; #
-      (local.set $val (i32.const 0))
+      (br_if $b1 (call $between (local.get $t) (i32.const 97) (i32.const 122))) ;; a-z
+      (local.set $val (i32.const 0)) ;; fallback to false
     )
     (local.get $val)
   )
@@ -51,31 +50,22 @@
     (local.get $val)
   )
 
-  (func $innerSelectorToken (param $t i32) (result i32)
-    (local $val i32)
-    (local.set $val (i32.const 1))
-    (block $b0
-      (br_if $b0 (call $selectorToken (local.get $t)))
-      (br_if $b0 (i32.eq (local.get $t) (i32.const 32))) ;; space
-      (local.set $val (i32.const 0))
-    )
-    (local.get $val)
-  )
-
   (func $parse (param $array_length i32) (result i32)
     ;; declare the loop counter
     (local $idx i32)
+    ;; The index we are in the source
     (local $idx_bytes i32)
 
-    ;; declare a variable for storing the value loaded from memory
+    ;; The current char
     (local $char i32)
+    ;; Place in memory where the last non whitespace character
     (local $lastNonWhitespace i32)
 
-    (local $type i32)
+    (local $state i32)
     (local $local_memstack_ptr i32)
     
     (local.set $idx_bytes (i32.const 0))
-    (local.set $type (i32.const 0))
+    (local.set $state (i32.const 0))
     (local.set $local_memstack_ptr (global.get $memstack_ptr))
 
     (block
@@ -87,16 +77,16 @@
         (local.set $char (i32.load8_u (local.get $idx_bytes)))
 
         ;; Reset state
-        (if (i32.eq (local.get $type) (i32.const 0))
+        (if (i32.eq (local.get $state) (i32.const 0))
           (then
             (if (call $selectorToken (local.get $char))
               (then
                 (local.set $lastNonWhitespace (local.get $idx_bytes))
-                (local.set $type (i32.const 1))
+                (local.set $state (i32.const 1))
 
                 (i32.store
                   (local.get $local_memstack_ptr)
-                  (local.get $type)
+                  (local.get $state)
                 )
 
                 (i32.store offset=1
@@ -109,7 +99,7 @@
         )
 
         ;; Selector state
-        (if (i32.eq (local.get $type) (i32.const 1))
+        (if (i32.eq (local.get $state) (i32.const 1))
           (then
             (if (call $selectorToken (local.get $char))
               (then
@@ -119,7 +109,7 @@
                 (if (i32.eq (local.get $char) (i32.const 32))
                   (then)
                   (else
-                    (local.set $type (i32.const 3))
+                    (local.set $state (i32.const 3))
                     (i32.store offset=2
                       (local.get $local_memstack_ptr)
                       (i32.add (local.get $lastNonWhitespace) (i32.const 1))
@@ -140,6 +130,7 @@
       )
     )
 
+    ;; Return the starting point of our memory block, which contains the return information
     (global.get $memstack_ptr)
   )
   (export "parse" (func $parse))

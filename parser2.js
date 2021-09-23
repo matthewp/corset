@@ -1,8 +1,8 @@
-const memory = new WebAssembly.Memory({initial:1});
-let buffer = globalThis.MEMORY =new Uint8Array(memory.buffer);
+const memory = new WebAssembly.Memory({ initial: 1 });
+const buffer = globalThis.MEMORY = new Uint8Array(memory.buffer);
 
 const importObject = {
-  js: { mem: memory }
+  env: { mem: memory }
 };
 
 const {instance: {exports}} = await WebAssembly.instantiateStreaming(
@@ -34,4 +34,3 @@ export function parse(source, ...values) {
     }
   }
 }
-

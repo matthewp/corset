@@ -30,20 +30,7 @@
 </main>
 
 <script type="module">
-  import { parse } from './dslw.js';
-
-  console.time('parse1');
-  parse`
-    #counter .count {
-      text: ${1};
-    }
-  `;
-  console.timeEnd('parse1');
-</script>
-
-<!--
-<script type="module">
-  import dsl from './dsl.js';
+  import dsl from './parser1.js';
 
   function update({ count, increment, decrement }) {
     return dsl`
@@ -79,4 +66,3 @@
 
   refresh();
 </script>
--->
