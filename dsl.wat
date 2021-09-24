@@ -5,6 +5,9 @@
   (import "env" "mem" (memory 1))
 
   (global $memstack_ptr (mut i32) (i32.const 32768))
+  (global $tagmemstack_ptr (mut i32) (i32.const 32776))
+  (global $intmemstack_ptr (mut i32) (i32.const 49152))
+
   (global $tag_rule_start i32 (i32.const 1))
   (global $tag_end i32 (i32.const 9))
 
@@ -50,7 +53,12 @@
     (local.get $val)
   )
 
-  (func $parse (param $array_length i32) (result i32)
+  (func $parse (param $idx_param i32) (param $array_length i32) (result i32)
+    ;; INTERNAL
+
+    ;; State of where we are
+    (local $state i32)
+
     ;; declare the loop counter
     (local $idx i32)
     ;; The index we are in the source
@@ -60,13 +68,12 @@
     (local $char i32)
     ;; Place in memory where the last non whitespace character
     (local $lastNonWhitespace i32)
-
-    (local $state i32)
-    (local $local_memstack_ptr i32)
     
+    (local.set $idx (local.get $idx_param))
     (local.set $idx_bytes (i32.const 0))
-    (local.set $state (i32.const 0))
-    (local.set $local_memstack_ptr (global.get $memstack_ptr))
+
+    ;; Load parse state from memory
+    (local.set $state (i32.load8_u (global.get $intmemstack_ptr)))
 
     (block
       (loop
@@ -84,40 +91,116 @@
                 (local.set $lastNonWhitespace (local.get $idx_bytes))
                 (local.set $state (i32.const 1))
 
-                (i32.store
-                  (local.get $local_memstack_ptr)
-                  (local.get $state)
+                ;; Tag
+                (i32.store8
+                  (global.get $tagmemstack_ptr)
+                  (i32.const 1) ;; RuleStart
                 )
 
+                ;; selectorStart
                 (i32.store offset=1
-                  (local.get $local_memstack_ptr)
+                  (global.get $tagmemstack_ptr)
                   (local.get $idx_bytes)
                 )
               )
             )
           )
-        )
-
-        ;; Selector state
-        (if (i32.eq (local.get $state) (i32.const 1))
-          (then
-            (if (call $selectorToken (local.get $char))
+          (else
+            ;; RuleStart
+            (if (i32.eq (local.get $state) (i32.const 1))
               (then
-                (local.set $lastNonWhitespace (local.get $idx_bytes))
-              )
-              (else
-                (if (i32.eq (local.get $char) (i32.const 32))
-                  (then)
+                (if (call $selectorToken (local.get $char))
+                  (then
+                    (local.set $lastNonWhitespace (local.get $idx_bytes))
+                  )
                   (else
-                    (local.set $state (i32.const 3))
-                    (i32.store offset=2
-                      (local.get $local_memstack_ptr)
-                      (i32.add (local.get $lastNonWhitespace) (i32.const 1))
+                    (if (i32.eq (local.get $char) (i32.const 32)) ;; Space
+                      (then)
+                      (else
+                        (if (i32.eq (local.get $char) (i32.const 123)) ;; {
+                          (then
+                            ;; Move to RuleReset
+                            (i32.store8 (global.get $intmemstack_ptr) (i32.const 2))
+
+                            ;; Exit
+                            (local.set $state (i32.const 9))
+
+                            ;; selectorEnd
+                            (i32.store offset=5
+                              (global.get $tagmemstack_ptr)
+                              (i32.add (local.get $lastNonWhitespace) (i32.const 1))
+                            )
+                          )
+                          (else
+                            ;; ERROR
+                          )
+                        )
+                      )
+                    )
+                  )
+                )
+              )
+
+              (else
+                ;; RuleReset
+                (if (i32.eq (local.get $state) (i32.const 2))
+                  (then
+                    (if (call $identifierToken (local.get $char))
+                      (then
+                        ;; Tag
+                        (i32.store8
+                          (global.get $tagmemstack_ptr)
+                          (i32.const 2) ;; Property
+                        )
+
+                        (local.set $state (i32.const 3)) ;; PropStart
+
+                        ;; propertyStart
+                        (i32.store offset=9
+                          (global.get $tagmemstack_ptr)
+                          (local.get $idx_bytes)
+                        )
+                      )
+                    )
+                  )
+                  (else
+                    (if (i32.eq (local.get $state) (i32.const 3)) ;; PropStart
+                      (then
+                        (if (call $identifierToken (local.get $char))
+                          (then
+                            (local.set $lastNonWhitespace (local.get $idx_bytes))
+                          )
+                          (else
+                            (if (i32.eq (local.get $char (i32.const 58))) ;; :
+                              (then
+                                ;; Move to ValueStart
+                                (i32.store8 (global.get $intmemstack_ptr) (i32.const 4))
+
+                                ;; Exit
+                                (local.set $state (i32.const 9))
+
+                                ;; propertyEnd
+                                (i32.store offset=13
+                                  (global.get $tagmemstack_ptr)
+                                  (i32.add (local.get $lastNonWhitespace) (i32.const 1))
+                                )
+                              )
+                              (else
+                                ;; ERROR unidentified token
+                              )
+                            )
+                          )
+                        )
+                      )
+                      (else
+                        ;; TODO ValueStart
+                      )
                     )
                   )
                 )
               )
             )
+
           )
         )
 
@@ -125,9 +208,31 @@
         (local.set $idx (i32.add (local.get $idx) (i32.const 1)))
 
         ;; stop the loop if the loop counter is equal the array length
-        (br_if 1 (i32.eq (local.get $idx) (local.get $array_length)))
+        (if (i32.eq (local.get $idx) (local.get $array_length))
+          (then
+            ;; Tag
+            (i32.store8
+              (global.get $tagmemstack_ptr)
+              (i32.const 0) ;; EOF
+            )
+
+            ;; Reset state
+            (i32.store8 (global.get $intmemstack_ptr) (i32.const 0))
+
+            ;; Exit
+            (local.set $state (i32.const 9))
+          )
+        )
+
+        (br_if 1 (i32.eq (local.get $state) (i32.const 9)))
         (br 0)
       )
+    )
+
+    ;; Byte Index
+    (i32.store
+      (global.get $memstack_ptr)
+      (local.get $idx_bytes)
     )
 
     ;; Return the starting point of our memory block, which contains the return information
