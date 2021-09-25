@@ -277,7 +277,9 @@
                           (else
                             ;; TODO ValueStart
                             (if (i32.eq (local.get $state (i32.const 5)))
-                              (then)
+                              (then
+                                ;; TODO
+                              )
                               (else)
                             )
                           )
