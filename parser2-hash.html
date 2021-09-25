@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<title>Testing</title>
+<style>
+  main {
+
+    display: block;
+  }
+</style>
+
+<main>
+  <input type="text" name="text" placeholder="text here">
+  <output name="out">
+</main>
+
+<script type="module">
+  import { debug, hash } from './parser2.js';
+
+  const input = document.querySelector('input');
+  const output = document.querySelector('output');
+
+  input.oninput = ev => {
+    let hashValue = hash(ev.target.value);
+    output.value = hashValue;
+  };
+</script>

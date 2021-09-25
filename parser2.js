@@ -1,3 +1,4 @@
+const INSERTION = 'ins';
 const memory = new WebAssembly.Memory({ initial: 1 });
 const buffer8 = new Uint8Array(memory.buffer);
 const buffer32 = new Uint32Array(memory.buffer);
@@ -26,13 +27,19 @@ function readFromBuffer(buffer, start, end) {
 function debugPrintArray(ret) {
   console.log(ret);
   let ret32 = ret >> 2;
-  let arr = buffer8.slice(ret, ret + 25);
+  let arr = buffer8.slice(ret, ret + 40);
   //arr = buffer32.slice(ret32, ret32 + 20);
   console.table(arr);
 }
 
+export function hash(str) {
+  writeToBuffer(str);
+  let hash = exports.hash(0, str.length);
+  return hash;
+}
+
 export function debug(source, ...values) {
-  let holes = values.map(_ => 'hole');
+  let holes = values.map(_ => INSERTION);
   let raw = String.raw(source, ...holes);
   writeToBuffer(raw);
 
@@ -75,8 +82,20 @@ export function debug(source, ...values) {
           selector: readFromBuffer(buffer8, buffer32[ret32 + 2] >> 8, buffer32[ret32 + 3] >> 8),
           propertyStart: buffer32[ret32 + 4] >> 8,
           propertyEnd: buffer32[ret32 + 5] >> 8,
-          property: readFromBuffer(buffer8, buffer32[ret32 + 4] >> 8, buffer32[ret32 + 5] >> 8)
+          property: readFromBuffer(buffer8, buffer32[ret32 + 4] >> 8, buffer32[ret32 + 5] >> 8),
+          valueType: buffer8[ret + 25]
         });
+        switch(out.valueType) {
+          case 2:
+            out.valueType = 'String';
+            break;
+          case 3:
+            out.valueType = 'Identifier';
+            break;
+          case 9:
+            out.valueTypeName = 'Unknown';
+            break;
+        }
       }
     }
 
@@ -93,7 +112,7 @@ export function debug(source, ...values) {
 }
 
 export function parse(source, ...values) {
-  let holes = values.map(_ => 'hole');
+  let holes = values.map(_ => INSERTION);
   let raw = String.raw(source, ...holes);
   writeToBuffer(raw);
 

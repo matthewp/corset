@@ -31,6 +31,43 @@
     (local.get $ret)
   )
 
+  (func $hash (param $start i32) (param $end i32) (result i64)
+    (local $hash i64)
+
+    ;; declare the loop counter
+    (local $idx i32)
+    (local $char i64)
+
+    (local.set $hash (i64.const 5381))
+    (local.set $idx (local.get $start))
+
+    (block
+      (loop
+        (br_if 1 (i32.eq (local.get $idx) (local.get $end)))
+
+        ;; get the value of the array from memory:
+        (local.set $char (i64.load8_u (local.get $idx)))
+
+        (local.set $hash
+          (i64.add
+            (i64.add
+              (i64.shl (local.get $hash) (i64.const 5))
+              (local.get $hash)
+            )
+            (local.get $char)
+          )
+        )
+
+        ;; increment the loop counter
+        (local.set $idx (i32.add (local.get $idx) (i32.const 1)))
+        (br 0)
+      )
+    )
+
+    (local.get $hash)
+  )
+  (export "hash" (func $hash))
+
   (func $identifierToken (param $t i32) (result i32)
     (local $val i32)
     (local.set $val (i32.const 1)) ;; default to true
@@ -48,6 +85,17 @@
       (br_if $b0 (call $identifierToken (local.get $t)))
       (br_if $b0 (i32.eq (local.get $t) (i32.const 35))) ;; #
       (br_if $b0 (i32.eq (local.get $t) (i32.const 46))) ;; .
+      (local.set $val (i32.const 0))
+    )
+    (local.get $val)
+  )
+
+  (func $whitespaceToken (param $t i32) (result i32)
+    (local $val i32)
+    (local.set $val (i32.const 1))
+    (block $b0
+      (br_if $b0 (i32.eq (local.get $t) (i32.const 32))) ;; Space
+      (br_if $b0 (call $between (local.get $t) (i32.const 10) (i32.const 13))) ;; tabs, newlines, etc.
       (local.set $val (i32.const 0))
     )
     (local.get $val)
@@ -173,11 +221,9 @@
                           (else
                             (if (i32.eq (local.get $char (i32.const 58))) ;; :
                               (then
-                                ;; Move to ValueStart
-                                (i32.store8 (global.get $intmemstack_ptr) (i32.const 4))
-
-                                ;; Exit
-                                (local.set $state (i32.const 9))
+                                ;; Move to ValueReset
+                                ;;(i32.store8 (global.get $intmemstack_ptr) (i32.const 4))
+                                (local.set $state (i32.const 4))
 
                                 ;; propertyEnd
                                 (i32.store offset=13
@@ -193,14 +239,55 @@
                         )
                       )
                       (else
-                        ;; TODO ValueStart
+                        ;; ValueReset
+                        (if (i32.eq (local.get $state (i32.const 4)))
+                          (then
+                            (if (call $identifierToken (local.get $char)) ;; Initially set to an identifier
+                              (then
+                                (i32.store8 offset=17
+                                  (global.get $tagmemstack_ptr)
+                                  (i32.const 3) ;; Identifier
+                                )
+                                (local.set $state (i32.const 9)) ;; TODO remove
+                              )
+                              (else
+                                (if (i32.eq (local.get $char) (i32.const 34)) ;; "
+                                  (then
+                                    (i32.store8 offset=17
+                                      (global.get $tagmemstack_ptr)
+                                      (i32.const 2) ;; String
+                                    )
+                                    (local.set $state (i32.const 9)) ;; TODO remove
+                                  )
+                                  (else
+                                    (if (call $whitespaceToken (local.get $char))
+                                      (then) ;; Continue.
+                                      (else
+                                        (i32.store8 offset=17
+                                          (global.get $tagmemstack_ptr)
+                                          (i32.const 9) ;; Unknown
+                                        )
+                                      )
+                                    )
+                                  ) 
+                                ) 
+                              )
+                            )
+                          )
+                          (else
+                            ;; TODO ValueStart
+                            (if (i32.eq (local.get $state (i32.const 5)))
+                              (then)
+                              (else)
+                            )
+                          )
+                        )
                       )
                     )
                   )
                 )
               )
             )
-
           )
         )
 
