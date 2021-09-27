@@ -101,6 +101,39 @@
     (local.get $val)
   )
 
+  (func $callType (param $start i32) (param $end i32) (result i32)
+    (local $val i32)
+    (local $hashv i64)
+    (local.set $val (i32.const 9)) ;; // Unknown
+    (local.set $hashv (call $hash (local.get $start) (local.get $end)))
+
+    (if (i64.eq (local.get $hashv) (i64.const 193495087)) ;; ins
+      (then
+        (local.set $val (i32.const 1))
+      )
+      (else) ;; Others
+    )
+
+    (local.get $val)
+  )
+  (export "callType" (func $callType))
+
+  (func $propertyType (param $start i32) (param $end i32) (result i32)
+    (local $val i32)
+    (local $hashv i64)
+    (local.set $val (i32.const 9)) ;; // Unknown
+    (local.set $hashv (call $hash (local.get $start) (local.get $end)))
+
+    (if (i64.eq (local.get $hashv) (i64.const 6385723658)) ;; text
+      (then
+        (local.set $val (i32.const 1))
+      )
+      (else) ;; Others
+    )
+    (local.get $val)
+  )
+  (export "propertyType" (func $propertyType))
+
   (func $parse (param $idx_param i32) (param $array_length i32) (result i32)
     ;; INTERNAL
 
@@ -209,6 +242,17 @@
                           (local.get $idx_bytes)
                         )
                       )
+                      (else
+                        (if (i32.eq (local.get $char) (i32.const 125)) ;; }
+                          (then
+                            ;; Reset state
+                            (local.set $state (i32.const 0))
+                          )
+                          (else
+                            ;; Error
+                          )
+                        )
+                      )
                     )
                   )
                   (else
@@ -221,9 +265,7 @@
                           (else
                             (if (i32.eq (local.get $char (i32.const 58))) ;; :
                               (then
-                                ;; Move to ValueReset
-                                ;;(i32.store8 (global.get $intmemstack_ptr) (i32.const 4))
-                                (local.set $state (i32.const 4))
+                                (local.set $state (i32.const 4)) ;; ValueReset
 
                                 ;; propertyEnd
                                 (i32.store offset=13
@@ -248,7 +290,14 @@
                                   (global.get $tagmemstack_ptr)
                                   (i32.const 3) ;; Identifier
                                 )
-                                (local.set $state (i32.const 9)) ;; TODO remove
+
+                                ;; identifierStart
+                                (i32.store offset=20
+                                  (global.get $tagmemstack_ptr)
+                                  (local.get $idx_bytes)
+                                )
+
+                                (local.set $state (i32.const 5)) ;; ValueStart
                               )
                               (else
                                 (if (i32.eq (local.get $char) (i32.const 34)) ;; "
@@ -257,7 +306,7 @@
                                       (global.get $tagmemstack_ptr)
                                       (i32.const 2) ;; String
                                     )
-                                    (local.set $state (i32.const 9)) ;; TODO remove
+                                    (local.set $state (i32.const 5)) ;; ValueStart
                                   )
                                   (else
                                     (if (call $whitespaceToken (local.get $char))
@@ -278,7 +327,18 @@
                             ;; TODO ValueStart
                             (if (i32.eq (local.get $state (i32.const 5)))
                               (then
-                                ;; TODO
+                                (if (i32.eq (local.get $char) (i32.const 59)) ;; semicolon
+                                  (then
+                                    ;; TODO send end stuff for identifier, etc.
+
+                                    ;; Go back to RuleReset
+                                    (i32.store8 (global.get $intmemstack_ptr) (i32.const 2))
+
+                                    ;; End of property, exit
+                                    (local.set $state (i32.const 9))
+                                  )
+                                  (else) ;; anything else, TODO check
+                                )
                               )
                               (else)
                             )

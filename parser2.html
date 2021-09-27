@@ -30,13 +30,14 @@
 </main>
 
 <script type="module">
-  import { debug } from './parser2.js';
+  import dsl from './dsl2.js';
 
-  console.time('parse1');
-  debug`
+  let main = document.querySelector('main');
+  let template = dsl`
     #counter .count {
       text: ${1};
     }
   `;
-  console.timeEnd('parse1');
+
+  template.update(main);
 </script>

@@ -3,6 +3,9 @@ const memory = new WebAssembly.Memory({ initial: 1 });
 const buffer8 = new Uint8Array(memory.buffer);
 const buffer32 = new Uint32Array(memory.buffer);
 
+const eMem8 = buffer8.subarray(32768);
+const eMem32 = buffer32.subarray(32768 >> 2);
+
 const importObject = {
   env: { mem: memory }
 };
@@ -13,6 +16,8 @@ const {instance: {exports}} = await WebAssembly.instantiateStreaming(
 );
 
 const $parse = exports.parse;
+const $callType = exports.callType;
+const $propertyType = exports.propertyType;
 
 function writeToBuffer(value) {
   let enc = new TextEncoder();
@@ -91,6 +96,10 @@ export function debug(source, ...values) {
             break;
           case 3:
             out.valueType = 'Identifier';
+            out.identifierStart = buffer32[ret32 + 7];
+            out.identifierEnd = buffer32[ret32 + 7] + 3; // TODO made up
+            out.identifier = readFromBuffer(buffer8, buffer32[ret32 + 7], buffer32[ret32 + 7] + 3);
+            out.callType = $callType(out.identifierStart, out.identifierEnd);
             break;
           case 9:
             out.valueTypeName = 'Unknown';
@@ -111,22 +120,29 @@ export function debug(source, ...values) {
   }
 }
 
-export function parse(source, ...values) {
+export function tokenize(source, values, cb) {
   let holes = values.map(_ => INSERTION);
   let raw = String.raw(source, ...holes);
   writeToBuffer(raw);
 
   let idx = 0;
-  let ret = $parse(idx, raw.length);
+  let len = raw.length;
+  let ret;
 
-  switch(buffer[ret + 2]) {
-    case 1: {
-      let start = buffer[ret + 3];
-      let end = buffer[ret + 4];
-      let d = new TextDecoder();
-      let selector = d.decode(buffer8.slice(start, end));
-      console.log(selector);
+  while(true) {
+    ret = $parse(idx, len);
+    idx = buffer32[ret >> 2];
+    if(buffer8[ret + 8] === 0)
       break;
-    }
+
+    cb(eMem8, eMem32);
   }
 }
+
+// Reading
+export const readSelector = () => readFromBuffer(buffer8, eMem32[2] >> 8, eMem32[3] >> 8);
+export const readValueType = () => eMem8[25];
+export const readPropertyType = () => $propertyType(eMem32[4] >> 8, eMem32[5] >> 8);
+
+// TODO remove
+export const readCallType = (start, end) => $callType();
