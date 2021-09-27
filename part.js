@@ -1,17 +1,17 @@
 
 class Part {
-  constructor(selector) {
+  constructor(selector, value) {
     this.selector = selector;
+    this.value = value;
   }
 
-  getValue(values) {
-    debugger;
-    return 99;
+  getValue(node, values) {
+    return this.value.extract(values);
   }
 }
 
 export class TextPart extends Part {
   set(node, values) {
-    node.textContent = this.getValue(values);
+    node.textContent = this.getValue(node, values);
   }
 }

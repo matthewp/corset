@@ -1,4 +1,4 @@
-const INSERTION = 'ins';
+const INSERTION = 'ins()';
 const memory = new WebAssembly.Memory({ initial: 1 });
 const buffer8 = new Uint8Array(memory.buffer);
 const buffer32 = new Uint32Array(memory.buffer);

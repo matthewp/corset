@@ -7,10 +7,11 @@ import {
 import {
   TextPart
 } from './part.js';
-import { Template, TemplateResult } from './template.js';
+import { Sheet, BindingResult } from './sheet.js';
+import { InsertionValue } from './value.js';
 
 function compile(strings, values) {
-  const parts = [];
+  let sheet = new Sheet();
   tokenize(strings, values, (mem8, _mem32) => {
     switch(mem8[8]) {
       // Property
@@ -21,24 +22,22 @@ function compile(strings, values) {
             switch(readValueType()) {
               // Identifier
               case 3: {
-                
-                
-                parts.push(new TextPart(readSelector(), value));
+                let value = new InsertionValue(0);
+                sheet.addPart(new TextPart(readSelector(), value))
                 break;
               }
             }
             break;
           }
         }
-
         
         break;
       }
     }
   });
-  return new Template(parts);
+  return sheet;
 }
 
 export default function(strings, ...values) {
-  return new TemplateResult(compile(strings, values), values);
+  return new BindingResult(compile(strings, values), values);
 }

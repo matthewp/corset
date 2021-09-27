@@ -7,3 +7,7 @@
 * __4__ - ValueReset - After the colon in a property.
 * __5__ - ValueStart - Start of a property value.
 * __6__ - ValueEnd - End of a property value, the semicolon.
+* __7__ - CallReset - Start of a call such as url(stuff)
+* __8__ - CallStart
+
+* __9__ - Exit

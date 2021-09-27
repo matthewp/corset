@@ -337,10 +337,38 @@
                                     ;; End of property, exit
                                     (local.set $state (i32.const 9))
                                   )
-                                  (else) ;; anything else, TODO check
+                                  (else
+                                    (if (i32.eq (local.get $char) (i32.const 40)) ;; (
+                                      (then
+                                        (i32.store8 offset=17
+                                          (global.get $tagmemstack_ptr)
+                                          (i32.const 5) ;; Call
+                                        )
+                                        (local.set $state (i32.const 7)) ;; CallReset
+                                      )
+                                      (else) ;; anything else, TODO check for multi?
+                                    )
+                                  ) 
                                 )
                               )
-                              (else)
+                              (else
+                                ;; TODO CallReset
+                                (if (i32.eq (local.get $state (i32.const 7)))
+                                  (then
+                                    (if (i32.eq (local.get $char) (i32.const 41)) ;; )
+                                      (then
+                                        ;; TODO End of call
+                                        ;; TODO check if its an insertion
+                                        ;; TODO change state to whatever.
+                                      )
+                                      (else
+                                        ;; TODO look for selectors...
+                                      )
+                                    )
+                                  )
+                                  (else) ;; TODO CallStart?
+                                )
+                              )
                             )
                           )
                         )
