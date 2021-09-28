@@ -2,7 +2,8 @@ import {
   tokenize,
   readSelector,
   readPropertyType,
-  readValueType
+  readValueType,
+  readInsertionValueIndex
 } from './parser2.js';
 import {
   TextPart
@@ -20,9 +21,9 @@ function compile(strings, values) {
           // Text
           case 1: {
             switch(readValueType()) {
-              // Identifier
-              case 3: {
-                let value = new InsertionValue(0);
+              // Insertion
+              case 1: {
+                let value = new InsertionValue(readInsertionValueIndex());
                 sheet.addPart(new TextPart(readSelector(), value))
                 break;
               }

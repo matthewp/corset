@@ -91,11 +91,15 @@ export function debug(source, ...values) {
           valueType: buffer8[ret + 25]
         });
         switch(out.valueType) {
+          case 1:
+            out.valueTypeName = 'Insertion';
+            out.valueIndex = buffer8[ret + 26];
+            break;
           case 2:
-            out.valueType = 'String';
+            out.valueTypeName = 'String';
             break;
           case 3:
-            out.valueType = 'Identifier';
+            out.valueTypeName = 'Identifier';
             out.identifierStart = buffer32[ret32 + 7];
             out.identifierEnd = buffer32[ret32 + 7] + 3; // TODO made up
             out.identifier = readFromBuffer(buffer8, buffer32[ret32 + 7], buffer32[ret32 + 7] + 3);
@@ -144,5 +148,4 @@ export const readSelector = () => readFromBuffer(buffer8, eMem32[2] >> 8, eMem32
 export const readValueType = () => eMem8[25];
 export const readPropertyType = () => $propertyType(eMem32[4] >> 8, eMem32[5] >> 8);
 
-// TODO remove
-export const readCallType = (start, end) => $callType();
+export const readInsertionValueIndex = () => eMem8[26];

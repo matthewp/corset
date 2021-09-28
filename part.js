@@ -6,7 +6,7 @@ class Part {
   }
 
   getValue(node, values) {
-    return this.value.extract(values);
+    return this.value.extract(values, node);
   }
 }
 

@@ -227,9 +227,9 @@ function parse(source, filename) {
 function compile(strings, initialValues) {
   let holes = initialValues.map(_ => HOLE);
   let source = String.raw(strings, ...holes);
-  console.time('parse2');
+  console.time('parse1');
   let program = parse(source, 'input.dsl');
-  console.timeEnd('parse2');
+  console.timeEnd('parse1');
   
   return function(values, root) {
     for(let rule of program.rules) {

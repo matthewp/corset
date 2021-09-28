@@ -324,7 +324,7 @@
                             )
                           )
                           (else
-                            ;; TODO ValueStart
+                            ;; ValueStart
                             (if (i32.eq (local.get $state (i32.const 5)))
                               (then
                                 (if (i32.eq (local.get $char) (i32.const 59)) ;; semicolon
@@ -344,6 +344,7 @@
                                           (global.get $tagmemstack_ptr)
                                           (i32.const 5) ;; Call
                                         )
+
                                         (local.set $state (i32.const 7)) ;; CallReset
                                       )
                                       (else) ;; anything else, TODO check for multi?
@@ -356,7 +357,56 @@
                                 (if (i32.eq (local.get $state (i32.const 7)))
                                   (then
                                     (if (i32.eq (local.get $char) (i32.const 41)) ;; )
+                                      ;; End of call
                                       (then
+                                        (if
+                                          (i64.eq
+                                            (call $hash
+                                              (i32.load offset=20
+                                                (global.get $tagmemstack_ptr)
+                                              )
+                                              (i32.sub (local.get $idx_bytes) (i32.const 1))
+                                            )
+                                            (i64.const 193495087) ;; ins
+                                          )
+                                          (then
+                                            ;; Save this as an insertion
+                                            (i32.store8 offset=17
+                                              (global.get $tagmemstack_ptr)
+                                              (i32.const 1) ;; Insertion
+                                            )
+
+                                            ;; Clear out the identifierStart
+                                            (i32.store offset=20
+                                              (global.get $tagmemstack_ptr)
+                                              (i32.const 0)
+                                            )
+
+                                            ;; Save the holeIndex
+                                            (i32.store8 offset=21
+                                              (global.get $tagmemstack_ptr)
+                                              (i32.load8_u offset=1
+                                                (global.get $intmemstack_ptr)
+                                              )
+                                            )
+
+                                            ;; Increment the holeIndex
+                                            (i32.store8 offset=1
+                                              (global.get $intmemstack_ptr)
+                                              (i32.add
+                                                (i32.load8_u offset=1
+                                                  (global.get $intmemstack_ptr)
+                                                )
+                                                (i32.const 1)
+                                              )
+                                            )
+
+                                            ;; Back to ValueStart
+                                            (local.set $state (i32.const 5))
+                                          )
+                                          (else) ;; Not an Insertion, what is it?
+                                        )
+
                                         ;; TODO End of call
                                         ;; TODO check if its an insertion
                                         ;; TODO change state to whatever.

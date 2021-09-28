@@ -33,7 +33,8 @@
   import dsl from './parser1.js';
 
   function update({ count, increment, decrement }) {
-    return dsl`
+    console.time('compile');
+    let r = dsl`
       #counter .count {
         text: ${count};
       }
@@ -46,6 +47,8 @@
         event: click ${decrement};
       }
     `;
+    console.timeEnd('compile');
+    return r;
   }
 
   let refresh = () => {
