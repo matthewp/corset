@@ -134,6 +134,48 @@
   )
   (export "propertyType" (func $propertyType))
 
+  (func $parseValue (param $idx_bytes i32) (result i32)
+    (local $char i32)
+    (local $val_ptr i32)
+    (local $state i32)
+
+    (local.set $char (i32.load8_u (local.get $idx_bytes)))
+    (local.set $val_ptr (i32.load offset=1 (global.get $intmemstack_ptr)))
+    (local.set $state (i32.const 5))
+
+    (if (i32.eq (local.get $char) (i32.const 59)) ;; semicolon
+      (then
+        ;; TODO send end stuff for identifier, etc.
+
+        ;; Go back to RuleReset
+        (i32.store8 (global.get $intmemstack_ptr) (i32.const 2))
+
+        ;; Remove the value ptr
+        (i32.store offset=1 (global.get $intmemstack_ptr (i32.const 0)))
+
+        ;; End of property, exit
+        (local.set $state (i32.const 9))
+      )
+      (else
+        (if (i32.eq (local.get $char) (i32.const 40)) ;; (
+          (then
+            (i32.store8 offset=17
+              (global.get $tagmemstack_ptr)
+              (i32.const 5) ;; Call
+            )
+
+            (local.set $state (i32.const 7)) ;; CallReset
+          )
+          (else
+            
+          ) ;; anything else, TODO check for multi?
+        )
+      ) 
+    )
+
+    (local.get $state)
+  )
+
   (func $parse (param $idx_param i32) (param $array_length i32) (result i32)
     ;; INTERNAL
 
@@ -327,30 +369,7 @@
                             ;; ValueStart
                             (if (i32.eq (local.get $state (i32.const 5)))
                               (then
-                                (if (i32.eq (local.get $char) (i32.const 59)) ;; semicolon
-                                  (then
-                                    ;; TODO send end stuff for identifier, etc.
-
-                                    ;; Go back to RuleReset
-                                    (i32.store8 (global.get $intmemstack_ptr) (i32.const 2))
-
-                                    ;; End of property, exit
-                                    (local.set $state (i32.const 9))
-                                  )
-                                  (else
-                                    (if (i32.eq (local.get $char) (i32.const 40)) ;; (
-                                      (then
-                                        (i32.store8 offset=17
-                                          (global.get $tagmemstack_ptr)
-                                          (i32.const 5) ;; Call
-                                        )
-
-                                        (local.set $state (i32.const 7)) ;; CallReset
-                                      )
-                                      (else) ;; anything else, TODO check for multi?
-                                    )
-                                  ) 
-                                )
+                                (local.set $state (call $parseValue (local.get $idx_bytes)))
                               )
                               (else
                                 ;; TODO CallReset
@@ -406,10 +425,6 @@
                                           )
                                           (else) ;; Not an Insertion, what is it?
                                         )
-
-                                        ;; TODO End of call
-                                        ;; TODO check if its an insertion
-                                        ;; TODO change state to whatever.
                                       )
                                       (else
                                         ;; TODO look for selectors...
