@@ -34,12 +34,8 @@
 
   console.time('parse');
   debug`
-    #counter .count {
-      text: ${1};
-    }
-
     #counter .increment {
-      event: click ${ev => console.log(ev)};
+      event: click;
     }
   `;
   console.timeEnd('parse');

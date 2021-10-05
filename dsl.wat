@@ -6,6 +6,7 @@
 
   (global $memstack_ptr (mut i32) (i32.const 32768))
   (global $tagmemstack_ptr (mut i32) (i32.const 32776))
+  (global $valmemstack_ptr (mut i32) (i32.const 32793)) ;; 17 bytes after the tag
   (global $intmemstack_ptr (mut i32) (i32.const 49152))
 
   (global $tag_rule_start i32 (i32.const 1))
@@ -134,18 +135,195 @@
   )
   (export "propertyType" (func $propertyType))
 
-  (func $parseValue (param $idx_bytes i32) (result i32)
+  (func $moveValuePtr (param $prop_val_type i32) (param $val_ptr i32)
+    (local $offset i32)
+    (local $val_type i32)
+
+    ;; If we're in a multi, move the value-pointer
+    (if (i32.eq (local.get $prop_val_type) (i32.const 4)) ;; Multi
+      (then
+        (local.set $val_type (i32.load8_u (local.get $val_ptr)))
+
+        (if (i32.eq (local.get $val_type) (i32.const 1)) ;; Insertion
+          (then (local.set $offset (i32.const 2)))
+          (else
+            (if (i32.eq (local.get $val_type) (i32.const 2)) ;; String
+              (then (local.set $offset (i32.const 3)))
+              (else
+                (if (i32.eq (local.get $val_type) (i32.const 3)) ;; Identifier
+                  (then (local.set $offset (i32.const 3)))
+                  (else
+                    (if (i32.eq (local.get $val_type) (i32.const 5)) ;; Call
+                      (then (local.set $offset (i32.const 3)))
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+
+        (i32.store offset=1
+          (global.get $intmemstack_ptr)
+          (i32.add (local.get $val_ptr) (local.get $offset))
+        )
+      )
+    )
+  )
+
+  (func $parseValueReset (param $idx_bytes i32) (result i32)
     (local $char i32)
     (local $val_ptr i32)
+    (local $prop_val_type i32)
     (local $state i32)
 
     (local.set $char (i32.load8_u (local.get $idx_bytes)))
     (local.set $val_ptr (i32.load offset=1 (global.get $intmemstack_ptr)))
+    (local.set $prop_val_type (i32.load8_u offset=17 (global.get $tagmemstack_ptr)))
+    (local.set $state (i32.const 4)) ;; ValueReset
+
+    (if (call $identifierToken (local.get $char)) ;; Initially set to an identifier
+      (then
+        (call $moveValuePtr (local.get $prop_val_type) (local.get $val_ptr))
+
+        ;; Set the value type
+        (i32.store8
+          (local.get $val_ptr)
+          (i32.const 3) ;; Identifier
+        )
+
+        ;; identifierStart
+        (i32.store offset=1
+          (local.get $val_ptr)
+          (local.get $idx_bytes)
+        )
+
+        (local.set $state (i32.const 5)) ;; ValueStart
+      )
+      (else
+        (if (i32.eq (local.get $char) (i32.const 34)) ;; "
+          (then
+            (call $moveValuePtr (local.get $prop_val_type) (local.get $val_ptr))
+
+            (i32.store8
+              (local.get $val_ptr)
+              (i32.const 2) ;; String
+            )
+            (local.set $state (i32.const 5)) ;; ValueStart
+          )
+          (else
+            (if (call $whitespaceToken (local.get $char))
+              (then) ;; Continue.
+              (else
+                (i32.store8
+                  (local.get $val_ptr)
+                  (i32.const 9) ;; Unknown
+                )
+              )
+            )
+          ) 
+        ) 
+      )
+    )
+
+    (local.get $state)
+  )
+
+  (func $parseValueEnd (param $idx_bytes i32) (param $val_ptr i32)
+    ;; TODO send end stuff for identifier, etc.
+    (if (i32.eq (i32.load8_u (local.get $val_ptr)) (i32.const 3)) ;; Identifier
+      (then
+        ;; identifierEnd
+        (i32.store offset=5 (local.get $val_ptr) (local.get $idx_bytes))
+      )
+    )
+  )
+
+  (func $parseCallReset (param $idx_bytes i32) (result i32)
+    (local $char i32)
+    (local $state i32)
+    (local $val_ptr i32)
+    (local $prop_val_type i32)
+
+    (local.set $char (i32.load8_u (local.get $idx_bytes)))
+    (local.set $state (i32.const 7)) ;; CallReset
+    (local.set $val_ptr (i32.load offset=1 (global.get $intmemstack_ptr)))
+    (local.set $prop_val_type (i32.load8_u offset=17 (global.get $tagmemstack_ptr)))
+  
+    (if (i32.eq (local.get $char) (i32.const 41)) ;; )
+      ;; End of call
+      (then
+        (if
+          (i64.eq
+            (call $hash
+              (i32.load offset=3
+                (local.get $val_ptr)
+              )
+              (i32.sub (local.get $idx_bytes) (i32.const 1))
+            )
+            (i64.const 193495087) ;; ins
+          )
+          (then
+            ;; Save this as an insertion
+            (i32.store8
+              (local.get $val_ptr)
+              (i32.const 1) ;; Insertion
+            )
+
+            ;; Clear out the identifierStart
+            (i32.store offset=1
+              (local.get $val_ptr)
+              (i32.const 0)
+            )
+
+            ;; Save the holeIndex
+            (i32.store8 offset=1
+              (local.get $val_ptr)
+              (i32.load8_u offset=1
+                (global.get $intmemstack_ptr)
+              )
+            )
+
+            ;; Increment the holeIndex
+            (i32.store8 offset=1
+              (global.get $intmemstack_ptr)
+              (i32.add
+                (i32.load8_u offset=1
+                  (global.get $intmemstack_ptr)
+                )
+                (i32.const 1)
+              )
+            )
+
+            ;; Back to ValueStart
+            (local.set $state (i32.const 5))
+          )
+          (else) ;; Not an Insertion, what is it?
+        )
+      )
+      (else
+        ;; TODO look for selectors...
+      )
+    )
+
+    (local.get $state)
+  )
+
+  (func $parseValueStart (param $idx_bytes i32) (result i32)
+    (local $char i32)
+    (local $val_ptr i32)
+    (local $prop_val_type i32)
+    (local $state i32)
+
+    (local.set $char (i32.load8_u (local.get $idx_bytes)))
+    (local.set $val_ptr (i32.load offset=1 (global.get $intmemstack_ptr)))
+    (local.set $prop_val_type (i32.load8_u offset=17 (global.get $tagmemstack_ptr)))
     (local.set $state (i32.const 5))
 
     (if (i32.eq (local.get $char) (i32.const 59)) ;; semicolon
       (then
-        ;; TODO send end stuff for identifier, etc.
+        ;; End end stuff for identifier, etc.
+        (call $parseValueEnd (local.get $idx_bytes) (local.get $val_ptr))
 
         ;; Go back to RuleReset
         (i32.store8 (global.get $intmemstack_ptr) (i32.const 2))
@@ -159,16 +337,34 @@
       (else
         (if (i32.eq (local.get $char) (i32.const 40)) ;; (
           (then
-            (i32.store8 offset=17
-              (global.get $tagmemstack_ptr)
+            ;; Set the value type
+            (i32.store8
+              (local.get $val_ptr)
               (i32.const 5) ;; Call
             )
 
             (local.set $state (i32.const 7)) ;; CallReset
           )
           (else
-            
-          ) ;; anything else, TODO check for multi?
+            (if (i32.eq (local.get $char) (i32.const 32)) ;; Space
+              (then
+                ;; If this is not already a multi, make it so.
+                (if (i32.eq (local.get $prop_val_type) (i32.const 4)) ;; Multi
+                  (then)
+                  (else
+                    (call $parseValueEnd (local.get $idx_bytes) (local.get $val_ptr))
+
+                    (i32.store8 offset=17
+                      (global.get $tagmemstack_ptr)
+                      (i32.const 4) ;; Multi
+                    )
+
+                    (local.set $state (i32.const 9)) ;; ValueReset
+                  )
+                )
+              )
+            )
+          )
         )
       ) 
     )
@@ -314,6 +510,13 @@
                                   (global.get $tagmemstack_ptr)
                                   (i32.add (local.get $lastNonWhitespace) (i32.const 1))
                                 )
+
+                                ;; value ptr points to top of stack
+                                (i32.store offset=1
+                                  (global.get $intmemstack_ptr)
+                                  (i32.add (global.get $valmemstack_ptr) (i32.const 2))
+                                  ;;(global.get $valmemstack_ptr)
+                                )
                               )
                               (else
                                 ;; ERROR unidentified token
@@ -326,110 +529,19 @@
                         ;; ValueReset
                         (if (i32.eq (local.get $state (i32.const 4)))
                           (then
-                            (if (call $identifierToken (local.get $char)) ;; Initially set to an identifier
-                              (then
-                                (i32.store8 offset=17
-                                  (global.get $tagmemstack_ptr)
-                                  (i32.const 3) ;; Identifier
-                                )
-
-                                ;; identifierStart
-                                (i32.store offset=20
-                                  (global.get $tagmemstack_ptr)
-                                  (local.get $idx_bytes)
-                                )
-
-                                (local.set $state (i32.const 5)) ;; ValueStart
-                              )
-                              (else
-                                (if (i32.eq (local.get $char) (i32.const 34)) ;; "
-                                  (then
-                                    (i32.store8 offset=17
-                                      (global.get $tagmemstack_ptr)
-                                      (i32.const 2) ;; String
-                                    )
-                                    (local.set $state (i32.const 5)) ;; ValueStart
-                                  )
-                                  (else
-                                    (if (call $whitespaceToken (local.get $char))
-                                      (then) ;; Continue.
-                                      (else
-                                        (i32.store8 offset=17
-                                          (global.get $tagmemstack_ptr)
-                                          (i32.const 9) ;; Unknown
-                                        )
-                                      )
-                                    )
-                                  ) 
-                                ) 
-                              )
-                            )
+                            (local.set $state (call $parseValueReset (local.get $idx_bytes)))
                           )
                           (else
                             ;; ValueStart
                             (if (i32.eq (local.get $state (i32.const 5)))
                               (then
-                                (local.set $state (call $parseValue (local.get $idx_bytes)))
+                                (local.set $state (call $parseValueStart (local.get $idx_bytes)))
                               )
                               (else
-                                ;; TODO CallReset
+                                ;; CallReset
                                 (if (i32.eq (local.get $state (i32.const 7)))
                                   (then
-                                    (if (i32.eq (local.get $char) (i32.const 41)) ;; )
-                                      ;; End of call
-                                      (then
-                                        (if
-                                          (i64.eq
-                                            (call $hash
-                                              (i32.load offset=20
-                                                (global.get $tagmemstack_ptr)
-                                              )
-                                              (i32.sub (local.get $idx_bytes) (i32.const 1))
-                                            )
-                                            (i64.const 193495087) ;; ins
-                                          )
-                                          (then
-                                            ;; Save this as an insertion
-                                            (i32.store8 offset=17
-                                              (global.get $tagmemstack_ptr)
-                                              (i32.const 1) ;; Insertion
-                                            )
-
-                                            ;; Clear out the identifierStart
-                                            (i32.store offset=20
-                                              (global.get $tagmemstack_ptr)
-                                              (i32.const 0)
-                                            )
-
-                                            ;; Save the holeIndex
-                                            (i32.store8 offset=21
-                                              (global.get $tagmemstack_ptr)
-                                              (i32.load8_u offset=1
-                                                (global.get $intmemstack_ptr)
-                                              )
-                                            )
-
-                                            ;; Increment the holeIndex
-                                            (i32.store8 offset=1
-                                              (global.get $intmemstack_ptr)
-                                              (i32.add
-                                                (i32.load8_u offset=1
-                                                  (global.get $intmemstack_ptr)
-                                                )
-                                                (i32.const 1)
-                                              )
-                                            )
-
-                                            ;; Back to ValueStart
-                                            (local.set $state (i32.const 5))
-                                          )
-                                          (else) ;; Not an Insertion, what is it?
-                                        )
-                                      )
-                                      (else
-                                        ;; TODO look for selectors...
-                                      )
-                                    )
+                                    (local.set $state (call $parseCallReset (local.get $idx_bytes)))
                                   )
                                   (else) ;; TODO CallStart?
                                 )

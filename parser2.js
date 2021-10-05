@@ -88,7 +88,8 @@ export function debug(source, ...values) {
           propertyStart: buffer32[ret32 + 4] >> 8,
           propertyEnd: buffer32[ret32 + 5] >> 8,
           property: readFromBuffer(buffer8, buffer32[ret32 + 4] >> 8, buffer32[ret32 + 5] >> 8),
-          valueType: buffer8[ret + 25]
+          valueMulti: !!buffer8[ret + 25],
+          valueType: buffer8[ret + 25] ? buffer8[ret + 25] : buffer8[ret + 25 + 2]
         });
         switch(out.valueType) {
           case 1:
@@ -101,10 +102,14 @@ export function debug(source, ...values) {
           case 3:
             out.valueTypeName = 'Identifier';
             out.identifierStart = buffer32[ret32 + 7];
-            out.identifierEnd = buffer32[ret32 + 7] + 3; // TODO made up
-            out.identifier = readFromBuffer(buffer8, buffer32[ret32 + 7], buffer32[ret32 + 7] + 3);
+            out.identifierEnd = buffer32[ret32 + 8];
+            out.identifier = readFromBuffer(buffer8, out.identifierStart, out.identifierEnd);
             out.callType = $callType(out.identifierStart, out.identifierEnd);
             break;
+          case 4:
+              console.log(buffer8.subarray(ret))
+              out.valueTypeName = 'Multi';
+              break;
           case 9:
             out.valueTypeName = 'Unknown';
             break;
