@@ -1,0 +1,15 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Test Suite</title>
+<link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-2.17.2.css">
+
+<div id="qunit"></div>
+<div id="qunit-fixture"></div>
+<script src="https://code.jquery.com/qunit/qunit-2.17.2.js"></script>
+<script>
+  QUnit.config.autostart = false;
+</script>
+<script type="module">
+  import "./test-text.js";
+  QUnit.start();
+</script>
