@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<title>Dark Mode Switcher</title>
+<style>
+  body {
+    font-family: Helvetica, Arial, Sans-Serif;
+    margin: 0;
+  }
+
+  article {
+    padding: 2rem;
+  }
+
+  article.dark-mode {
+    background: black;
+    color: white;
+  }
+
+  .mode-toggle {
+    float: right;
+    margin: 1rem;
+  }
+
+  button {
+    font-family: "Open Sans", sans-serif;
+    font-size: 16px;
+    letter-spacing: 2px;
+    text-decoration: none;
+    text-transform: uppercase;
+    color: #000;
+    cursor: pointer;
+    border: 3px solid;
+    padding: 0.25em 0.5em;
+    box-shadow: 1px 1px 0px 0px, 2px 2px 0px 0px, 3px 3px 0px 0px, 4px 4px 0px 0px, 5px 5px 0px 0px;
+    position: relative;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+
+  article.dark-mode button {
+    color: white;
+    background: black;
+  }
+
+  button:active {
+    box-shadow: 0px 0px 0px 0px;
+    top: 5px;
+    left: 5px;
+  }
+
+</style>
+
+<article>
+  <button class="mode-toggle" type="button">Mode: <span id="mode">light</span></button>
+  <p>
+  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam egestas vel arcu at posuere. Nulla eu sodales purus. Donec tristique egestas risus, in tristique ligula malesuada non. Fusce non augue ac eros pulvinar porta sed sit amet augue. Duis semper urna in mauris venenatis, vel aliquam lacus vestibulum. Aenean at mi quis sapien sollicitudin tincidunt a at turpis. Donec tristique vulputate tempus. Cras vehicula consequat purus vel pharetra. Sed et nulla in diam posuere tincidunt. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Suspendisse eget ligula ac elit porta auctor. Morbi lobortis enim et vehicula aliquam. Donec erat dolor, iaculis ut dolor elementum, rutrum condimentum orci.
+  </p>
+  <p>
+  Sed lobortis sapien felis, quis auctor nibh varius et. Pellentesque elementum metus eu rutrum volutpat. Morbi fermentum, urna at convallis fermentum, ipsum diam cursus nunc, nec porta quam augue eget purus. Phasellus et cursus turpis. Vivamus egestas augue ac efficitur iaculis. Donec a fermentum magna. Maecenas vitae mi tortor. Donec tempus, felis id tincidunt lobortis, risus quam pellentesque orci, fermentum viverra risus mauris sollicitudin est. Donec elementum feugiat elit, eu bibendum nisi malesuada eu. Morbi egestas vulputate metus, nec blandit diam gravida ut. Aliquam neque arcu, malesuada ut ex sed, posuere dapibus neque. Pellentesque consequat augue ipsum, sit amet porttitor dui accumsan a. Suspendisse nec ligula lectus. Nulla consequat vitae lacus in sodales. Mauris pulvinar sapien eget bibendum viverra.
+  </p>
+  <p>
+  Fusce in tristique erat. In hac habitasse platea dictumst. Praesent facilisis interdum odio, quis sollicitudin mi volutpat vel. Ut rhoncus, lorem eget condimentum lobortis, tortor dui dignissim orci, nec semper ligula erat quis neque. Aenean id elit maximus, volutpat turpis commodo, feugiat nunc. Praesent fringilla libero eros, sit amet cursus lorem porta vel. Proin in ex dignissim, congue nibh blandit, rutrum magna. Aenean iaculis tincidunt nibh eu malesuada. Nunc id ex vitae velit lobortis egestas a non dui.
+  </p>
+  <p>
+  Sed congue feugiat augue, consectetur sollicitudin metus semper sit amet. Donec enim ipsum, aliquet placerat ante sit amet, mollis porttitor mi. Morbi blandit finibus ante nec vulputate. Etiam ante lectus, maximus in libero vitae, pellentesque consequat mauris. In nec tincidunt lorem, eget luctus enim. Morbi blandit nunc a feugiat luctus. Vivamus volutpat iaculis placerat. Maecenas ut sapien mauris. Vestibulum nibh nisl, efficitur vitae vestibulum et, volutpat et ligula. Vestibulum interdum mi et velit porttitor, non consectetur diam gravida. Aliquam et nulla ex. Ut vulputate lacus at tellus ullamcorper, sit amet aliquam odio efficitur. Nullam vitae enim non arcu venenatis dictum.
+  </p>
+  <p>
+  Praesent lorem nunc, efficitur eget scelerisque ac, auctor et lacus. Nunc in ante mauris. Aenean rutrum elementum nisl vel porttitor. In hac habitasse platea dictumst. Donec placerat metus dignissim tortor tincidunt, in vestibulum eros rutrum. In rutrum lorem vel sapien porttitor tempor. Nam consectetur sapien in nibh iaculis, sit amet condimentum odio dignissim. Aliquam mollis ipsum elit, a hendrerit ante dictum nec. Nulla sed tortor sit amet felis euismod mattis ac eget massa. Aliquam finibus dignissim arcu. Quisque sollicitudin turpis sit amet odio scelerisque, id dapibus turpis pellentesque. Mauris mi magna, semper ac tincidunt in, feugiat id risus. Maecenas varius ut nulla quis elementum. Pellentesque nulla velit, dictum at mauris ut, congue finibus massa. Ut egestas, felis ut varius blandit, neque nisi fringilla metus, nec molestie lorem eros sed mi.
+  </p>
+</article>
+
+<script type="module">
+  import dsl from '../../src/dsl.js';
+
+  let app = {
+    mode: 'light',
+    toggle() {
+      app.mode = app.mode === 'light' ? 'dark' : 'light';
+      app.update();
+    },
+    update() {
+      let template = dsl`
+        .mode-toggle {
+          event: click ${app.toggle};
+        }
+
+        article {
+          class-toggle: "dark-mode" ${app.mode === 'dark'};
+        }
+
+        #mode {
+          text: ${app.mode};
+        }
+      `;
+      template.update(document.body);
+    }
+  };
+
+  app.update();
+</script>
