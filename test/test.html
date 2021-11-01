@@ -1,0 +1,18 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>DSL Test Suite</title>
+<link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-2.17.2.css">
+<link rel="preload" as="fetch" href="../src/dsl-debug.wasm" crossorigin>
+
+<div id="qunit"></div>
+<div id="qunit-fixture"></div>
+<script src="https://code.jquery.com/qunit/qunit-2.17.2.js"></script>
+<script>
+  QUnit.config.autostart = false;
+</script>
+<script type="module">
+  import "./test-text.js";
+  import "./test-class-toggle.js";
+  import "./test-event.js";
+  QUnit.start();
+</script>

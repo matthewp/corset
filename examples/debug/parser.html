@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<title>Testing</title>
+<style>
+  main {
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    justify-content: center;
+  }
+
+  #counter {
+    height: max-content;
+    width: 200px;
+    background: tomato;
+    padding: 1.2rem;
+  }
+
+  .increment, .decrement {
+    margin-top: .5rem;
+  }
+</style>
+
+<main>
+  <div id="counter">
+    Count: <strong class="count">0</strong><br/>
+    <button type="button" class="increment">Increment</button><br/>
+    <button type="button" class="decrement">Decrement</button>
+  </div>
+</main>
+
+<script type="module">
+  import { debug } from '../../src/parser-debug.js';
+
+  const increment = () => console.log('increment');
+
+  console.time('parse');
+  debug`
+    #counter .count {
+      text: ${1};
+    }
+
+    #counter .increment {
+      event: click ${increment};
+    }
+  `;
+  console.timeEnd('parse');
+
+</script>

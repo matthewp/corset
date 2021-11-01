@@ -1,0 +1,25 @@
+{
+  "name": "@matthewp/untitled-dsl-project",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/dsl.js",
+  "scripts": {
+    "server": "python3 -m http.server 7800",
+    "test-qunit": "node node_modules/@matthewp/node-qunit-puppeteer/cli.js http://localhost:7800/test/test.html",
+    "test": "npm run server & npm run test-qunit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matthewp/untitled-dsl-project.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/matthewp/untitled-dsl-project/issues"
+  },
+  "homepage": "https://github.com/matthewp/untitled-dsl-project#readme",
+  "devDependencies": {
+    "@matthewp/node-qunit-puppeteer": "^3.0.0"
+  }
+}
