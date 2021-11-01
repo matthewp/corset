@@ -1,3 +1,5 @@
+/// <reference path="./dsl.d.ts" />
+
 import {
   heap8, heap32, mem32,
   parse, next,

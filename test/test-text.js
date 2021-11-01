@@ -1,6 +1,6 @@
 import dsl from '../src/dsl.js';
 
-QUnit.module('text');
+QUnit.module('Property - text');
 
 QUnit.test('Sets the textContent if an element', assert => {
   let root = document.createElement('main');
