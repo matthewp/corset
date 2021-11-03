@@ -92,6 +92,8 @@ typedef struct value_type_call_t {
   value_type_node_t type;
   int nameStart;
   int nameEnd;
+  int argStart;
+  int argEnd;
 } value_type_call_t;
 
 typedef struct value_type_ins_t {
@@ -101,8 +103,6 @@ typedef struct value_type_ins_t {
 
 typedef struct tag_prop_t {
   unsigned char type;
-  int num_of_selectors;
-  selector_list_t* selectors;
   int prop_start;
   int prop_end;
   int num_of_values;
@@ -155,9 +155,9 @@ static char whitespaceToken(char c) {
 
 static void free_tag() {
   // Loop over tag and zero out
-  // int len = bump_pointer - tag_pointer;
-  // int* s = (int*)tag_pointer;
-  // for(; len; len--, s++) *s = 0;
+  int len = bump_pointer - tag_pointer;
+  int* s = (int*)tag_pointer;
+  for(; len; len--, s++) *s = 0;
 
   bump_pointer = tag_pointer;
 }
@@ -229,38 +229,12 @@ static unsigned char parse_rule_start_mode() {
   return TOKEN_CONSUMED;
 }
 
-static int get_selectors_from_tag(int start) {
-  char* tag_ptr = (char*)parser_state->tag;
-  char tag = *tag_ptr;
-  if(tag == TAG_RULE_START) {
-    tag_rule_start_t* rule_start = (tag_rule_start_t*)parser_state->tag;
-    if(start) {
-      return rule_start->selector_start;
-    } else {
-      return rule_start->selector_end;
-    }
-  } else { // TAG_PROPERTY
-    tag_prop_t* prop = get_prop_tag();
-    if(start) {
-      return prop->selectors->start;
-    } else {
-      return prop->selectors->end;
-    }
-  }
-}
-
 static unsigned char parse_rule_reset_mode() {
   char c = read_char();
-  if(identifierToken(c)) {
-    int selector_start = get_selectors_from_tag(true);
-    int selector_end = get_selectors_from_tag(false);
+  if(identifierToken(c) || c == '-') {
     free_tag();
     tag_prop_t *prop = malloc(sizeof(tag_prop_t));
     prop->type = TAG_PROPERTY;
-    prop->num_of_selectors = 1;
-    prop->selectors = malloc(sizeof(selector_list_t));
-    prop->selectors->start = selector_start;
-    prop->selectors->end = selector_end;
     prop->prop_start = parser_state->index;
     prop->prop_end = 0;
     prop->num_of_values = 0;
@@ -362,12 +336,15 @@ static unsigned char parse_value_start_mode() {
     value_type_node_t* value_id_node = (value_type_node_t*)value_id;
 
     // Create a call node
-    value_type_call_t* value_call = malloc(sizeof(*value_call));
+    value_type_call_t* value_call = malloc(sizeof(value_type_call_t));
     value_type_node_t* value_call_node = (value_type_node_t*)value_call;
     value_call_node->next = 0;
     value_call_node->prev = 0;
     value_call->nameStart = value_id->start;
     value_call->nameEnd = parser_state->index;
+
+    value_call->argStart = parser_state->index + 1;
+    value_call->argEnd = 0;
     
     value_call_node->type = VALUE_TYPE_CALL;
     replace_node(value_id_node, value_call_node);
@@ -406,9 +383,10 @@ static unsigned char parse_call_reset_mode() {
   if(c == ')') {
     tag_prop_t* prop = get_prop_tag();
     value_type_call_t* value_call = (value_type_call_t*)prop->last_value;
+    value_type_node_t* value_call_node = (value_type_node_t*)value_call;
     long h = hash(value_call->nameStart, value_call->nameEnd);
     if(h == INS_HASH) {
-      value_type_ins_t* value_ins = malloc(sizeof(*value_ins));
+      value_type_ins_t* value_ins = malloc(sizeof(value_type_ins_t));
       value_type_node_t* value_ins_node = (value_type_node_t*)value_ins;
       value_ins_node->type = VALUE_TYPE_INSERTION;
       value_ins_node->prev = 0;
@@ -416,18 +394,13 @@ static unsigned char parse_call_reset_mode() {
       value_ins->index = parser_state->hole_index++;
       
       tag_prop_t* prop = get_prop_tag();
-      value_type_node_t* value_call_node = prop->last_value;
       replace_node(value_call_node, value_ins_node);
 
       parser_state->mode = VALUE_START_MODE;
     } else {
-      free_tag();
-      tag_error_t* err = malloc(sizeof(*err));
-      err->code = 3;
-      err->type = TAG_ERROR;
-      err->data = 0;
-      parser_state->tag = err;
-      return TOKEN_EXIT;
+      value_type_call_t* value_call = (value_type_call_t*)prop->last_value;
+      value_call->argEnd = parser_state->index;
+      parser_state->mode = VALUE_START_MODE;
     }
   }
   return TOKEN_CONSUMED;
