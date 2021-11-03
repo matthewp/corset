@@ -138,13 +138,22 @@ static char identifierToken(char c) {
 }
 
 static char selectorToken(char c) {
-  if(identifierToken(c)
-    || c == '#' // #
-    || c == '.' // .
-  ) {
-    return true;
-  } else {
-    return false;
+  if(identifierToken(c)) return true;
+  switch(c) {
+    case '#':
+    case '.':
+    case '[':
+    case ']':
+    case '(':
+    case ')':
+    case ':':
+    case '-':
+    case '>':
+    case '+':
+    case '~': {
+      return true;
+    }
+    default: return false;
   }
 }
 
@@ -253,7 +262,7 @@ static unsigned char parse_rule_reset_mode() {
 
 static unsigned char parse_prop_start_mode() {
   char c = read_char();
-  if(selectorToken(c)) {
+  if(identifierToken(c)) {
     parser_state->last_non_whitespace = parser_state->index;
   } else if(c == ':') {
     tag_prop_t* prop = get_prop_tag();
