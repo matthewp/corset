@@ -1,53 +1,111 @@
+// @ts-check
+import { Binding } from './binding.js';
+
+/**
+ * @typedef {import('./rule').Rule} Rule
+ * @typedef {Map<string, Binding>} PropertyBindingMap
+ */
 
 class Root {
-  constructor(root, sheet) {
-    this.root = root;
-    this.selectors = sheet.selectors;
+  /**
+   * @param {HTMLElement} rootElement 
+   * @param {BindingSheet} sheet 
+   */
+  constructor(rootElement, sheet) {
+    /** @type {HTMLElement} */
+    this.rootElement = rootElement;
+    /** @type {Rule[]} */
+    this.rules = sheet.rules;
+    /** @type {Map<Element, PropertyBindingMap>} */
+    this.bindingMap = new Map();
   }
+  /**
+   * @param {any[]} values
+   */
   update(values) {
-    let root = this.root;
-    for(let [selector, parts] of this.selectors) {
-      for(let el of root.querySelectorAll(selector)) {
-        for(let part of parts) {
-          part.set(el, values);
+    let invalid = true;
+    while(invalid) {
+      this.collectBindings();
+      invalid = this.updateBindings(values);
+    }
+  }
+  collectBindings() {
+    let rootElement = this.rootElement;
+    for(let rule of this.rules) {
+      for(let el of rootElement.querySelectorAll(rule.selector)) {
+        /** @type {PropertyBindingMap} */
+        let map;
+        if(this.bindingMap.has(el)) {
+          map = this.bindingMap.get(el);
+        } else {
+          map = new Map();
+          this.bindingMap.set(el, map);
+        }
+
+        for(let [propertyName, declaration] of rule.declarations) {
+          /** @type {Binding} */
+          let binding;
+          if(map.has(propertyName)) {
+            binding = map.get(propertyName);
+          } else {
+            binding = new Binding(el);
+            map.set(propertyName, binding);
+          }
+          binding.addDeclaration(declaration);
         }
       }
     }
   }
-}
-
-export class Sheet {
-  constructor() {
-    this.selectors = new Map();
-  }
-  getOrCreateSelector(selector) {
-    let parts = this.selectors.get(selector);
-    if(parts === undefined) {
-      parts = [];
-      this.selectors.set(selector, parts);
+  /**
+   * @param {any[]} values
+   * @returns {Boolean}
+   */
+  updateBindings(values) {
+    for(let [, propertyBindingMap] of this.bindingMap) {
+      for(let [,binding] of propertyBindingMap) {
+        binding.set(values);
+      }
     }
-    return parts;
-  }
-  addPart(part) {
-    this.getOrCreateSelector(part.selector).push(part);
+    return false; // TODO change this
   }
 }
 
-export class BindingResult {
+export class BindingSheet {
+  constructor() {
+    /** @type {Rule[]} */
+    this.rules = [];
+  }
+  /**
+   * Add a rule to this sheet
+   * @param {Rule} rule 
+   */
+  addRule(rule) {
+    this.rules.push(rule);
+  }
+}
+
+export class SheetWithValues {
+  /**
+   * @param {BindingSheet} sheet
+   * @param {any[]} values
+   */
   constructor(sheet, values) {
     this.roots = new WeakMap();
     this.sheet = sheet;
     this.values = values;
   }
 
-  update(root) {
-    let binding;
-    if(this.roots.has(root)) {
-      binding = this.roots.get(root);
+  /**
+   * @param {HTMLElement} rootElement
+   */
+  update(rootElement) {
+    let root;
+    if(this.roots.has(rootElement)) {
+      root = this.roots.get(rootElement);
     } else {
-      binding = new Root(root, this.sheet);
-      this.roots.set(root, binding);
+      root = new Root(rootElement, this.sheet);
+      this.roots.set(rootElement, root);
     }
-    binding.update(this.values);
+    return root.update(this.values);
   }
 }

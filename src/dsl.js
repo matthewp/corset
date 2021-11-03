@@ -1,100 +1,141 @@
+// @ts-check
 /// <reference path="./dsl.d.ts" />
 
 import {
-  heap8, heap32, mem32,
+  heap32, mem32,
   parse, next,
+  readNumberOfValues,
+  readFirstValuePointer,
   readProperty,
-  readString,
-  readSelector,
-  readValueType
+  readString
 } from './parser.js';
+import { Declaration } from './declaration.js';
 import {
-  ClassTogglePart,
-  EventPart,
-  TextPart
-} from './part.js';
-import { Sheet, BindingResult } from './sheet.js';
-import { InsertionValue } from './value.js';
+  ClassToggleProperty,
+  CustomProperty,
+  EventProperty,
+  TextProperty
+} from './property.js';
+import { Rule } from './rule.js';
+import { BindingSheet, SheetWithValues } from './sheet.js';
+import { AnyValue, InsertionValue, VarValue } from './value.js';
 
-const expectValues = num => {
-  if(heap32[5] !== num) {
-    throw new Error(`Expected ${num} values but found ${heap32[5]}`);
+/** @typedef {import('./value').Value} Value */
+
+/**
+ * Asserts a number of values for a property.
+ * @param {String} name The name of the property
+ * @param {Number} num The number of expected values
+ */
+const expectValues = (name, num) => {
+  if(readNumberOfValues() !== num) {
+    throw new Error(`The property [${name}] expects ${num} values but found ${readNumberOfValues()}.`);
   }
 }
 
+/**
+ * Gets the value at the pointer location.
+ * @param {Number} ptr 
+ * @returns {Value}
+ */
 function getValue(ptr) {
   let ptr32 = ptr >> 2;
   let ptrv32 = ptr32 + 3;
   
-  switch(mem32[ptr32]) {
+  let valueType = mem32[ptr32];
+  switch(valueType) {
     case 1: {
       return new InsertionValue(mem32[ptrv32]);
     }
     case 2:
     case 3: {
-      return readString(mem32[ptrv32], mem32[ptrv32 + 1]);
+      return new AnyValue(readString(mem32[ptrv32], mem32[ptrv32 + 1]));
+    }
+    case 4: {
+      let fn = readString(mem32[ptrv32], mem32[ptrv32 + 1]);
+      switch(fn) {
+        case 'var': {
+          return new VarValue(readString(mem32[ptrv32 + 2], mem32[ptrv32 + 3]));
+        }
+        default: {
+          throw new Error(`Unknown function ${fn}`);
+        }
+      }
+    }
+    default: {
+      throw new Error(`Unknown value type [${valueType}]`);
     }
   }
 }
 
-function addInsertion(sheet, Part, ptr) {
-  let value = new InsertionValue(mem32[(ptr >> 2) + 3]);
-  sheet.addPart(new Part(readSelector(), value));
-}
-
 function compile(strings, values) {
-  let sheet = new Sheet();
+  let sheet = new BindingSheet();
+  let rule;
   parse(strings, values);
-  while(next()) {
+  loop: while(next()) {
     switch(heap32[0]) {
+      case 1: {
+        rule = new Rule(readString(heap32[1], heap32[2]));
+        sheet.addRule(rule);
+        break;
+      }
       case 2: {
-        switch(readProperty()) {
+        let propName = readProperty();
+        switch(propName) {
           case 'text': {
-            expectValues(1);
-            let ptr = heap32[6];
-            switch(readValueType(ptr)) {
-              case 1: {
-                addInsertion(sheet, TextPart, ptr);
-                break;
-              }
-              default: {
-                console.log('This type is not supported on text');
-                break;
-              }
-            }
+            expectValues(propName, 1);
+            let ptr = readFirstValuePointer();
+            let value = getValue(ptr);
+            rule.addDeclaration(new Declaration(rule, TextProperty, value));
             break;
           }
           case 'event': {
-            expectValues(2);
-            let selector = readSelector();
-            let values = heap32[5];
-            let ptr = heap32[6];
+            expectValues(propName, 2);
+            let values = readNumberOfValues();
+            let ptr = readFirstValuePointer();
             while(values > 0) {
               let evValue = getValue(ptr);
               let cbValue = getValue(mem32[(ptr >> 2) + 1]);
-              sheet.addPart(new EventPart(selector, evValue, cbValue));
+              rule.addDeclaration(new Declaration(rule, EventProperty, evValue, cbValue));
               values -= 2;
             }
             break;
           }
           case 'class-toggle': {
-            expectValues(2);
-            let selector = readSelector();
-            let values = heap32[5];
-            let ptr = heap32[6];
+            expectValues(propName, 2);
+            let values = readNumberOfValues();
+            let ptr = readFirstValuePointer();
             while(values > 0) {
               let classNameValue = getValue(ptr);
               let condValue = getValue(mem32[(ptr >> 2) + 1]);
-              sheet.addPart(new ClassTogglePart(selector, classNameValue, condValue));
+              rule.addDeclaration(new Declaration(rule, ClassToggleProperty, classNameValue, condValue));
               values -= 2;
             }
             break;
           }
           default: {
-            throw new Error(`Unknown property: ${readProperty()}`);
+            let prop = readProperty();
+            if(prop.startsWith('--')) {
+              let values = readNumberOfValues();
+              let ptr = readFirstValuePointer();
+              /** @type {Value[]} */
+              let args = [new AnyValue(prop)];
+              while(values > 0) {
+                let value = getValue(ptr);
+                args.push(value);
+                values--;
+              }
+              rule.addDeclaration(new Declaration(rule, CustomProperty, ...args));
+            } else {
+              throw new Error(`Unknown property: ${prop}`);
+            }
           }
         }
         break;
+      }
+      case 4: {
+        console.log("GOT AN ERROR")
+        break loop;
       }
     }
   }
@@ -103,18 +144,30 @@ function compile(strings, values) {
 
 const cache = new WeakMap();
 
+/**
+ * 
+ * @param {String[]} strings 
+ * @param {any[]} values 
+ * @returns 
+ */
 function memoizeCompile(strings, values) {
   if(cache.has(strings)) {
     return cache.get(strings);
   }
-  let sheet = compile(strings, values);
-  let binding = new BindingResult(sheet, values);
-  cache.set(strings, binding);
-  return binding;
+  let bindingSheet = compile(strings, values);
+  let sheet = new SheetWithValues(bindingSheet, values);
+  cache.set(strings, sheet);
+  return sheet;
 }
 
+/**
+ * The main DSL
+ * @param {String[]} strings 
+ * @param  {...any} values 
+ * @returns 
+ */
 export default function(strings, ...values) {
-  let binding = memoizeCompile(strings, values);
-  binding.values = values;
-  return binding;
+  let sheet = memoizeCompile(strings, values);
+  sheet.values = values;
+  return sheet;
 }

@@ -19,19 +19,13 @@ const tag_ptr32 = tag_ptr >> 2;
 export const heap8 = mem8.subarray(tag_ptr);
 export const heap32 = mem32.subarray(tag_ptr32);
 
+const enc = new TextEncoder();
+const dec = new TextDecoder();
 
-function writeToBuffer(value) {
-  let enc = new TextEncoder();
-  enc.encodeInto(value, mem8);
-}
-
-function readFromBuffer(buffer, start, end) {
-  let d = new TextDecoder();
-  return d.decode(buffer.slice(start, end));
-}
+const writeToBuffer = value => enc.encodeInto(value, mem8);
+const readFromBuffer = (buffer, start, end) => dec.decode(buffer.slice(start, end));
 
 let len;
-
 export function parse(source, values) {
   $reset();
 
@@ -42,17 +36,12 @@ export function parse(source, values) {
   len = raw.length;
 }
 
-export function next() {
-  return $parse(len);
-}
+export const next = () => $parse(len);
 
 // Reading
 export const readString = (start, end) => {
   return readFromBuffer(mem8, start, end);
 };
-export const readSelector = () => {
-  let list_ptr = mem32[tag_ptr32 + 2] >> 2;
-  return readFromBuffer(mem8, mem32[list_ptr], mem32[list_ptr + 1]);
-};
-export const readProperty = () => readFromBuffer(mem8, heap32[3], heap32[4]);
-export const readValueType = ptr => mem32[ptr >> 2];
+export const readProperty = () => readFromBuffer(mem8, heap32[1], heap32[2]);
+export const readNumberOfValues = () => heap32[3];
+export const readFirstValuePointer = () => heap32[4];
