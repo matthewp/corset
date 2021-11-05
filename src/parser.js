@@ -13,7 +13,7 @@ const $reset = exports.reset;
 const mem8 = new Uint8Array($memory.buffer);
 export const mem32 = new Uint32Array($memory.buffer);
 
-const tag_ptr = 66596;
+const tag_ptr = 66600;
 const tag_ptr32 = tag_ptr >> 2;
 
 export const heap8 = mem8.subarray(tag_ptr);

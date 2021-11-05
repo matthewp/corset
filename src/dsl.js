@@ -73,6 +73,7 @@ function compile(strings, values) {
   let rule;
   parse(strings, values);
   loop: while(next()) {
+    console.log(heap32[0])
     switch(heap32[0]) {
       case 1: {
         rule = new Rule(readString(heap32[1], heap32[2]));
