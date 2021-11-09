@@ -18,9 +18,18 @@ import {
 } from './property.js';
 import { Rule } from './rule.js';
 import { BindingSheet, SheetWithValues } from './sheet.js';
-import { AnyValue, InsertionValue, VarValue } from './value.js';
+import { AnyValue, GetValue, InsertionValue, VarValue } from './value.js';
 
-/** @typedef {import('./value').Value} Value */
+/** @typedef {import('./types').ValueType} ValueType */
+/** @typedef {import('./types').Value} Value */
+
+/** @type {Map<string, ValueType>} */
+// @ts-ignore -- Not sure why this is not working
+const fnMap = new Map([
+  ['var', VarValue],
+  ['get', GetValue]
+  //['ins', InsertionValue]
+]);
 
 /**
  * Asserts a number of values for a property.
@@ -53,14 +62,21 @@ function getValue(ptr) {
     }
     case 4: {
       let fn = readString(mem32[ptrv32], mem32[ptrv32 + 1]);
-      switch(fn) {
-        case 'var': {
-          return new VarValue(readString(mem32[ptrv32 + 2], mem32[ptrv32 + 3]));
-        }
-        default: {
-          throw new Error(`Unknown function ${fn}`);
-        }
+      if(!fnMap.has(fn)) {
+        throw new Error(`Unknown function ${fn}`);
       }
+      /** @type {ValueType} */
+      let ValueConstructor = fnMap.get(fn);
+
+      /** @type {Value[]} */
+      let args = [];
+      let vptr = mem32[ptrv32 + 3];
+      while(vptr) {
+        args.push(getValue(vptr));
+        vptr = mem32[(vptr >> 2) + 1];
+      }
+
+      return new ValueConstructor(...args);
     }
     default: {
       throw new Error(`Unknown value type [${valueType}]`);
@@ -72,7 +88,7 @@ function compile(strings, values) {
   let sheet = new BindingSheet();
   let rule;
   parse(strings, values);
-  loop: while(next()) {
+  while(next()) {
     switch(heap32[0]) {
       case 1: {
         rule = new Rule(readString(heap32[1], heap32[2]));
@@ -134,8 +150,17 @@ function compile(strings, values) {
         break;
       }
       case 4: {
-        console.log("GOT AN ERROR")
-        break loop;
+        let code = heap32[1];
+        switch(code) {
+          case 1:
+          case 2: {
+            let charCode = heap32[2];
+            throw new SyntaxError(`Unexpected token "${String.fromCharCode(charCode)}" found. Error code ${code}.`);
+          }
+          default: {
+            throw new Error(`Unknown Parse error occurred. Error code [${code}]`);
+          }
+        }
       }
     }
   }

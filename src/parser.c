@@ -53,6 +53,8 @@ typedef struct parser_state_t {
   int index;
   int last_non_whitespace;
   int hole_index;
+  int open_parens;
+  int closed_parens;
   void* tag;
 } parser_state_t;
 
@@ -90,10 +92,12 @@ typedef struct value_type_identifier_t {
 
 typedef struct value_type_call_t {
   value_type_node_t type;
-  int nameStart;
-  int nameEnd;
-  int argStart;
-  int argEnd;
+  int name_start;
+  int name_end;
+  int num_of_args;
+  value_type_node_t* first_arg;
+  value_type_node_t* last_arg;
+  struct value_type_call_t* parent;
 } value_type_call_t;
 
 typedef struct value_type_ins_t {
@@ -162,6 +166,17 @@ static char whitespaceToken(char c) {
     || (c >= 10 && c <= 13); // tabs, newlines, etc.
 }
 
+static char callArgToken(char c) { 
+  return identifierToken(c) || c == '"' || c == '-';
+}
+
+/*
+static void memset(int* dest, int c, int len) {
+  int *s = dest;
+  for(; len; len--, s++) *s = c;
+}
+*/
+
 static void free_tag() {
   // Loop over tag and zero out
   int len = bump_pointer - tag_pointer;
@@ -171,35 +186,106 @@ static void free_tag() {
   bump_pointer = tag_pointer;
 }
 
-static tag_prop_t* get_prop_tag() {
+// TODO wrap so that this only exists in the debug build
+static int create_error_tag(int code, int data) {
+  free_tag();
+  tag_error_t* err = malloc(sizeof(*err));
+  err->type = TAG_ERROR;
+  err->code = code;
+  err->data = data;
+  parser_state->tag = err;
+  return TOKEN_EXIT;
+}
+
+static inline tag_prop_t* get_prop_tag() {
   tag_prop_t* prop = (tag_prop_t*)parser_state->tag;
   return prop;
 }
 
-static void add_value_to_prop(value_type_node_t* value_node) {
+static inline char in_value_node() {
+  return parser_state->open_parens > parser_state->closed_parens;
+}
+
+static inline char post_value_mode() {
+  return in_value_node() ? CALL_START_MODE : VALUE_RESET_MODE;
+}
+
+static value_type_node_t* get_current_value() {
+  tag_prop_t* prop = get_prop_tag();
+  value_type_node_t* last_value = prop->last_value;
+  if(!in_value_node()) {
+    return last_value;
+  }
+  value_type_call_t* value_call = (value_type_call_t*)last_value;
+  return value_call->last_arg;
+}
+
+static inline void append_value_to_node(value_type_node_t* previous_sibling_node, value_type_node_t* new_value_node) {
+  previous_sibling_node->next = new_value_node;
+  new_value_node->prev = previous_sibling_node;
+}
+
+static void append_value_to_tree(value_type_node_t* value_node) {
   tag_prop_t* prop = get_prop_tag();
   if(prop->first_value == 0) {
     prop->first_value = value_node;
     prop->last_value = value_node;
+    prop->num_of_values++;
+  } else if(in_value_node()) {
+    value_type_call_t* last_call = (value_type_call_t*)prop->last_value;
+    if(last_call->first_arg == 0) {
+      last_call->first_arg = value_node;
+      last_call->last_arg = value_node;
+    } else {
+      append_value_to_node(last_call->last_arg, value_node);
+      last_call->last_arg = value_node;
+    }
+    last_call->num_of_args++;
+    // Only if this is a call itself, give it the parent and make it the last value
+    if(value_node->type == VALUE_TYPE_CALL) { // NEVER HAPPENS
+      ((value_type_call_t*)value_node)->parent = last_call;
+      prop->last_value = value_node;
+    }
   } else {
-    value_type_node_t* last_node = prop->last_value;
-    last_node->next = value_node;
-    value_node->prev = last_node;
+    append_value_to_node(prop->last_value, value_node);
     prop->last_value = value_node;
+    prop->num_of_values++;
   }
-  prop->num_of_values++;
 }
 
 static void replace_node(value_type_node_t* ref, value_type_node_t* new_last) {
   tag_prop_t* prop = get_prop_tag();
-  if(ref->prev == 0) {
-    prop->first_value = new_last;
-    prop->last_value = new_last;
-  } else {
+
+  // If this is not the first argument, just replace pointers
+  if(ref->prev != 0) {
     value_type_node_t* prev = ref->prev;
+
     prev->next = new_last;
     new_last->prev = prev;
-    if(ref == prop->last_value) {
+
+    if(new_last->type == VALUE_TYPE_CALL && prop->last_value->type == VALUE_TYPE_CALL) {
+      ((value_type_call_t*)new_last)->parent = (value_type_call_t*)prop->last_value;
+    }
+
+    if(ref == prop->last_value || new_last->type == VALUE_TYPE_CALL) {
+      prop->last_value = new_last;
+    }
+  } else {
+    if(in_value_node()) {
+      value_type_call_t* last_call = 0;
+      if(ref->type == VALUE_TYPE_CALL) {
+        last_call = ((value_type_call_t*)ref)->parent;
+      } else {
+        last_call = (value_type_call_t*)prop->last_value;
+      }
+      if(new_last->type == VALUE_TYPE_CALL) {
+        ((value_type_call_t*)new_last)->parent = last_call;
+        prop->last_value = new_last;
+      }
+      last_call->first_arg = new_last;
+      last_call->last_arg = new_last;
+    } else {
+      prop->first_value = new_last;
       prop->last_value = new_last;
     }
   }
@@ -276,7 +362,7 @@ static unsigned char parse_prop_start_mode() {
 
 static unsigned char parse_value_reset_mode() {
   char c = read_char();
-  if(identifierToken(c)) {
+  if(identifierToken(c) || c == '-') {
     value_type_identifier_t* value_id = malloc(sizeof(*value_id));
     value_type_node_t* node = (value_type_node_t*)value_id;
     node->type = VALUE_TYPE_IDENTIFIER;
@@ -284,7 +370,7 @@ static unsigned char parse_value_reset_mode() {
     node->prev = 0;
     value_id->start = parser_state->index;
 
-    add_value_to_prop(node);
+    append_value_to_tree(node);
     parser_state->mode = VALUE_START_MODE;
   } else if(c == '"') {
     value_type_string_t* value_string = malloc(sizeof(value_type_string_t));
@@ -294,37 +380,30 @@ static unsigned char parse_value_reset_mode() {
     node->prev = 0;
     value_string->start = parser_state->index + 1;
     parser_state->mode = VALUE_STRING_MODE;
-    add_value_to_prop(node);
+    append_value_to_tree(node);
     return TOKEN_CONSUMED;
   } else if(c == ';') {
     parser_state->mode = RULE_RESET_MODE;
     return TOKEN_EXIT;
   } else if(!whitespaceToken(c)) {
-    // ERROR
-    free_tag();
-    tag_error_t* err = malloc(sizeof(*err));
-    err->type = TAG_ERROR;
-    err->code = 2;
-    err->data = c;
-    parser_state->tag = err;
-    return TOKEN_EXIT;
+    return create_error_tag(2, c);
   }
   return TOKEN_CONSUMED;
 }
 
 static void parse_value_end() {
-  tag_prop_t* prop = (tag_prop_t*)parser_state->tag;
-  switch(prop->last_value->type) {
+  value_type_node_t* value_node = get_current_value();
+  switch(value_node->type) {
     case VALUE_TYPE_INSERTION: {
       break;
     }
     case VALUE_TYPE_STRING: {
-      value_type_string_t* value_str = (value_type_string_t*)prop->last_value;
+      value_type_string_t* value_str = (value_type_string_t*)value_node;
       value_str->end = parser_state->index;
       break;
     }
     case VALUE_TYPE_IDENTIFIER: {
-      value_type_identifier_t* value_id = (value_type_identifier_t*)prop->last_value;
+      value_type_identifier_t* value_id = (value_type_identifier_t*)value_node;
       value_id->end = parser_state->index;
       break;
     }
@@ -340,39 +419,22 @@ static unsigned char parse_value_start_mode() {
     parser_state->mode = RULE_RESET_MODE;
     return TOKEN_EXIT;
   } else if(c == '(') {
-    tag_prop_t* prop = get_prop_tag();
-    value_type_identifier_t* value_id = (value_type_identifier_t*)prop->last_value;
-    value_type_node_t* value_id_node = (value_type_node_t*)value_id;
-
-    // Create a call node
-    value_type_call_t* value_call = malloc(sizeof(value_type_call_t));
-    value_type_node_t* value_call_node = (value_type_node_t*)value_call;
-    value_call_node->next = 0;
-    value_call_node->prev = 0;
-    value_call->nameStart = value_id->start;
-    value_call->nameEnd = parser_state->index;
-
-    value_call->argStart = parser_state->index + 1;
-    value_call->argEnd = 0;
-    
-    value_call_node->type = VALUE_TYPE_CALL;
-    replace_node(value_id_node, value_call_node);
-
     parser_state->mode = CALL_RESET_MODE;
+    return TOKEN_NOTCONSUMED;
+  } else if((c == ',' || c == ')') && in_value_node()) {
+    parse_value_end();
+    parser_state->mode = CALL_START_MODE;
+    if(c == ')') {
+      return TOKEN_NOTCONSUMED;
+    }
   } else if(whitespaceToken(c)) {
     // This is a multi
     if(get_prop_tag()->last_value != 0) {
       parse_value_end();
     }
-    parser_state->mode = VALUE_RESET_MODE;
-  } else if(!identifierToken(c)) {
-    parser_state->mode = ERROR_MODE;
-    free_tag();
-    tag_error_t* err = malloc(sizeof(*err));
-    err->type = TAG_ERROR;
-    err->code = 1;
-    parser_state->tag = err;
-    return TOKEN_EXIT;
+    parser_state->mode = post_value_mode();
+  } else if(!identifierToken(c) && c != '-') {
+    return create_error_tag(1, c);
   }
 
   return TOKEN_CONSUMED;
@@ -381,19 +443,56 @@ static unsigned char parse_value_start_mode() {
 static unsigned char parse_string_mode() {
   char c = read_char();
   if(c == '"') {
-    parse_value_end();
-    parser_state->mode = VALUE_RESET_MODE;
+    // Ignore if escaped.
+    if(parser_state->index > 0 && read_char_at(parser_state->index-1) != '\\') {
+      parse_value_end();
+      parser_state->mode = post_value_mode();
+    }
   }
   return TOKEN_CONSUMED;
 }
 
 static unsigned char parse_call_reset_mode() {
   char c = read_char();
-  if(c == ')') {
-    tag_prop_t* prop = get_prop_tag();
-    value_type_call_t* value_call = (value_type_call_t*)prop->last_value;
+
+  if(c == '(') {
+    value_type_node_t* value_id_node = get_current_value();
+    value_type_identifier_t* value_id = (value_type_identifier_t*)value_id_node;
+
+    // Create a call node
+    value_type_call_t* value_call = malloc(sizeof(value_type_call_t));
     value_type_node_t* value_call_node = (value_type_node_t*)value_call;
-    long h = hash(value_call->nameStart, value_call->nameEnd);
+    value_call_node->next = 0;
+    value_call_node->prev = 0;
+    value_call->name_start = value_id->start;
+    value_call->name_end = parser_state->index;
+    value_call->num_of_args = 0;
+    value_call->first_arg = 0;
+    value_call->last_arg = 0;
+    value_call->parent = 0;
+    
+    value_call_node->type = VALUE_TYPE_CALL;
+    replace_node(value_id_node, value_call_node);
+
+    parser_state->mode = CALL_START_MODE;
+    parser_state->open_parens++;
+  } else if(callArgToken(c)) {
+    parser_state->mode = VALUE_RESET_MODE;
+    return TOKEN_NOTCONSUMED;
+  }
+  return TOKEN_CONSUMED;
+}
+
+static unsigned char parse_call_start_mode() {
+  char c = read_char();
+
+  if(c == ')') {
+    // Close out if inside another call, properly
+    value_type_node_t* value_call_node = get_prop_tag()->last_value;
+    value_type_call_t* value_call = (value_type_call_t*)value_call_node;
+    parser_state->closed_parens++;
+
+    long h = hash(value_call->name_start, value_call->name_end);
     if(h == INS_HASH) {
       value_type_ins_t* value_ins = malloc(sizeof(value_type_ins_t));
       value_type_node_t* value_ins_node = (value_type_node_t*)value_ins;
@@ -401,17 +500,22 @@ static unsigned char parse_call_reset_mode() {
       value_ins_node->prev = 0;
       value_ins_node->next = 0;
       value_ins->index = parser_state->hole_index++;
-      
-      tag_prop_t* prop = get_prop_tag();
       replace_node(value_call_node, value_ins_node);
 
       parser_state->mode = VALUE_START_MODE;
     } else {
-      value_type_call_t* value_call = (value_type_call_t*)prop->last_value;
-      value_call->argEnd = parser_state->index;
       parser_state->mode = VALUE_START_MODE;
     }
+
+    // If nested, promote the parent to be the new last tag.
+    if(value_call->parent != 0) {
+      get_prop_tag()->last_value = (value_type_node_t*)value_call->parent;
+    }
+  } else if(callArgToken(c)) {
+    parser_state->mode = VALUE_RESET_MODE;
+    return TOKEN_NOTCONSUMED;
   }
+  
   return TOKEN_CONSUMED;
 }
 
@@ -421,6 +525,9 @@ export void reset() {
   parser_state->index = 0;
   parser_state->mode = RESET_MODE;
   parser_state->hole_index = 0;
+  parser_state->last_non_whitespace = 0;
+  parser_state->open_parens = 0;
+  parser_state->closed_parens = 0;
   parser_state->tag = 0;
 
   // This sets the start of where tags should be created.
@@ -436,6 +543,7 @@ static int parse_next_token() {
     case VALUE_RESET_MODE: return parse_value_reset_mode();
     case VALUE_START_MODE: return parse_value_start_mode();
     case CALL_RESET_MODE: return parse_call_reset_mode();
+    case CALL_START_MODE: return parse_call_start_mode();
     case VALUE_STRING_MODE: return parse_string_mode();
   }
   return TOKEN_CONSUMED;
