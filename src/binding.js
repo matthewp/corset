@@ -49,6 +49,7 @@ export class Binding {
    */
   setValue(declaration, newValue) {
     if(this.currentValue !== newValue) {
+      this.currentValue = newValue;
       declaration.property.set(this.element, newValue, declaration.args);
       return declaration.property.invalidates;
     }

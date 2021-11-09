@@ -28,3 +28,33 @@ QUnit.test('Removes a class when false', assert => {
   sheet.update(root);
   assert.equal(root.firstElementChild.classList.contains('on'), false);
 });
+
+QUnit.test('Triggers update on dependent properties', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<article>Mode: <span id="mode">light</span></article>`;
+  let app = {
+    mode: 'light',
+    toggle() {
+      app.mode = app.mode === 'light' ? 'dark' : 'light';
+      app.update();
+    },
+    update() {
+      let sheet = dsl`
+        article {
+          class-toggle: "dark-mode" ${app.mode === 'dark'};
+        }
+
+        .dark-mode #mode {
+          text: "dark";
+        }
+      `;
+      sheet.update(root);
+    }
+  };
+
+  app.update();
+  assert.equal(root.querySelector('#mode').textContent, 'light');
+  app.mode = 'dark';
+  app.update();
+  assert.equal(root.querySelector('#mode').textContent, 'dark');
+})

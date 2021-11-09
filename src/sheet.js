@@ -61,12 +61,14 @@ class Root {
    * @returns {Boolean}
    */
   updateBindings(values) {
+    let invalid = false;
     for(let [, propertyBindingMap] of this.bindingMap) {
       for(let [,binding] of propertyBindingMap) {
-        binding.set(values);
+        if(binding.set(values))
+          invalid = true;
       }
     }
-    return false; // TODO change this
+    return invalid;
   }
 }
 
