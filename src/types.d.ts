@@ -1,8 +1,9 @@
+import type { Binding } from './binding.js';
 
 export interface ValueType {
   new(...args: Value[]): Value;
 }
 
 export interface Value {
-  get(element?: Element, values?: any[]): any;
+  get(Binding?: binding, values?: any[]): any;
 }

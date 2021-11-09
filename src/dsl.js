@@ -13,12 +13,13 @@ import { Declaration } from './declaration.js';
 import {
   ClassToggleProperty,
   CustomProperty,
+  EachProperty,
   EventProperty,
   TextProperty
 } from './property.js';
 import { Rule } from './rule.js';
 import { BindingSheet, SheetWithValues } from './sheet.js';
-import { AnyValue, GetValue, InsertionValue, VarValue } from './value.js';
+import { AnyValue, SelectValue, GetValue, InsertionValue, VarValue } from './value.js';
 
 /** @typedef {import('./types').ValueType} ValueType */
 /** @typedef {import('./types').Value} Value */
@@ -27,7 +28,8 @@ import { AnyValue, GetValue, InsertionValue, VarValue } from './value.js';
 // @ts-ignore -- Not sure why this is not working
 const fnMap = new Map([
   ['var', VarValue],
-  ['get', GetValue]
+  ['get', GetValue],
+  ['select', SelectValue]
   //['ins', InsertionValue]
 ]);
 
@@ -103,6 +105,17 @@ function compile(strings, values) {
             let ptr = readFirstValuePointer();
             let value = getValue(ptr);
             rule.addDeclaration(new Declaration(rule, TextProperty, value));
+            break;
+          }
+          case 'each': {
+            expectValues(propName, 3);
+            let ptr = readFirstValuePointer();
+            let args = [];
+            while(ptr) {
+              args.push(getValue(ptr));
+              ptr = mem32[(ptr >> 2) + 1];
+            }
+            rule.addDeclaration(new Declaration(rule, EachProperty, ...args));
             break;
           }
           case 'event': {

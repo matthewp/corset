@@ -5,10 +5,13 @@
 export class Binding {
   /**
    * @param {Element} element
+   * @param {Element} rootElement
    */
-  constructor(element) {
+  constructor(element, rootElement) {
     /** @type {Element} */
     this.element = element;
+    /** @type {Element} */
+    this.rootElement = rootElement;
     /** @type {Declaration[]} */
     this.declarations = [];
     /** @type {any} */
@@ -35,7 +38,7 @@ export class Binding {
       i--;
       declaration = declarations[i];
       if(element.matches(declaration.rule.selector)) {
-        let newValue = declaration.property.getValue(element, values, declaration.args);
+        let newValue = declaration.property.getValue(this, values, declaration.args);
         return this.setValue(declaration, newValue);
       }
     }
@@ -50,7 +53,7 @@ export class Binding {
   setValue(declaration, newValue) {
     if(this.currentValue !== newValue) {
       this.currentValue = newValue;
-      declaration.property.set(this.element, newValue, declaration.args);
+      declaration.property.set(this, newValue, declaration.args);
       return declaration.property.invalidates;
     }
     return false;
