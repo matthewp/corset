@@ -80,7 +80,7 @@
       app.update();
     },
     update() {
-      let template = dsl`
+      let sheet = dsl`
         .mode-toggle {
           event: click ${app.toggle};
         }
@@ -93,7 +93,7 @@
           text: ${app.mode};
         }
       `;
-      template.update(document.body);
+      sheet.update(document.body);
     }
   };
 
