@@ -1,7 +1,8 @@
-/** @typedef {import('./types').ValueType} ValueType */
-/** @typedef {ValueType} Value */
+// @ts-check
 
-/** @implements {ValueType} */
+/** @typedef {import('./types').Value} Value */
+
+/** @implements {Value} */
 export class AnyValue {
   constructor(value) {
     this.value = value;
@@ -11,7 +12,7 @@ export class AnyValue {
   }
 }
 
-/** @implements {ValueType} */
+/** @implements {Value} */
 export class InsertionValue {
   constructor(index) {
     this.index = index;
@@ -22,11 +23,11 @@ export class InsertionValue {
   }
 }
 
-/** @implements {ValueType} */
+/** @implements {Value} */
 export class VarValue {
-  constructor(propName) {
-    this.propName = propName;
-    this.dataPropName = 'data-dsl-prop' + propName.substr(1);
+  constructor(propValue) {
+    this.propName = propValue.get();
+    this.dataPropName = 'data-dsl-prop-' + this.propName.substr(2);
     this.dataSelector = '[' + this.dataPropName + ']';
   }
   get(element) {
@@ -37,5 +38,26 @@ export class VarValue {
       }
       el = element.closest(this.dataSelector);
     } while(el);
+  }
+}
+
+/** @implements {Value} */
+export class GetValue {
+  constructor(objValue, propValue) {
+    if(!propValue) {
+      propValue = objValue;
+      objValue = new VarValue(new AnyValue('--scope'));
+    }
+    this.objValue = objValue;
+    this.propValue = propValue;
+  }
+  get(element, values) {
+    let obj = this.objValue.get(element, values);
+    let prop = this.propValue.get(element, values);
+    if(typeof prop === 'function') {
+      return prop(obj);
+    } else {
+      return obj[prop];
+    }
   }
 }
