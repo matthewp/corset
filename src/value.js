@@ -1,5 +1,6 @@
 // @ts-check
 
+/** @typedef {import('./binding').Binding} Binding */
 /** @typedef {import('./types').Value} Value */
 
 /** @implements {Value} */
@@ -30,13 +31,14 @@ export class VarValue {
     this.dataPropName = 'data-dsl-prop-' + this.propName.substr(2);
     this.dataSelector = '[' + this.dataPropName + ']';
   }
-  get(element) {
-    let el = element;
+  /** @param {Binding} binding */
+  get(binding) {
+    let el = binding.element;
     do {
       if(el.hasAttribute(this.dataPropName)) {
         return el[Symbol.for(this.propName)];
       }
-      el = element.closest(this.dataSelector);
+      el = binding.element.closest(this.dataSelector);
     } while(el);
   }
 }
@@ -48,16 +50,33 @@ export class GetValue {
       propValue = objValue;
       objValue = new VarValue(new AnyValue('--scope'));
     }
+    /** @type {Value} */
     this.objValue = objValue;
+    /** @type {Value} */
     this.propValue = propValue;
   }
-  get(element, values) {
-    let obj = this.objValue.get(element, values);
-    let prop = this.propValue.get(element, values);
+  /**
+   * @param {Binding} binding 
+   * @param {any[]} values
+   */
+  get(binding, values) {
+    let obj = this.objValue.get(binding, values);
+    let prop = this.propValue.get(binding, values);
     if(typeof prop === 'function') {
       return prop(obj);
     } else {
       return obj[prop];
     }
+  }
+}
+
+/** @implements {Value} */
+export class SelectValue {
+  constructor(selectorValue) {
+    this.selector = selectorValue.get();
+  }
+  /** @param {Binding} binding */
+  get(binding) {
+    return binding.rootElement.querySelector(this.selector);
   }
 }

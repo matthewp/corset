@@ -1,14 +1,17 @@
 // @ts-check
+export { EachProperty } from './each.js';
 
+/** @typedef {import('./binding').Binding} Binding */
 /** @typedef {import('./value').Value} Value */
 
 /**
  * @typedef {Object} Property
  * @property {string} name
  * @property {Boolean} invalidates
+ * @property {Boolean} [needsUpdate]
  * @property {(element: Element, args: Value[]) => any} read
- * @property {(element: Element, value: any, args: Value[]) => void} set
- * @property {(element: Element, values: any[], args: Value[]) => any} getValue
+ * @property {(binding: Binding, value: any, args: Value[]) => (void | boolean)} set
+ * @property {(binding: Binding, values: any[], args: Value[]) => any} getValue
  */
 
 /** @type {Property} */
@@ -21,8 +24,8 @@ export const TextProperty = {
   getValue(element, values, args) {
     return args[0].get(element, values);
   },
-  set(element, text, _args) {
-    element.textContent = text;
+  set(binding, text, _args) {
+    binding.element.textContent = text;
   }
 };
 
@@ -36,9 +39,9 @@ export const ClassToggleProperty = {
   getValue(element, values, args) {
     return args[1].get(element, values);
   },
-  set(element, cond, args) {
+  set(binding, cond, args) {
     let className = args[0].get();
-    element.classList[cond ? 'add' : 'remove'](className);
+    binding.element.classList[cond ? 'add' : 'remove'](className);
   }
 };
 
@@ -52,9 +55,9 @@ export const EventProperty = {
   getValue(element, values, args) {
     return args[1].get(element, values);
   },
-  set(element, callback, args) {
+  set(binding, callback, args) {
     let eventName = args[0].get();
-    element.addEventListener(eventName, callback);
+    binding.element.addEventListener(eventName, callback);
   }
 };
 
@@ -68,7 +71,8 @@ export const CustomProperty = {
   getValue(element, values, args) {
     return args[1].get(element, values);
   },
-  set(element, value, args) {
+  set(binding, value, args) {
+    let element = binding.element;
     let varName = args[0].get();
     let name = varName.replace(/-?-([a-zA-Z])/, (_whole, letter) => {
       return letter.toUpperCase();
@@ -79,4 +83,4 @@ export const CustomProperty = {
     element.dataset['dslProp' + name] = '';
     element[Symbol.for(varName)] = value;
   }
-}
+};

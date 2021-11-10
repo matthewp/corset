@@ -167,7 +167,7 @@ static char whitespaceToken(char c) {
 }
 
 static char callArgToken(char c) { 
-  return identifierToken(c) || c == '"' || c == '-';
+  return selectorToken(c) || c == '"' || c == '-';
 }
 
 /*
@@ -362,7 +362,7 @@ static unsigned char parse_prop_start_mode() {
 
 static unsigned char parse_value_reset_mode() {
   char c = read_char();
-  if(identifierToken(c) || c == '-') {
+  if(selectorToken(c) || c == '-') {
     value_type_identifier_t* value_id = malloc(sizeof(*value_id));
     value_type_node_t* node = (value_type_node_t*)value_id;
     node->type = VALUE_TYPE_IDENTIFIER;

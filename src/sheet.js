@@ -48,7 +48,7 @@ class Root {
           if(map.has(propertyName)) {
             binding = map.get(propertyName);
           } else {
-            binding = new Binding(el);
+            binding = new Binding(el, this.rootElement);
             map.set(propertyName, binding);
           }
           binding.addDeclaration(declaration);
