@@ -18,12 +18,11 @@ class EachInstance {
     /** @type {string} */
     this.scopeName = scopeName;
   }
-  /*update(values, parentData) {
-    if(!super.update(values, parentData)) {
-      this.updateValues(values, parentData);
-    }
-  }*/
-  set(values, parentData) {
+  /**
+   * 
+   * @param {any[]} values
+   */
+  set(values) {
     if(!this.start) {
       let doc = this.host.ownerDocument;
       this.key = this.key ? this.keyKeyed : this.keyNonKeyed;
@@ -36,7 +35,7 @@ class EachInstance {
       this.keys = [];
       this.keyMap = new Map();
     }
-    this.updateValues(values, parentData);
+    return this.updateValues(values);
   }
   setData(frag, value) {
     let prop = this.scopeName.substr(2);
@@ -46,7 +45,7 @@ class EachInstance {
       element[Symbol.for(this.scopeName)] = value;
     }
   }
-  render(index, value, parentData) {
+  render(index, value) {
     let frag = this.host.ownerDocument.importNode(this.template.content, true);
     frag.nodes = Array.from(frag.childNodes);
     frag.item = value;
@@ -84,13 +83,18 @@ class EachInstance {
       node = next;
     }
   }
-  updateFrag(frag, index, value, parentData) {
+  updateFrag(frag, index, value) {
     if(frag.item !== value) {
       this.setData(frag, value);
     }
     return frag;
   }
-  updateValues(values = [], parentData) {
+  /**
+   * 
+   * @param {any[]} values
+   */
+  updateValues(values = []) {
+    let invalid = false;
     let oldFrags = this.frags,
     newFrags = [],
     oldKeys = this.keys;
@@ -115,23 +119,23 @@ class EachInstance {
         oldTail--;
       } else if(oldKeys[oldHead] === newKeys[newHead]) {
         newFrags[newHead] =
-          this.updateFrag(oldFrags[oldHead], newHead, values[newHead], parentData);
+          this.updateFrag(oldFrags[oldHead], newHead, values[newHead]);
         oldHead++;
         newHead++;
       } else if(oldKeys[oldTail] === newKeys[newTail]) {
         newFrags[newTail] =
-          this.updateFrag(oldFrags[oldTail], newHead, values[newTail], parentData);
+          this.updateFrag(oldFrags[oldTail], newHead, values[newTail]);
         oldTail--;
         newTail--;
       } else if(oldKeys[oldHead] === newKeys[newTail]) {
         newFrags[newTail] =
-          this.updateFrag(oldFrags[oldHead], newHead, values[newTail], parentData);
+          this.updateFrag(oldFrags[oldHead], newHead, values[newTail]);
         this.before(oldFrags[oldHead], newFrags[newTail + 1]);
         oldHead++;
         newTail--;
       } else if(oldKeys[oldTail] === newKeys[newHead]) {
         newFrags[newHead] =
-          this.updateFrag(oldFrags[oldTail], newHead, values[newHead], parentData);
+          this.updateFrag(oldFrags[oldTail], newHead, values[newHead]);
         this.before(oldFrags[oldTail], oldFrags[oldHead]);
         oldTail--;
         newHead++;
@@ -146,10 +150,10 @@ class EachInstance {
           let value = values[newHead];
           let frag = this.keyMap.get(this.key(value, newHead));
           if(frag === undefined) {
-            frag = this.render(newHead, value, parentData);
+            frag = this.render(newHead, value);
             this.keyMap.set(this.key(value, newHead), frag);
           } else {
-            frag = this.updateFrag(frag, newHead, value, parentData);
+            frag = this.updateFrag(frag, newHead, value);
             oldFrags[oldFrags.indexOf(frag)] = null;
           }
           newFrags[newHead] = frag;
@@ -160,10 +164,11 @@ class EachInstance {
     }
 
     while(newHead <= newTail) {
-      let frag = this.render(newHead, values[newHead], parentData);
+      let frag = this.render(newHead, values[newHead]);
       this.keyMap.set(this.key(frag.item, newHead), frag);
       this.append(frag, newFrags[newHead - 1]);
       newFrags[newHead++] = frag;
+      invalid = true;
     }
 
     while(oldHead <= oldTail) {
@@ -171,10 +176,12 @@ class EachInstance {
       this.keyMap.delete(this.key(frag.item, oldHead));
       oldHead++;
       this.remove(frag);
+      invalid = true;
     }
 
     this.keys = newKeys;
     this.frags = newFrags;
+    return invalid;
   }
 }
 
@@ -192,6 +199,7 @@ const instances = new WeakMap();
 export const EachProperty = {
   name: 'each',
   invalidates: false,
+  needsUpdate: true,
   read() {
     return null;
   },
@@ -211,7 +219,8 @@ export const EachProperty = {
   },
   /**
    * @param {Binding} binding 
-   * @param {EachDeps} deps 
+   * @param {EachDeps} deps
+   * @returns {boolean}
    */
   set(binding, {items, template, scopeName}) {
     /** @type {EachInstance} */
@@ -224,6 +233,6 @@ export const EachProperty = {
       inst = new EachInstance(binding.element, template, '', scopeName);
       instances.set(binding.element, inst);
     }
-    inst.set(items);
+    return inst.set(items);
   }
 };

@@ -8,8 +8,9 @@ export { EachProperty } from './each.js';
  * @typedef {Object} Property
  * @property {string} name
  * @property {Boolean} invalidates
+ * @property {Boolean} [needsUpdate]
  * @property {(element: Element, args: Value[]) => any} read
- * @property {(binding: Binding, value: any, args: Value[]) => void} set
+ * @property {(binding: Binding, value: any, args: Value[]) => (void | boolean)} set
  * @property {(binding: Binding, values: any[], args: Value[]) => any} getValue
  */
 

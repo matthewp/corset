@@ -2,7 +2,7 @@ import dsl from '../src/dsl.js';
 
 QUnit.module('Property - each');
 
-QUnit.only('Short form', assert => {
+QUnit.test('Short form', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<ul></ul><template id="todos-template"><li><span class="label"></span></li></template>`;
 

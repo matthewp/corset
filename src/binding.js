@@ -51,10 +51,10 @@ export class Binding {
    * @returns {Boolean}
    */
   setValue(declaration, newValue) {
-    if(this.currentValue !== newValue) {
+    if(this.currentValue !== newValue || declaration.property.needsUpdate) {
       this.currentValue = newValue;
-      declaration.property.set(this, newValue, declaration.args);
-      return declaration.property.invalidates;
+      return declaration.property.set(this, newValue, declaration.args)
+        || declaration.property.invalidates;
     }
     return false;
   }
