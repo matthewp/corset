@@ -520,7 +520,16 @@ static unsigned char parse_call_start_mode() {
 }
 
 export void reset() {
-  bump_pointer = (unsigned int)&__heap_base; // free()
+  int base_pointer = (unsigned int)&__heap_base;
+  // TODO create and use a memset
+  if(bump_pointer) {
+    int len = bump_pointer - base_pointer;
+    int* s = (int*)base_pointer;
+    for(; len; len--, s++) *s = 0;
+  }
+
+  bump_pointer = base_pointer; // free()
+
   parser_state = malloc(sizeof(parser_state_t));
   parser_state->index = 0;
   parser_state->mode = RESET_MODE;

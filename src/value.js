@@ -1,10 +1,14 @@
 // @ts-check
 
-/** @typedef {import('./binding').Binding} Binding */
-/** @typedef {import('./types').Value} Value */
+/**
+ * @typedef {import('./types').Value} Value
+ */
 
 /** @implements {Value} */
 export class AnyValue {
+  /**
+   * @param {any} value 
+   */
   constructor(value) {
     this.value = value;
   }
@@ -19,27 +23,37 @@ export class InsertionValue {
     this.index = index;
   }
 
-  get(_, values) {
+  get(_, __, values) {
     return values[this.index];
   }
 }
 
 /** @implements {Value} */
 export class VarValue {
-  constructor(propValue) {
+  constructor(propValue, fallbackValue) {
     this.propName = propValue.get();
     this.dataPropName = 'data-dsl-prop-' + this.propName.substr(2);
     this.dataSelector = '[' + this.dataPropName + ']';
+    /** @type {Value} */
+    this.fallbackValue = fallbackValue || null;
   }
-  /** @param {Binding} binding */
-  get(binding) {
-    let el = binding.element;
+  /**
+   * @param {Element} rootElement
+   * @param {Element} element
+   * @param {any[]} values
+   */
+  get(rootElement, element, values) {
+    let el = element;
     do {
       if(el.hasAttribute(this.dataPropName)) {
         return el[Symbol.for(this.propName)];
       }
-      el = binding.element.closest(this.dataSelector);
+      el = element.closest(this.dataSelector);
     } while(el);
+    
+    if(this.fallbackValue !== null) {
+      return this.fallbackValue.get(rootElement, element, values);
+    }
   }
 }
 
@@ -56,12 +70,13 @@ export class GetValue {
     this.propValue = propValue;
   }
   /**
-   * @param {Binding} binding 
+   * @param {Element} rootElement
+   * @param {Element} element 
    * @param {any[]} values
    */
-  get(binding, values) {
-    let obj = this.objValue.get(binding, values);
-    let prop = this.propValue.get(binding, values);
+  get(rootElement, element, values) {
+    let obj = this.objValue.get(rootElement, element, values);
+    let prop = this.propValue.get(rootElement, element, values);
     if(typeof prop === 'function') {
       return prop(obj);
     } else {
@@ -75,8 +90,10 @@ export class SelectValue {
   constructor(selectorValue) {
     this.selector = selectorValue.get();
   }
-  /** @param {Binding} binding */
-  get(binding) {
-    return binding.rootElement.querySelector(this.selector);
+  /**
+   * @param {Element} rootElement
+   */
+  get(rootElement) {
+    return rootElement.querySelector(this.selector);
   }
 }

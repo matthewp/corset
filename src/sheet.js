@@ -1,9 +1,9 @@
 // @ts-check
-import { Binding } from './binding.js';
+import { Bindings } from './bindings.js';
+import { renderRoot } from './render.js';
 
 /**
  * @typedef {import('./rule').Rule} Rule
- * @typedef {Map<string, Binding>} PropertyBindingMap
  */
 
 class Root {
@@ -16,7 +16,7 @@ class Root {
     this.rootElement = rootElement;
     /** @type {Rule[]} */
     this.rules = sheet.rules;
-    /** @type {Map<Element, PropertyBindingMap>} */
+    /** @type {Map<Element, Bindings>} */
     this.bindingMap = new Map();
   }
   /**
@@ -25,50 +25,31 @@ class Root {
   update(values) {
     let invalid = true;
     while(invalid) {
-      this.collectBindings();
-      invalid = this.updateBindings(values);
-    }
-  }
-  collectBindings() {
-    let rootElement = this.rootElement;
-    for(let rule of this.rules) {
-      for(let el of rootElement.querySelectorAll(rule.selector)) {
-        /** @type {PropertyBindingMap} */
-        let map;
-        if(this.bindingMap.has(el)) {
-          map = this.bindingMap.get(el);
-        } else {
-          map = new Map();
-          this.bindingMap.set(el, map);
-        }
-
-        for(let [propertyName, declaration] of rule.declarations) {
-          /** @type {Binding} */
-          let binding;
-          if(map.has(propertyName)) {
-            binding = map.get(propertyName);
-          } else {
-            binding = new Binding(el, this.rootElement);
-            map.set(propertyName, binding);
-          }
-          binding.addDeclaration(declaration);
-        }
-      }
+      this.collect(values);
+      invalid = renderRoot(this.bindingMap, values);
     }
   }
   /**
-   * @param {any[]} values
-   * @returns {Boolean}
+   * 
+   * @param {any[]} values 
    */
-  updateBindings(values) {
-    let invalid = false;
-    for(let [, propertyBindingMap] of this.bindingMap) {
-      for(let [,binding] of propertyBindingMap) {
-        if(binding.set(values))
-          invalid = true;
+  collect(values) {
+    let rootElement = this.rootElement;
+    for(let rule of this.rules) {
+      for(let el of rootElement.querySelectorAll(rule.selector)) {
+        /** @type {Bindings} */
+        let bindings;
+        if(this.bindingMap.has(el)) {
+          bindings = this.bindingMap.get(el);
+        } else {
+          bindings = new Bindings(rootElement, el);
+          this.bindingMap.set(el, bindings);
+        }
+        for(let [propertyName, declaration] of rule.declarations) {
+          bindings.add(propertyName, declaration, values);
+        }
       }
     }
-    return invalid;
   }
 }
 

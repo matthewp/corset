@@ -1,7 +1,8 @@
 // @ts-check
 
-/** @typedef {import('./property').Property} Property */
-/** @typedef {import('./declaration').Declaration} Declaration */
+/**
+ * @typedef {import('./declaration').Declaration} Declaration
+ */
 
 export class Rule {
   /**
@@ -16,7 +17,7 @@ export class Rule {
 
   /** @param {Declaration} declaration */
   addDeclaration(declaration) {
-    let name = declaration.property.name;
+    let name = declaration.propertyName;
     this.declarations.set(name, declaration);
   }
 }

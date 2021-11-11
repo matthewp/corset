@@ -1,7 +1,10 @@
-/** @typedef {import('./binding').Binding} Binding */
-/** @typedef {import('./property').Property} Property */
+// @ts-check
 
-class EachInstance {
+/**
+ * @typedef {DocumentFragment & { nodes?: Array<ChildNode>; item?: any }} EachFragment
+ */
+
+export class EachInstance {
   /**
    * @param {Element} host 
    * @param {HTMLTemplateElement} template
@@ -17,6 +20,8 @@ class EachInstance {
     this.key = key;
     /** @type {string} */
     this.scopeName = scopeName;
+    /** @type {typeof this.keyNonKeyed} */
+    this.keyFn = null;
   }
   /**
    * 
@@ -25,9 +30,9 @@ class EachInstance {
   set(values) {
     if(!this.start) {
       let doc = this.host.ownerDocument;
-      this.key = this.key ? this.keyKeyed : this.keyNonKeyed;
-      this.start = doc.createComment(`each(${this.prop})`);
-      this.end = doc.createComment(`end each(${this.prop})`);
+      this.keyFn = this.key ? this.keyKeyed : this.keyNonKeyed;
+      this.start = doc.createComment(`each(items)`);
+      this.end = doc.createComment(`end each(items)`);
       //this.node.replaceWith(this.start);
       this.host.append(this.start);
       this.start.after(this.end);
@@ -46,17 +51,24 @@ class EachInstance {
     }
   }
   render(index, value) {
+    /** @type {EachFragment} */
     let frag = this.host.ownerDocument.importNode(this.template.content, true);
     frag.nodes = Array.from(frag.childNodes);
     frag.item = value;
     this.setData(frag, value);
     return frag;
   }
+  /**
+   * 
+   * @param {any} _ 
+   * @param {number} index 
+   * @returns 
+   */
   keyNonKeyed(_, index) {
     return index;
   }
   keyKeyed(value) {
-    return value[this.args.key];
+    return value[this.key];
   }
   refrag(frag) {
     if(!frag.firstChild && frag.nodes)
@@ -102,7 +114,7 @@ class EachInstance {
     let expectedMap = new Map();
     let newKeys = [];
     for(let i = 0, len = values.length; i < len; i++) {
-      let key = this.key(values[i], i);
+      let key = this.keyFn(values[i], i);
       expectedMap.set(key, values[i]);
       newKeys[i] = key;
     }
@@ -148,10 +160,10 @@ class EachInstance {
           oldTail--;
         } else {
           let value = values[newHead];
-          let frag = this.keyMap.get(this.key(value, newHead));
+          let frag = this.keyMap.get(this.keyFn(value, newHead));
           if(frag === undefined) {
             frag = this.render(newHead, value);
-            this.keyMap.set(this.key(value, newHead), frag);
+            this.keyMap.set(this.keyFn(value, newHead), frag);
           } else {
             frag = this.updateFrag(frag, newHead, value);
             oldFrags[oldFrags.indexOf(frag)] = null;
@@ -165,7 +177,7 @@ class EachInstance {
 
     while(newHead <= newTail) {
       let frag = this.render(newHead, values[newHead]);
-      this.keyMap.set(this.key(frag.item, newHead), frag);
+      this.keyMap.set(this.keyFn(frag.item, newHead), frag);
       this.append(frag, newFrags[newHead - 1]);
       newFrags[newHead++] = frag;
       invalid = true;
@@ -173,7 +185,7 @@ class EachInstance {
 
     while(oldHead <= oldTail) {
       let frag = oldFrags[oldHead];
-      this.keyMap.delete(this.key(frag.item, oldHead));
+      this.keyMap.delete(this.keyFn(frag.item, oldHead));
       oldHead++;
       this.remove(frag);
       invalid = true;
@@ -184,55 +196,3 @@ class EachInstance {
     return invalid;
   }
 }
-
-/** @type {Map<Element, EachInstance>} */
-const instances = new WeakMap();
-
-/**
- * @typedef {Object} EachDeps
- * @property {any[]} items
- * @property {HTMLTemplateElement} template
- * @property {string} scopeName
- */
-
-/** @type {Property} */
-export const EachProperty = {
-  name: 'each',
-  invalidates: false,
-  needsUpdate: true,
-  read() {
-    return null;
-  },
-  /**
-   * 
-   * @param {Binding} binding 
-   * @param {any[]} values 
-   * @param {Value[]} args 
-   * @returns {EachDeps}
-   */
-  getValue(binding, values, args) {
-    return {
-      items: args[0].get(binding, values),
-      template: args[1].get(binding, values),
-      scopeName: args[2].get(binding, values)
-    };
-  },
-  /**
-   * @param {Binding} binding 
-   * @param {EachDeps} deps
-   * @returns {boolean}
-   */
-  set(binding, {items, template, scopeName}) {
-    /** @type {EachInstance} */
-    let inst;
-    if(instances.has(binding.element)) {
-      inst = instances.get(binding.element);
-    }
-    
-    if(!inst || inst.template !== template || inst.scopeName !== scopeName) {
-      inst = new EachInstance(binding.element, template, '', scopeName);
-      instances.set(binding.element, inst);
-    }
-    return inst.set(items);
-  }
-};
