@@ -10,13 +10,6 @@ import {
   readString
 } from './parser.js';
 import { Declaration } from './declaration.js';
-import {
-  ClassToggleProperty,
-  CustomProperty,
-  EachProperty,
-  EventProperty,
-  TextProperty
-} from './property.js';
 import { Rule } from './rule.js';
 import { BindingSheet, SheetWithValues } from './sheet.js';
 import { AnyValue, SelectValue, GetValue, InsertionValue, VarValue } from './value.js';
@@ -104,7 +97,7 @@ function compile(strings, values) {
             expectValues(propName, 1);
             let ptr = readFirstValuePointer();
             let value = getValue(ptr);
-            rule.addDeclaration(new Declaration(rule, TextProperty, value));
+            rule.addDeclaration(new Declaration(rule, 'text', value));
             break;
           }
           case 'each': {
@@ -115,7 +108,9 @@ function compile(strings, values) {
               args.push(getValue(ptr));
               ptr = mem32[(ptr >> 2) + 1];
             }
-            rule.addDeclaration(new Declaration(rule, EachProperty, ...args));
+            rule.addDeclaration(new Declaration(rule, 'each-items', args[0]));
+            rule.addDeclaration(new Declaration(rule, 'each-template', args[1]));
+            rule.addDeclaration(new Declaration(rule, 'each-scope', args[2]));
             break;
           }
           case 'event': {
@@ -125,7 +120,7 @@ function compile(strings, values) {
             while(values > 0) {
               let evValue = getValue(ptr);
               let cbValue = getValue(mem32[(ptr >> 2) + 1]);
-              rule.addDeclaration(new Declaration(rule, EventProperty, evValue, cbValue));
+              rule.addDeclaration(new Declaration(rule, 'event', evValue, cbValue));
               values -= 2;
             }
             break;
@@ -137,7 +132,7 @@ function compile(strings, values) {
             while(values > 0) {
               let classNameValue = getValue(ptr);
               let condValue = getValue(mem32[(ptr >> 2) + 1]);
-              rule.addDeclaration(new Declaration(rule, ClassToggleProperty, classNameValue, condValue));
+              rule.addDeclaration(new Declaration(rule, 'class-toggle', classNameValue, condValue));
               values -= 2;
             }
             break;
@@ -148,27 +143,44 @@ function compile(strings, values) {
               let values = readNumberOfValues();
               let ptr = readFirstValuePointer();
               /** @type {Value[]} */
-              let args = [new AnyValue(prop)];
+              let args = [];
               while(values > 0) {
                 let value = getValue(ptr);
                 args.push(value);
                 values--;
               }
-              rule.addDeclaration(new Declaration(rule, CustomProperty, ...args));
+              rule.addDeclaration(new Declaration(rule, prop, ...args));
             } else {
-              throw new Error(`Unknown property: ${prop}`);
+              let ptr = readFirstValuePointer();
+              let args = [];
+              while(ptr) {
+                args.push(getValue(ptr));
+                ptr = mem32[(ptr >> 2) + 1];
+              }
+              rule.addDeclaration(new Declaration(rule, prop, ...args));
             }
           }
         }
         break;
       }
+      // TODO remove in build
       case 4: {
         let code = heap32[1];
         switch(code) {
           case 1:
           case 2: {
             let charCode = heap32[2];
-            throw new SyntaxError(`Unexpected token "${String.fromCharCode(charCode)}" found. Error code ${code}.`);
+            switch(charCode) {
+              // '
+              case 39: {
+                throw new SyntaxError("Saw the a single quote character ('). Use double quotes (\") for strings.")
+                break;
+              }
+              default: {
+                throw new SyntaxError(`Unexpected token "${String.fromCharCode(charCode)}" found. Error code ${code}.`);
+              }
+            }
+            
           }
           default: {
             throw new Error(`Unknown Parse error occurred. Error code [${code}]`);

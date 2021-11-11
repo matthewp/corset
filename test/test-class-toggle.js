@@ -18,6 +18,9 @@ QUnit.test('Adds a class when true', assert => {
   assert.equal(root.firstElementChild.classList.contains('on'), true);
   template(false).update(root);
   assert.equal(root.firstElementChild.classList.contains('on'), false);
+  // Try false again
+  template(false).update(root);
+  assert.equal(root.firstElementChild.classList.contains('on'), false);
 });
 
 QUnit.test('Removes a class when false', assert => {
@@ -57,4 +60,29 @@ QUnit.test('Triggers update on dependent properties', assert => {
   app.mode = 'dark';
   app.update();
   assert.equal(root.querySelector('#mode').textContent, 'dark');
-})
+});
+
+QUnit.test('Restores the original value', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app"><span class="yes"></span></div>`;
+
+  function template(value) {
+    return dsl`
+      #app {
+        class-toggle: on ${value};
+      }
+
+      #app.on span {
+        class-toggle: yes ${false};
+      }
+    `;
+  }
+
+  let span = root.querySelector('span');
+  template(true).update(root);
+  assert.equal(span.classList.contains('yes'), false);
+  template(false).update(root);
+  assert.equal(span.classList.contains('yes'), true);
+});
+
+QUnit.skip('Setting multiple classes');

@@ -6,13 +6,14 @@ export class Declaration {
   /**
    * @param {Rule} rule
    * @param {Property} property
+   * @param {string} propertyName
    * @param {Value[]} args
    */
-  constructor(rule, property, ...args) {
+  constructor(rule, propertyName, ...args) {
     /** @type {Rule} */
     this.rule = rule;
-    /** @type {Property} */
-    this.property = property;
+    /** @type {string} */
+    this.propertyName = propertyName;
     /** @type {Value[]} */
     this.args = args;
   }
