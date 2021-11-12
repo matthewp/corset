@@ -2,6 +2,7 @@
 
 import { flags } from './bindings.js';
 import { EachInstance } from './each.js';
+import { NO_VALUE } from './compute.js';
 
 /**
  * @typedef {import('./bindings').Bindings} Bindings
@@ -91,7 +92,10 @@ function render(element, bindings, values) {
 
   // Events last, does not affect the cascade.
   if(bindings.flags & flags.event && bindings.event.dirty(values)) {
-    // TODO unbind if necessary
+    const lastValue = bindings.event.lastValue;
+    if(lastValue !== NO_VALUE) {
+      element.removeEventListener(lastValue[0], lastValue[1]);
+    }
     element.addEventListener(bindings.event.item(0), bindings.event.item(1));
   }
 

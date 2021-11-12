@@ -1,7 +1,11 @@
 // @ts-check
 
 /**
- * @typedef {DocumentFragment & { nodes?: Array<ChildNode>; item?: any }} EachFragment
+ * @typedef {object} FragData
+ * @property {any} item
+ * @property {number} index
+ * 
+ * @typedef {DocumentFragment & { nodes?: Array<ChildNode>; data?: FragData }} EachFragment
  */
 
 /**
@@ -33,7 +37,7 @@ export class EachInstance {
     this.scopeName = scopeName;
     /** @type {string} */
     this.indexName = indexName;
-    /** @type {typeof this.keyNonKeyed} */
+    /** @type {(item: any, index: number) => any} */
     this.keyFn = null;
   }
   /**
@@ -49,27 +53,41 @@ export class EachInstance {
       //this.node.replaceWith(this.start);
       this.host.append(this.start);
       this.start.after(this.end);
+      /** @type {EachFragment[]} */
       this.frags = [];
+      /** @type {any[]} */
       this.keys = [];
+      /** @type {Map<any, EachFragment>} */
       this.keyMap = new Map();
     }
     return this.updateValues(values);
   }
+  /**
+   * 
+   * @param {EachFragment} frag 
+   * @param {*} value 
+   * @param {*} index 
+   */
   setData(frag, value, index) {
     let scopeProp = varToDataProp(this.scopeName);
     let indexProp = varToDataProp(this.indexName);
-    for(let element of frag.children) {
-      element.dataset[scopeProp] = '';
-      element[Symbol.for(this.scopeName)] = value;
-      element.dataset[indexProp] = '';
-      element[Symbol.for(this.indexName)] = index;
+    for(let element of frag.nodes) {
+      if('dataset' in element) {
+        /** @type {HTMLElement} */
+        (element).dataset[scopeProp] = '';
+        element[Symbol.for(this.scopeName)] = value;
+         /** @type {HTMLElement} */
+        (element).dataset[indexProp] = '';
+        element[Symbol.for(this.indexName)] = index;
+      }
+
     }
   }
   render(index, value) {
     /** @type {EachFragment} */
     let frag = this.host.ownerDocument.importNode(this.template.content, true);
     frag.nodes = Array.from(frag.childNodes);
-    frag.item = value;
+    frag.data = { item: value, index };
     this.setData(frag, value, index);
     return frag;
   }
@@ -77,7 +95,7 @@ export class EachInstance {
    * 
    * @param {any} _ 
    * @param {number} index 
-   * @returns 
+   * @returns {any}
    */
   keyNonKeyed(_, index) {
     return index;
@@ -110,8 +128,15 @@ export class EachInstance {
       node = next;
     }
   }
+  /**
+   * 
+   * @param {EachFragment} frag 
+   * @param {number} index 
+   * @param {any} value 
+   * @returns 
+   */
   updateFrag(frag, index, value) {
-    if(frag.item !== value) {
+    if(frag.data.item !== value || frag.data.index !== index) {
       this.setData(frag, value, index);
     }
     return frag;
@@ -121,12 +146,15 @@ export class EachInstance {
    * @param {any[]} values
    */
   updateValues(values = []) {
-    let invalid = false;
-    let oldFrags = this.frags,
-    newFrags = [],
-    oldKeys = this.keys;
+    let invalid = false,
+      /** @type {EachFragment[]} */
+      oldFrags = this.frags,
+      /** @type {EachFragment[]} */
+      newFrags = [],
+      oldKeys = this.keys;
 
     let expectedMap = new Map();
+    /** @type {any[]} */
     let newKeys = [];
     for(let i = 0, len = values.length; i < len; i++) {
       let key = this.keyFn(values[i], i);
@@ -192,7 +220,7 @@ export class EachInstance {
 
     while(newHead <= newTail) {
       let frag = this.render(newHead, values[newHead]);
-      this.keyMap.set(this.keyFn(frag.item, newHead), frag);
+      this.keyMap.set(this.keyFn(frag.data.item, newHead), frag);
       this.append(frag, newFrags[newHead - 1]);
       newFrags[newHead++] = frag;
       invalid = true;
@@ -200,7 +228,7 @@ export class EachInstance {
 
     while(oldHead <= oldTail) {
       let frag = oldFrags[oldHead];
-      this.keyMap.delete(this.keyFn(frag.item, oldHead));
+      this.keyMap.delete(this.keyFn(frag.data.item, oldHead));
       oldHead++;
       this.remove(frag);
       invalid = true;

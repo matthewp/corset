@@ -5,7 +5,7 @@
  * @typedef {import('./value').Value} Value
  */
 
-const NO_VALUE = {};
+export const NO_VALUE = {};
 
 /**
  * 
@@ -61,6 +61,7 @@ function computeValue(compute, values) {
   let newValue = computeValue(compute, values);
   for(let i = 0, len = newValue.length; i < len; i++) {
     if(currentValue[i] !== newValue[i]) {
+      compute.lastValue = currentValue;
       compute.currentValue = newValue;
       return true;
     }
@@ -77,6 +78,7 @@ function computeDirty(compute, values) {
   let { currentValue } = compute;
   let newValue = computeValue(compute, values);
   if(newValue !== currentValue) {
+    compute.lastValue = currentValue;
     compute.currentValue = newValue;
     return true;
   }
@@ -108,8 +110,10 @@ export class ComputedValue {
     this.callArg = multi ? callMultiArg : callArg;
     /** @type {typeof computeDirty} */
     this.computeDirty = multi ? computeMultiDirty : computeDirty;
-    /** @type {any} currentValue */
+    /** @type {any} */
     this.currentValue = NO_VALUE;
+    /** @type {any} */
+    this.lastValue = NO_VALUE;
   }
   /**
    * Add a declaration

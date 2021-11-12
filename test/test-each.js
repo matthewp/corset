@@ -66,3 +66,5 @@ QUnit.test('The index is available as a var', assert => {
   let li = root.querySelector('li');
   assert.equal(Number(li.dataset.index), 0);
 });
+
+QUnit.skip('Deleting an item in a keyed list updates sibling indices');
