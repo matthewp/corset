@@ -13,3 +13,7 @@ QUnit.test('Adds an event listener', assert => {
   root.firstElementChild.dispatchEvent(new Event('click'));
   assert.ok(called);
 });
+
+QUnit.skip('Unbinds from previous callback when it changes', assert => {
+
+});

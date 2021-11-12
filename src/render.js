@@ -53,12 +53,24 @@ function render(element, bindings, values) {
     let template = bindings.eachTemplate.compute(values);
     /** @type {string} */
     let scope = bindings.eachScope.compute(values);
+    /** @type {string} */
+    let indexVar = bindings.flags & flags.eachIndex ? bindings.eachIndex.compute(values) : '--index';
     
     if(!inst || inst.template !== template || inst.scopeName !== scope) {
-      inst = new EachInstance(element, template, '', scope);
+      inst = new EachInstance(element, template, '', scope, indexVar);
       eachInstances.set(element, inst);
     }
     return inst.set(items);
+  }
+
+  if(bindings.flags & flags.attr && bindings.attr.dirty(values)) {
+    element.setAttribute(bindings.attr.item(0), bindings.attr.item(1));
+    invalid = true;
+  }
+
+  if(bindings.flags & flags.attrToggle && bindings.attrToggle.dirty(values)) {
+    let value = bindings.attrToggle.item(1);
+    element.setAttribute(bindings.attrToggle.item(0), value === true ? '' : value);
   }
 
   if(bindings.flags & flags.text && bindings.text.dirty(values)) {
@@ -67,6 +79,12 @@ function render(element, bindings, values) {
 
   if(bindings.flags & flags.prop && bindings.prop.dirty(values)) {
     element[bindings.prop.item(0)] = bindings.prop.item(1);
+  }
+
+  if(bindings.flags & flags.data && bindings.data.dirty(values)) {
+    /** @type {any} */
+    let el = element;
+    el.dataset[bindings.data.item(0)] = bindings.data.item(1);
   }
 
   // Events last, does not affect the cascade.

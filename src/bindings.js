@@ -14,7 +14,12 @@ export const flags = {
   event: 1 << 2,
   custom: 1 << 3,
   each: 1 << 4,
-  prop: 1 << 5
+  eachScope: 1 << 5,
+  eachIndex: 1 << 6,
+  prop: 1 << 7,
+  attr: 1 << 8,
+  attrToggle: 1 << 9,
+  data: 1 << 10
 };
 
 /**
@@ -39,8 +44,15 @@ const properties = {
    ) },
   'each-items': { prop: 'eachItems', flag: flags.each, read: readNull },
   'each-template': { prop: 'eachTemplate', flag: flags.each, read: readNull },
-  'each-scope': { prop: 'eachScope', flag: flags.each, read: readNull },
-  prop: { prop: 'prop', flag: flags.prop, multi: true, read: (root, el, args, values) => el[args[0].get(root, el, values)]}
+  'each-scope': { prop: 'eachScope', flag: flags.eachScope, read: readNull },
+  'each-index': { prop: 'eachIndex', flag: flags.eachIndex, read: readNull },
+  prop: { prop: 'prop', flag: flags.prop, multi: true, read: (root, el, args, values) => el[args[0].get(root, el, values)]},
+  attr: { prop: 'attr', flag: flags.attr, multi: true, read: (root, el, args, values) => el.getAttribute(args[0].get(root, el, values))},
+  'attr-toggle': { prop: 'attrToggle', flag: flags.attrToggle, multi: true, read: (root, el, args, values) => el.getAttribute(args[0].get(root, el, values))},
+  data: { prop: 'data', flag: flags.data, multi: true,
+    /** @param {any} el */
+    read: (root, el, args, values) => el.dataset[args[0].get(root, el, values)]
+  }
 };
 
 export class Bindings {
@@ -70,7 +82,15 @@ export class Bindings {
     /** @type {ComputedValue} */
     this.eachScope = null;
     /** @type {ComputedValue} */
+    this.eachIndex = null;
+    /** @type {ComputedValue} */
     this.prop = null;
+    /** @type {ComputedValue} */
+    this.attr = null;
+    /** @type {ComputedValue} */
+    this.attrToggle = null;
+    /** @type {ComputedValue} */
+    this.data = null;
 
     /** @type {null | Map<string, ComputedValue>} */
     this.custom = null;

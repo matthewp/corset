@@ -4,14 +4,25 @@
  * @typedef {DocumentFragment & { nodes?: Array<ChildNode>; item?: any }} EachFragment
  */
 
+/**
+ * 
+ * @param {string} varName 
+ */
+function varToDataProp(varName) {
+  let prop = varName.substr(2);
+  let dataProp = 'dslProp' + prop[0].toUpperCase() + prop.substr(1);
+  return dataProp;
+}
+
 export class EachInstance {
   /**
    * @param {Element} host 
    * @param {HTMLTemplateElement} template
    * @param {string} key
    * @param {string} scopeName
+   * @param {string} indexName
    */
-  constructor(host, template, key, scopeName) {
+  constructor(host, template, key, scopeName, indexName) {
     /** @type {Element} */
     this.host = host;
     /** @type {HTMLTemplateElement} */
@@ -20,6 +31,8 @@ export class EachInstance {
     this.key = key;
     /** @type {string} */
     this.scopeName = scopeName;
+    /** @type {string} */
+    this.indexName = indexName;
     /** @type {typeof this.keyNonKeyed} */
     this.keyFn = null;
   }
@@ -42,12 +55,14 @@ export class EachInstance {
     }
     return this.updateValues(values);
   }
-  setData(frag, value) {
-    let prop = this.scopeName.substr(2);
-    let dataProp = 'dslProp' + prop[0].toUpperCase() + prop.substr(1);
+  setData(frag, value, index) {
+    let scopeProp = varToDataProp(this.scopeName);
+    let indexProp = varToDataProp(this.indexName);
     for(let element of frag.children) {
-      element.dataset[dataProp] = '';
+      element.dataset[scopeProp] = '';
       element[Symbol.for(this.scopeName)] = value;
+      element.dataset[indexProp] = '';
+      element[Symbol.for(this.indexName)] = index;
     }
   }
   render(index, value) {
@@ -55,7 +70,7 @@ export class EachInstance {
     let frag = this.host.ownerDocument.importNode(this.template.content, true);
     frag.nodes = Array.from(frag.childNodes);
     frag.item = value;
-    this.setData(frag, value);
+    this.setData(frag, value, index);
     return frag;
   }
   /**
@@ -97,7 +112,7 @@ export class EachInstance {
   }
   updateFrag(frag, index, value) {
     if(frag.item !== value) {
-      this.setData(frag, value);
+      this.setData(frag, value, index);
     }
     return frag;
   }

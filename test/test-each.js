@@ -45,3 +45,24 @@ QUnit.test('Longhand syntax', assert => {
   assert.equal(ul.querySelector(':nth-child(1) span').textContent, 'walk the dog');
   assert.equal(ul.querySelector(':nth-child(2) span').textContent, 'clean the dishes');
 });
+
+QUnit.test('The index is available as a var', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<ul></ul><template id="todos-template"><li></li></template>`;
+
+  let items = [1];
+  let sheet = dsl`
+    ul {
+      each-items: ${items};
+      each-template: select(#todos-template);
+      each-scope: --todo;
+    }
+
+    li {
+      data: index var(--index);
+    }
+  `;
+  sheet.update(root);
+  let li = root.querySelector('li');
+  assert.equal(Number(li.dataset.index), 0);
+});
