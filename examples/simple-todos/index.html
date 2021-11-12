@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<title>Testing</title>
+<link rel="stylesheet" href="./styles.css">
+<script type="module" src="./app.js"></script>
+
+<main>
+  <h3>Simple Todos Example</h3>
+  <div class="item">
+    <input id="new-todo" type="text"
+      placeholder="enter todo and click +">
+    <button id="create-todo">
+      +
+    </button>
+  </div>
+  <div id="todos"></div>
+  <template id="todo-template">
+    <div class="todo item">
+      <input class="done" type="checkbox">
+      <input class="title" type="text">
+      <button class="delete">
+        x
+      </button>
+    </div>
+  </template>
+</main>
