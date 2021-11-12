@@ -55,9 +55,11 @@ function render(element, bindings, values) {
     let scope = bindings.eachScope.compute(values);
     /** @type {string} */
     let indexVar = bindings.flags & flags.eachIndex ? bindings.eachIndex.compute(values) : '--index';
+    /** @type {string} */
+    let key = bindings.flags & flags.eachKey ? bindings.eachKey.compute(values) : '';
     
     if(!inst || inst.template !== template || inst.scopeName !== scope) {
-      inst = new EachInstance(element, template, '', scope, indexVar);
+      inst = new EachInstance(element, template, key, scope, indexVar);
       eachInstances.set(element, inst);
     }
     return inst.set(items);
