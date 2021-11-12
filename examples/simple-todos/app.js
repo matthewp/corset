@@ -37,6 +37,7 @@ let app = {
         each-items: ${app.todos};
         each-template: select(#todo-template);
         each-scope: --todo;
+        each-key: title;
       }
 
       .todo {
