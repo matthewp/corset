@@ -87,12 +87,12 @@ function computeDirty(compute, values) {
 
 export class ComputedValue {
   /**
-   * @param {Element} rootElement
-   * @param {Element} element
-   * @param {any} initialValue
-   * @param {Boolean} multi
+   * @param {Element} rootElement The root element of the tree
+   * @param {Element} element The element this compute targets
+   * @param {any} initialValue The initial value of the compute
+   * @param {Boolean} isMultiValue Contains multiple values
    */
-  constructor(rootElement, element, initialValue, multi) {
+  constructor(rootElement, element, initialValue, isMultiValue) {
     /** @type {Set<Declaration>} */
     this.set = new Set();
 
@@ -105,11 +105,11 @@ export class ComputedValue {
     /** @type {any} */
     this.initialValue = initialValue;
     /** @type {boolean} */
-    this.multi = multi;
+    this.isMultiValue = isMultiValue;
     /** @type {typeof callArg} */
-    this.callArg = multi ? callMultiArg : callArg;
+    this.callArg = isMultiValue ? callMultiArg : callArg;
     /** @type {typeof computeDirty} */
-    this.computeDirty = multi ? computeMultiDirty : computeDirty;
+    this.computeDirty = isMultiValue ? computeMultiDirty : computeDirty;
     /** @type {any} */
     this.currentValue = NO_VALUE;
     /** @type {any} */

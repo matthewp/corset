@@ -11,13 +11,12 @@ export class Rule {
   constructor(selector) {
     /** @type {String} */
     this.selector = selector;
-    /** @type {Map<string, Declaration>} */
-    this.declarations = new Map();
+    /** @type {Array<Declaration>} */
+    this.declarations = [];
   }
 
   /** @param {Declaration} declaration */
   addDeclaration(declaration) {
-    let name = declaration.propertyName;
-    this.declarations.set(name, declaration);
+    this.declarations.push(declaration);
   }
 }

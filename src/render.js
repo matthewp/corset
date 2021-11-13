@@ -36,9 +36,13 @@ function render(element, bindings, values) {
     }
   }
 
-  if(bindings.flags & flags.classToggle && bindings.classToggle.dirty(values)) {
-    element.classList.toggle(bindings.classToggle.item(0), bindings.classToggle.item(1));
-    invalid = true;
+  if(bindings.flags & flags.classToggle) {
+    for(let compute of bindings.classToggle.values()) {
+      if(compute.dirty(values)) {
+        element.classList.toggle(compute.item(0), compute.item(1));
+        invalid = true;
+      }
+    }
   }
 
   if(bindings.flags & flags.each) {
