@@ -133,13 +133,13 @@ function compile(strings, values) {
           }
           case 'class-toggle': {
             expectMultipleOf(propName, 2);
-            let values = readNumberOfValues();
             let ptr = readFirstValuePointer();
-            while(values > 0) {
+            while(ptr) {
               let classNameValue = getValue(ptr);
-              let condValue = getValue(mem32[(ptr >> 2) + 1]);
+              ptr = mem32[(ptr >> 2) + 1];
+              let condValue = getValue(ptr);
               rule.addDeclaration(new Declaration(rule, 'class-toggle', classNameValue, condValue));
-              values -= 2;
+              ptr = mem32[(ptr >> 2) + 1];
             }
             break;
           }

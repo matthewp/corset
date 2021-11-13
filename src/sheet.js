@@ -45,8 +45,8 @@ class Root {
           bindings = new Bindings(rootElement, el);
           this.bindingMap.set(el, bindings);
         }
-        for(let [propertyName, declaration] of rule.declarations) {
-          bindings.add(propertyName, declaration, values);
+        for(let declaration of rule.declarations) {
+          bindings.add(declaration, values);
         }
       }
     }

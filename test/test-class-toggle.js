@@ -85,7 +85,7 @@ QUnit.test('Restores the original value', assert => {
   assert.equal(span.classList.contains('yes'), true);
 });
 
-QUnit.skip('Setting multiple classes', assert => {
+QUnit.test('Setting multiple classes', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"></div>`;
   let sheet = dsl`
