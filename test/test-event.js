@@ -38,3 +38,5 @@ QUnit.test('Unbinds from previous callback when it changes', assert => {
   root.firstElementChild.dispatchEvent(new Event('click'));
   assert.equal(count, 2);
 });
+
+QUnit.skip('Can listen to multiple events on the same element');

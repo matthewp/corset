@@ -55,3 +55,5 @@ QUnit.test('Can take another var as a fallback value', assert => {
   sheet.update(root);
   assert.equal(root.firstElementChild.textContent, 'Hello Wilbur');
 });
+
+QUnit.skip('Dash property names work');

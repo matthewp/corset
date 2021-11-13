@@ -85,4 +85,18 @@ QUnit.test('Restores the original value', assert => {
   assert.equal(span.classList.contains('yes'), true);
 });
 
-QUnit.skip('Setting multiple classes');
+QUnit.skip('Setting multiple classes', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app"></div>`;
+  let sheet = dsl`
+    #app {
+      class-toggle:
+        one ${true}
+        two ${true};
+    }
+  `;
+  sheet.update(root);
+  let app = root.firstElementChild;
+  assert.ok(app.classList.contains('one'));
+  assert.ok(app.classList.contains('two'));
+});

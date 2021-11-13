@@ -25,6 +25,9 @@ let app = {
     todo.done = ev.target.checked;
     app.update();
   },
+  updateTodoTitle(todo, ev) {
+    todo.title = ev.target.value;
+  },
   update() {
     let doneCount = app.todos.filter(t => t.done).length;
     let template = dsl`
@@ -60,6 +63,7 @@ let app = {
 
       .todo .title {
         prop: value var(--title);
+        event: change bind(${app.updateTodoTitle}, var(--todo));
       }
 
       .todo .delete {

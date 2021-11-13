@@ -14,6 +14,7 @@
  */
 function varToDataProp(varName) {
   let prop = varName.substr(2);
+  // TODO make this work
   let dataProp = 'dslProp' + prop[0].toUpperCase() + prop.substr(1);
   return dataProp;
 }

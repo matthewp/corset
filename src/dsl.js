@@ -37,6 +37,12 @@ const expectValues = (name, num) => {
   }
 }
 
+const expectMultipleOf = (name, num) => {
+  if(readNumberOfValues() % num !== 0) {
+    throw new Error(`The property [${name}] expects a multiple of ${num} values but found ${readNumberOfValues()}.`);
+  }
+}
+
 /**
  * Gets the value at the pointer location.
  * @param {Number} ptr 
@@ -126,7 +132,7 @@ function compile(strings, values) {
             break;
           }
           case 'class-toggle': {
-            expectValues(propName, 2);
+            expectMultipleOf(propName, 2);
             let values = readNumberOfValues();
             let ptr = readFirstValuePointer();
             while(values > 0) {

@@ -24,7 +24,7 @@ function render(element, bindings, values) {
   if(bindings.flags & flags.custom) {
     for(let [propertyName, compute] of bindings.custom) {
       if(compute.dirty(values)) {
-        let name = propertyName.replace(/-?-([a-zA-Z])/, (_whole, letter) => {
+        let name = propertyName.replace(/-?-([a-zA-Z])/g, (_whole, letter) => {
           return letter.toUpperCase();
         });
         if(!(element instanceof HTMLElement)) {
