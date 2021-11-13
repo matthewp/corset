@@ -97,3 +97,21 @@ export class SelectValue {
     return rootElement.querySelector(this.selector);
   }
 }
+
+/** @implements {Value} */
+export class BindValue {
+  constructor(fnValue, ...args) {
+    this.fnValue = fnValue;
+    this.args = args;
+  }
+  /**
+   * @param {Element} rootElement
+   * @param {Element} element
+   * @param {any[]} values
+   */
+  get(rootElement, element, values) {
+    let fn = this.fnValue.get(rootElement, element, values);
+    let args = this.args.map(arg => arg.get(rootElement, element, values));
+    return fn.bind(element, ...args);
+  }
+}

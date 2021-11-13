@@ -17,12 +17,19 @@ let app = {
     app.newTitle = '';
     app.update();
   },
-  deleteTodo(ev) {
-    let index = Number(ev.target.value);
+  deleteTodo(index) {
     app.todos.splice(index, 1);
     app.update();
   },
+  toggleTodoDone(todo, ev) {
+    todo.done = ev.target.checked;
+    app.update();
+  },
+  updateTodoTitle(todo, ev) {
+    todo.title = ev.target.value;
+  },
   update() {
+    let doneCount = app.todos.filter(t => t.done).length;
     let template = dsl`
       #new-todo {
         event: input ${app.setNewTitle};
@@ -31,6 +38,10 @@ let app = {
 
       #create-todo {
         event: click ${app.createTodo};
+      }
+
+      #done-count {
+        text: ${doneCount};
       }
 
       #todos {
@@ -47,15 +58,17 @@ let app = {
 
       .todo .done {
         prop: checked var(--done);
+        event: change bind(${app.toggleTodoDone}, var(--todo));
       }
 
       .todo .title {
         prop: value var(--title);
+        event: change bind(${app.updateTodoTitle}, var(--todo));
       }
 
       .todo .delete {
         data: index var(--index);
-        event: click ${app.deleteTodo};
+        event: click bind(${app.deleteTodo}, var(--index));
       }
     `;
     template.update(main);

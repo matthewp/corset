@@ -10,11 +10,15 @@ main {
   padding-top: 20vh;
 }
 
+main > footer {
+  display: grid;
+  justify-content: center;
+}
+
 input {
   border: 3px solid #000;
   padding: .5em;
 }
-
 
 input[type="checkbox"] {
   /* Add if not using autoprefixer */
@@ -70,6 +74,10 @@ input[type="checkbox"]:disabled {
 
 #todos {
   margin-top: 2rem;
+}
+
+.todo {
+  margin-bottom: .5rem;
 }
 
 .item {

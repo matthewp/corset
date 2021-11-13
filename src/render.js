@@ -2,6 +2,7 @@
 
 import { flags } from './bindings.js';
 import { EachInstance } from './each.js';
+import { NO_VALUE } from './compute.js';
 
 /**
  * @typedef {import('./bindings').Bindings} Bindings
@@ -23,7 +24,7 @@ function render(element, bindings, values) {
   if(bindings.flags & flags.custom) {
     for(let [propertyName, compute] of bindings.custom) {
       if(compute.dirty(values)) {
-        let name = propertyName.replace(/-?-([a-zA-Z])/, (_whole, letter) => {
+        let name = propertyName.replace(/-?-([a-zA-Z])/g, (_whole, letter) => {
           return letter.toUpperCase();
         });
         if(!(element instanceof HTMLElement)) {
@@ -91,7 +92,10 @@ function render(element, bindings, values) {
 
   // Events last, does not affect the cascade.
   if(bindings.flags & flags.event && bindings.event.dirty(values)) {
-    // TODO unbind if necessary
+    const lastValue = bindings.event.lastValue;
+    if(lastValue !== NO_VALUE) {
+      element.removeEventListener(lastValue[0], lastValue[1]);
+    }
     element.addEventListener(bindings.event.item(0), bindings.event.item(1));
   }
 

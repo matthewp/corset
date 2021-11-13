@@ -12,7 +12,7 @@ import {
 import { Declaration } from './declaration.js';
 import { Rule } from './rule.js';
 import { BindingSheet, SheetWithValues } from './sheet.js';
-import { AnyValue, SelectValue, GetValue, InsertionValue, VarValue } from './value.js';
+import { AnyValue, BindValue, SelectValue, GetValue, InsertionValue, VarValue } from './value.js';
 
 /** @typedef {import('./types').ValueType} ValueType */
 /** @typedef {import('./types').Value} Value */
@@ -22,8 +22,8 @@ import { AnyValue, SelectValue, GetValue, InsertionValue, VarValue } from './val
 const fnMap = new Map([
   ['var', VarValue],
   ['get', GetValue],
-  ['select', SelectValue]
-  //['ins', InsertionValue]
+  ['select', SelectValue],
+  ['bind', BindValue]
 ]);
 
 /**
@@ -34,6 +34,12 @@ const fnMap = new Map([
 const expectValues = (name, num) => {
   if(readNumberOfValues() !== num) {
     throw new Error(`The property [${name}] expects ${num} values but found ${readNumberOfValues()}.`);
+  }
+}
+
+const expectMultipleOf = (name, num) => {
+  if(readNumberOfValues() % num !== 0) {
+    throw new Error(`The property [${name}] expects a multiple of ${num} values but found ${readNumberOfValues()}.`);
   }
 }
 
@@ -126,7 +132,7 @@ function compile(strings, values) {
             break;
           }
           case 'class-toggle': {
-            expectValues(propName, 2);
+            expectMultipleOf(propName, 2);
             let values = readNumberOfValues();
             let ptr = readFirstValuePointer();
             while(values > 0) {

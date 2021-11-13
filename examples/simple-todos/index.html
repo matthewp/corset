@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
-<title>Testing</title>
+<title>Simple Todo Example</title>
+<meta charset="utf-8">
 <link rel="stylesheet" href="./styles.css">
 <script type="module" src="./app.js"></script>
 
@@ -14,6 +15,9 @@
     </button>
   </div>
   <div id="todos"></div>
+  <footer>
+    <p>Completed: <strong id="done-count">0</strong></p>
+  </footer>
   <template id="todo-template">
     <div class="todo item">
       <input class="done" type="checkbox">
