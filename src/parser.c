@@ -29,7 +29,8 @@ unsigned int tag_pointer;
 #define CALL_RESET_MODE 7
 #define CALL_START_MODE 8
 #define VALUE_STRING_MODE 9
-#define ERROR_MODE 10
+#define COMMENT_MODE 10
+#define ERROR_MODE 11
 
 #define TAG_EOF 0
 #define TAG_RULE_START 1
@@ -50,6 +51,7 @@ unsigned int tag_pointer;
 
 typedef struct parser_state_t {
   unsigned char mode;
+  unsigned char last_mode;
   int index;
   int last_non_whitespace;
   int hole_index;
@@ -291,6 +293,15 @@ static void replace_node(value_type_node_t* ref, value_type_node_t* new_last) {
   }
 }
 
+static unsigned char check_for_comment(char c) {
+  if(c == '/' && read_char_at(parser_state->index + 1) == '*') {
+    parser_state->last_mode = parser_state->mode;
+    parser_state->mode = COMMENT_MODE;
+    return 1;
+  }
+  return 0;
+}
+
 static unsigned char parse_reset_mode() {
   char c = read_char();
   if(selectorToken(c)) {
@@ -301,6 +312,8 @@ static unsigned char parse_reset_mode() {
     rule_start->type = TAG_RULE_START;
     rule_start->selector_start = parser_state->index;
     parser_state->tag = rule_start;
+  } else {
+    check_for_comment(c);
   }
   return TOKEN_CONSUMED;
 }
@@ -317,6 +330,7 @@ static unsigned char parse_rule_start_mode() {
         rule_start->selector_end = parser_state->last_non_whitespace + 1;
         return TOKEN_EXIT;
       } else {
+        check_for_comment(c);
         // error?
       }
     }
@@ -341,6 +355,7 @@ static unsigned char parse_rule_reset_mode() {
   } else if(c == '}') {
     parser_state->mode = RESET_MODE;
   } else {
+    check_for_comment(c);
     // ERROR
   }
   return TOKEN_CONSUMED;
@@ -355,6 +370,7 @@ static unsigned char parse_prop_start_mode() {
     prop->prop_end = parser_state->last_non_whitespace + 1;
     parser_state->mode = VALUE_RESET_MODE;
   } else {
+    check_for_comment(c);
     // ERROR
   }
   return TOKEN_CONSUMED;
@@ -385,7 +401,7 @@ static unsigned char parse_value_reset_mode() {
   } else if(c == ';') {
     parser_state->mode = RULE_RESET_MODE;
     return TOKEN_EXIT;
-  } else if(!whitespaceToken(c)) {
+  } else if(!whitespaceToken(c) && !check_for_comment(c)) {
     return create_error_tag(2, c);
   }
   return TOKEN_CONSUMED;
@@ -434,7 +450,9 @@ static unsigned char parse_value_start_mode() {
     }
     parser_state->mode = post_value_mode();
   } else if(!identifierToken(c) && c != '-') {
-    return create_error_tag(1, c);
+    if(!check_for_comment(c)) {
+      return create_error_tag(1, c);
+    }
   }
 
   return TOKEN_CONSUMED;
@@ -448,6 +466,15 @@ static unsigned char parse_string_mode() {
       parse_value_end();
       parser_state->mode = post_value_mode();
     }
+  }
+  return TOKEN_CONSUMED;
+}
+
+static unsigned char parse_comment_mode() {
+  char c = read_char();
+  if(c == '/' && read_char_at(parser_state->index - 1) == '*') {
+    parser_state->mode = parser_state->last_mode;
+    parser_state->last_mode = COMMENT_MODE;
   }
   return TOKEN_CONSUMED;
 }
@@ -479,6 +506,8 @@ static unsigned char parse_call_reset_mode() {
   } else if(callArgToken(c)) {
     parser_state->mode = VALUE_RESET_MODE;
     return TOKEN_NOTCONSUMED;
+  } else {
+    check_for_comment(c);
   }
   return TOKEN_CONSUMED;
 }
@@ -514,6 +543,8 @@ static unsigned char parse_call_start_mode() {
   } else if(callArgToken(c)) {
     parser_state->mode = VALUE_RESET_MODE;
     return TOKEN_NOTCONSUMED;
+  } else {
+    check_for_comment(c);
   }
   
   return TOKEN_CONSUMED;
@@ -533,6 +564,7 @@ export void reset() {
   parser_state = malloc(sizeof(parser_state_t));
   parser_state->index = 0;
   parser_state->mode = RESET_MODE;
+  parser_state->last_mode = 0;
   parser_state->hole_index = 0;
   parser_state->last_non_whitespace = 0;
   parser_state->open_parens = 0;
@@ -554,6 +586,7 @@ static int parse_next_token() {
     case CALL_RESET_MODE: return parse_call_reset_mode();
     case CALL_START_MODE: return parse_call_start_mode();
     case VALUE_STRING_MODE: return parse_string_mode();
+    case COMMENT_MODE: return parse_comment_mode();
   }
   return TOKEN_CONSUMED;
 }
