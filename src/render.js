@@ -55,7 +55,7 @@ function render(element, bindings, values) {
     /** @type {HTMLTemplateElement} */
     let template = bindings.eachTemplate.compute(values);
     /** @type {string} */
-    let scope = bindings.eachScope.compute(values);
+    let scope = bindings.flags & flags.eachScope ? bindings.eachScope.compute(values) : '--scope';
     /** @type {string} */
     let indexVar = bindings.flags & flags.eachIndex ? bindings.eachIndex.compute(values) : '--index';
     /** @type {string} */
