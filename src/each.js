@@ -1,4 +1,5 @@
 // @ts-check
+import { datasetKey } from './custom-prop.js';
 
 /**
  * @typedef {object} FragData
@@ -7,17 +8,6 @@
  * 
  * @typedef {DocumentFragment & { nodes?: Array<ChildNode>; data?: FragData }} EachFragment
  */
-
-/**
- * 
- * @param {string} varName 
- */
-function varToDataProp(varName) {
-  let prop = varName.substr(2);
-  // TODO make this work
-  let dataProp = 'dslProp' + prop[0].toUpperCase() + prop.substr(1);
-  return dataProp;
-}
 
 export class EachInstance {
   /**
@@ -70,8 +60,8 @@ export class EachInstance {
    * @param {*} index 
    */
   setData(frag, value, index) {
-    let scopeProp = varToDataProp(this.scopeName);
-    let indexProp = varToDataProp(this.indexName);
+    let scopeProp = datasetKey(this.scopeName);
+    let indexProp = datasetKey(this.indexName);
     for(let element of frag.nodes) {
       if('dataset' in element) {
         /** @type {HTMLElement} */
