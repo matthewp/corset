@@ -95,12 +95,16 @@ function render(element, bindings, values) {
   }
 
   // Events last, does not affect the cascade.
-  if(bindings.flags & flags.event && bindings.event.dirty(values)) {
-    const lastValue = bindings.event.lastValue;
-    if(lastValue !== NO_VALUE) {
-      element.removeEventListener(lastValue[0], lastValue[1]);
+  if(bindings.flags & flags.event) {
+    for(let compute of bindings.event.values()) {
+      if(compute.dirty(values)) {
+        const lastValue = compute.lastValue;
+        if(lastValue !== NO_VALUE) {
+          element.removeEventListener(lastValue[0], lastValue[1]);
+        }
+        element.addEventListener(compute.item(0), compute.item(1));
+      }
     }
-    element.addEventListener(bindings.event.item(0), bindings.event.item(1));
   }
 
   return invalid;
