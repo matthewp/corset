@@ -44,9 +44,10 @@ const properties = {
     let name = args[0].get(root, el, values);
     return [name, el.classList.contains(name)];
    } },
-  event: { prop: 'event', flag: flags.event, multiValue: true, read: (root, el, args, values) => (
-    el['on' + args[0].get(root, el, values)] || null
-   ) },
+  event: { prop: 'event', flag: flags.event, multiValue: true, multiBindings: true,
+     read: (root, el, args, values) => (
+      el['on' + args[0].get(root, el, values)] || null
+    ) },
   'each-items': { prop: 'eachItems', flag: flags.each, read: readNull },
   'each-template': { prop: 'eachTemplate', flag: flags.each, read: readNull },
   'each-scope': { prop: 'eachScope', flag: flags.eachScope, read: readNull },
@@ -98,7 +99,7 @@ export class Bindings {
     this.text = null;
     /** @type {MultiBindingMap} */
     this.classToggle = null;
-    /** @type {ComputedValue} */
+    /** @type {MultiBindingMap} */
     this.event = null;
     /** @type {ComputedValue} */
     this.eachItems = null;

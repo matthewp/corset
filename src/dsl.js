@@ -120,14 +120,14 @@ function compile(strings, values) {
             break;
           }
           case 'event': {
-            expectValues(propName, 2);
-            let values = readNumberOfValues();
+            expectMultipleOf(propName, 2);
             let ptr = readFirstValuePointer();
-            while(values > 0) {
+            while(ptr) {
               let evValue = getValue(ptr);
-              let cbValue = getValue(mem32[(ptr >> 2) + 1]);
+              ptr = mem32[(ptr >> 2) + 1];
+              let cbValue = getValue(ptr);
               rule.addDeclaration(new Declaration(rule, 'event', evValue, cbValue));
-              values -= 2;
+              ptr = mem32[(ptr >> 2) + 1];
             }
             break;
           }
