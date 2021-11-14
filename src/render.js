@@ -3,6 +3,7 @@
 import { flags } from './bindings.js';
 import { EachInstance } from './each.js';
 import { NO_VALUE } from './compute.js';
+import { datasetKey } from './custom-prop.js';
 
 /**
  * @typedef {import('./bindings').Bindings} Bindings
@@ -24,13 +25,10 @@ function render(element, bindings, values) {
   if(bindings.flags & flags.custom) {
     for(let [propertyName, compute] of bindings.custom) {
       if(compute.dirty(values)) {
-        let name = propertyName.replace(/-?-([a-zA-Z])/g, (_whole, letter) => {
-          return letter.toUpperCase();
-        });
         if(!(element instanceof HTMLElement)) {
           throw new Error('Custom properties cannot be used on non-HTML elements.');
         }
-        element.dataset['dslProp' + name] = '';
+        element.dataset[datasetKey(propertyName)] = '';
         element[Symbol.for(propertyName)] = compute.get();
       }
     }

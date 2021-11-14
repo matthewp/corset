@@ -56,4 +56,15 @@ QUnit.test('Can take another var as a fallback value', assert => {
   assert.equal(root.firstElementChild.textContent, 'Hello Wilbur');
 });
 
-QUnit.skip('Dash property names work');
+QUnit.test('Dash property names work', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app"></div>`;
+  let sheet = dsl`
+    #app {
+      --my-prop: "testing";
+      text: var(--my-prop);
+    }
+  `;
+  sheet.update(root);
+  assert.equal(root.firstElementChild.textContent, 'testing');
+});
