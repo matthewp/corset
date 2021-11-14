@@ -67,4 +67,28 @@ QUnit.test('The index is available as a var', assert => {
   assert.equal(Number(li.dataset.index), 0);
 });
 
-QUnit.skip('Deleting an item in a keyed list updates sibling indices');
+QUnit.test('Deleting an item in a keyed list updates sibling indices', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<ul></ul><template><li>index: <span id="index"></span></li></template>`;
+  let items = [{id: 1}, {id: 2}, {id: 3}];
+  function template() {
+    return dsl`
+      ul {
+        each-items: ${items};
+        each-template: select(template);
+        each-key: id;
+      }
+      li {
+        attr: id get(${item => `item-${item.id}`});
+      }
+      li #index {
+        text: var(--index);
+      }
+    `;
+  }
+  template().update(root);
+  items.splice(1, 1);
+  template().update(root);
+  assert.equal(root.querySelector('#item-1 #index').textContent, 0);
+  assert.equal(root.querySelector('#item-3 #index').textContent, 1);
+});
