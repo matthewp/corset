@@ -19,6 +19,13 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
+    - name: Cache Binary Installs
+      id: cache-binaries
+      uses: actions/cache@v2
+      with:
+        path: ./llvm
+        key: llvm-11.0
+
     - uses: actions/setup-python@v2
       with:
         python-version: '3.x'
@@ -27,6 +34,7 @@ jobs:
       uses: KyleMayes/install-llvm-action@v1
       with:
         version: "11.0"
+        cached: ${{ steps.cache-binaries.outputs.cache-hit }}
 
     - name: Verify Clang
       run: |
