@@ -1,0 +1,40 @@
+@import "../common.css";
+
+main {
+  width: 100vw;
+  display: grid;
+  margin: 0 10%;
+  padding-top: 20vh;
+}
+
+main > footer {
+  display: grid;
+  justify-content: center;
+}
+
+.field-block {
+  margin: .5rem 0;
+  border: 0;
+  padding: 0;
+}
+
+input {
+  margin-top: .3rem;
+}
+
+button[type=submit] {
+  margin-top: .3rem;
+}
+
+.error-message {
+  color: red;
+  padding: 8px;
+}
+.field-has-error input {
+  box-shadow: 0px 0px 2px 1px red;
+}
+
+.field-has-error input, .field-has-error input:focus-visible {
+  border-color: rgba(255, 0, 0, .6);
+  outline: none;
+}
