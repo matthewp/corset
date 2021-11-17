@@ -12,7 +12,14 @@ import {
 import { Declaration } from './declaration.js';
 import { Rule } from './rule.js';
 import { BindingSheet, SheetWithValues } from './sheet.js';
-import { AnyValue, BindValue, SelectValue, GetValue, InsertionValue, VarValue } from './value.js';
+import {
+  AnyValue,
+  BindValue,
+  GetValue,
+  InsertionValue,
+  SelectValue,
+  VarValue
+} from './value.js';
 
 /** @typedef {import('./types').ValueType} ValueType */
 /** @typedef {import('./types').Value} Value */
