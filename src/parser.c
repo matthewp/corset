@@ -266,7 +266,9 @@ static void replace_node(value_type_node_t* ref, value_type_node_t* new_last) {
     new_last->prev = prev;
 
     if(new_last->type == VALUE_TYPE_CALL && prop->last_value->type == VALUE_TYPE_CALL) {
-      ((value_type_call_t*)new_last)->parent = (value_type_call_t*)prop->last_value;
+      value_type_call_t* parent_call = (value_type_call_t*)prop->last_value;
+      parent_call->last_arg = new_last;
+      ((value_type_call_t*)new_last)->parent = parent_call;
     }
 
     if(ref == prop->last_value || new_last->type == VALUE_TYPE_CALL) {
