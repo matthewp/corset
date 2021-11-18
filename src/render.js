@@ -68,6 +68,25 @@ function render(element, bindings, values) {
     return inst.set(items);
   }
 
+  if(bindings.flags & flags.attach && bindings.attachTemplate.dirty(values)) {
+    /** @type {HTMLTemplateElement | Array<Node>} */
+    let result = bindings.attachTemplate.get();
+    /** @type {DocumentFragment} */
+    let frag;
+    if(Array.isArray(result)) {
+      let nodes = result;
+      frag = element.ownerDocument.createDocumentFragment();
+      for(let node of nodes) frag.append(node);
+    } else {
+      frag = element.ownerDocument.importNode(result.content, true);
+    }
+    while(element.lastChild) {
+      element.removeChild(element.lastChild);
+    }
+    element.append(frag);
+    invalid = true;
+  }
+
   if(bindings.flags & flags.attr && bindings.attr.dirty(values)) {
     element.setAttribute(bindings.attr.item(0), bindings.attr.item(1));
     invalid = true;

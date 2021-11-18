@@ -7,7 +7,6 @@ import { ComputedValue } from './compute.js';
  * @typedef {import('./value').Value} Value
  */
 
-
 export const flags = {
   text: 1 << 0,
   classToggle: 1 << 1,
@@ -20,7 +19,9 @@ export const flags = {
   prop: 1 << 8,
   attr: 1 << 9,
   attrToggle: 1 << 10,
-  data: 1 << 11
+  data: 1 << 11,
+  attach: 1 << 12,
+  attachTemplate: 1 << 13
 };
 
 /**
@@ -59,7 +60,8 @@ const properties = {
   data: { prop: 'data', flag: flags.data, multiValue: true,
     /** @param {any} el */
     read: (root, el, args, values) => el.dataset[args[0].get(root, el, values)]
-  }
+  },
+  'attach-template': { prop: 'attachTemplate', flag: flags.attach | flags.attachTemplate, read: (_root, el) => Array.from(el.childNodes) }
 };
 
 /**
@@ -119,6 +121,8 @@ export class Bindings {
     this.attrToggle = null;
     /** @type {ComputedValue} */
     this.data = null;
+    /** @type {ComputedValue} */
+    this.attachTemplate = null;
 
     /** @type {null | Map<string, ComputedValue>} */
     this.custom = null;

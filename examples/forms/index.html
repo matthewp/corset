@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<title>Forms Example</title>
+<meta charset="utf-8">
+<link rel="stylesheet" href="./styles.css">
+<script type="module" src="./app.js"></script>
+
+<main>
+  <form>
+    <h1>Sign Up</h1>
+    <div class="field-block field-block-email">
+      <label for="email">Email</legend>
+      <br />
+      <input
+        id="email"
+        name="email"
+        type="email"
+        placeholder="Email"
+        required
+      >
+      <span class="errors"></span>
+    </div>
+    <div class="field-block field-block-password">
+      <label for="password">Password</label>
+      <br />
+      <input
+        id="password"
+        type="password"
+        name="password"
+        placeholder="Password"
+        required=""
+        minlength="8"
+      >
+      <span class="errors"></span>
+    </div>
+    <div class="field-block field-block-confirmpassword">
+      <label for="confirmpassword">Confirm password</label>
+      <br />
+      <input
+        id="confirmpassword"
+        type="password"
+        name="confirmpassword"
+        placeholder="Confirm Password"
+        required=""
+      >
+      <span class="errors"></span>
+    </div>
+
+    <button type="submit">Submit</button>
+  </form>
+  <template id="error-tmpl">
+    <span class="error-message"></span>
+  </template>
+</main>
