@@ -55,8 +55,8 @@ const properties = {
   'each-index': { prop: 'eachIndex', flag: flags.eachIndex, read: readNull },
   'each-key': { prop: 'eachKey', flag: flags.eachKey, read: readNull },
   prop: { prop: 'prop', flag: flags.prop, multiValue: true, read: (root, el, args, values) => el[args[0].get(root, el, values)]},
-  attr: { prop: 'attr', flag: flags.attr, multiValue: true, read: (root, el, args, values) => el.getAttribute(args[0].get(root, el, values))},
-  'attr-toggle': { prop: 'attrToggle', flag: flags.attrToggle, multiValue: true, read: (root, el, args, values) => el.getAttribute(args[0].get(root, el, values))},
+  attr: { prop: 'attr', flag: flags.attr, multiValue: true, multiBindings: true, read: (root, el, args, values) => el.getAttribute(args[0].get(root, el, values))},
+  'attr-toggle': { prop: 'attrToggle', flag: flags.attrToggle, multiValue: true, multiBindings: true, read: (root, el, args, values) => el.getAttribute(args[0].get(root, el, values))},
   data: { prop: 'data', flag: flags.data, multiValue: true,
     /** @param {any} el */
     read: (root, el, args, values) => el.dataset[args[0].get(root, el, values)]
@@ -115,9 +115,9 @@ export class Bindings {
     this.eachKey = null;
     /** @type {ComputedValue} */
     this.prop = null;
-    /** @type {ComputedValue} */
+    /** @type {MultiBindingMap} */
     this.attr = null;
-    /** @type {ComputedValue} */
+    /** @type {MultiBindingMap} */
     this.attrToggle = null;
     /** @type {ComputedValue} */
     this.data = null;
