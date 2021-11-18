@@ -126,27 +126,20 @@ function compile(strings, values) {
             rule.addDeclaration(new Declaration(rule, 'each-scope', args[2]));
             break;
           }
-          case 'event': {
+          case 'event':
+          case 'class-toggle':
+          case 'attr':
+          case 'attr-toggle': {
             expectMultipleOf(propName, 2);
             let ptr = readFirstValuePointer();
             while(ptr) {
-              let evValue = getValue(ptr);
-              ptr = mem32[(ptr >> 2) + 1];
-              let cbValue = getValue(ptr);
-              rule.addDeclaration(new Declaration(rule, 'event', evValue, cbValue));
-              ptr = mem32[(ptr >> 2) + 1];
-            }
-            break;
-          }
-          case 'class-toggle': {
-            expectMultipleOf(propName, 2);
-            let ptr = readFirstValuePointer();
-            while(ptr) {
-              let classNameValue = getValue(ptr);
-              ptr = mem32[(ptr >> 2) + 1];
-              let condValue = getValue(ptr);
-              rule.addDeclaration(new Declaration(rule, 'class-toggle', classNameValue, condValue));
-              ptr = mem32[(ptr >> 2) + 1];
+              let args = [];
+              for(let i = 0; i < 2; i++) {
+                args.push(getValue(ptr));
+                ptr = mem32[(ptr >> 2) + 1];
+              }
+
+              rule.addDeclaration(new Declaration(rule, propName, ...args));
             }
             break;
           }

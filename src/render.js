@@ -87,14 +87,25 @@ function render(element, bindings, values) {
     invalid = true;
   }
 
-  if(bindings.flags & flags.attr && bindings.attr.dirty(values)) {
-    element.setAttribute(bindings.attr.item(0), bindings.attr.item(1));
-    invalid = true;
+  if(bindings.flags & flags.attr) {
+    for(let compute of bindings.attr.values()) {
+      if(compute.dirty(values)) {
+        element.setAttribute(compute.item(0), compute.item(1));
+        invalid = true;
+      }
+    }
   }
 
-  if(bindings.flags & flags.attrToggle && bindings.attrToggle.dirty(values)) {
-    let value = bindings.attrToggle.item(1);
-    element.setAttribute(bindings.attrToggle.item(0), value === true ? '' : value);
+  if(bindings.flags & flags.attrToggle) {
+    for(let compute of bindings.attrToggle.values()) {
+      if(compute.dirty(values)) {
+        let value = compute.item(1);
+        if(value === false)
+          element.removeAttribute(compute.item(0));
+        else
+          element.setAttribute(compute.item(0), value === true ? '' : value);
+      }
+    }
   }
 
   if(bindings.flags & flags.text && bindings.text.dirty(values)) {
