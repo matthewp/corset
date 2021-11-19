@@ -28,7 +28,6 @@ function createBox(root, data) {
   };
 }
 
-
 const app = {
   render() {
     let items = Array.from({length: 100}, (_, i) => ({
@@ -70,21 +69,22 @@ const app = {
   
 app.render();
 
-var run = function(){
-  app.update();
-};
+const run = () => app.update();
 
-document.querySelector("#start").onclick = () => {
+document.querySelector('#start').onclick = () => {
   loopCount = 0;
   totalTime = 0;
   console.profile("loops");
   benchmarkLoop(run);
 };
 
-window.timeout = null;
-window.totalTime = null;
-window.loopCount = null; 	
-window.benchmarkLoop = (fn) => {
+document.querySelector('#stop').onclick = () => clearTimeout(timeout);
+document.querySelector('#reset').onclick = () => app.render();
+
+let timeout = null;
+let totalTime = null;
+let loopCount = null;
+const benchmarkLoop = (fn) => {
   let startDate = new Date();
   fn();
   let endDate = new Date();
