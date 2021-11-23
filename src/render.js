@@ -116,10 +116,14 @@ function render(element, bindings, values) {
     element[bindings.prop.item(0)] = bindings.prop.item(1);
   }
 
-  if(bindings.flags & flags.data && bindings.data.dirty(values)) {
-    /** @type {any} */
-    let el = element;
-    el.dataset[bindings.data.item(0)] = bindings.data.item(1);
+  if(bindings.flags & flags.data) {
+    for(let compute of bindings.data.values()) {
+      if(compute.dirty(values)) {
+        /** @type {any} */
+        let el = element;
+        el.dataset[compute.item(0)] = compute.item(1);
+      }
+    }
   }
 
   // Events last, does not affect the cascade.

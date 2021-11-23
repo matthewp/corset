@@ -57,7 +57,7 @@ const properties = {
   prop: { prop: 'prop', flag: flags.prop, multiValue: true, read: (root, el, args, values) => el[args[0].get(root, el, values)]},
   attr: { prop: 'attr', flag: flags.attr, multiValue: true, multiBindings: true, read: (root, el, args, values) => el.getAttribute(args[0].get(root, el, values))},
   'attr-toggle': { prop: 'attrToggle', flag: flags.attrToggle, multiValue: true, multiBindings: true, read: (root, el, args, values) => el.getAttribute(args[0].get(root, el, values))},
-  data: { prop: 'data', flag: flags.data, multiValue: true,
+  data: { prop: 'data', flag: flags.data, multiValue: true, multiBindings: true,
     /** @param {any} el */
     read: (root, el, args, values) => el.dataset[args[0].get(root, el, values)]
   },
@@ -119,7 +119,7 @@ export class Bindings {
     this.attr = null;
     /** @type {MultiBindingMap} */
     this.attrToggle = null;
-    /** @type {ComputedValue} */
+    /** @type {MultiBindingMap} */
     this.data = null;
     /** @type {ComputedValue} */
     this.attachTemplate = null;
