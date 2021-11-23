@@ -17,7 +17,6 @@ QUnit.test('Set an attribute value', assert => {
   template(true).update(root);
   assert.ok(root.firstElementChild.hasAttribute('name'));
   template(false).update(root);
-  console.log(root);
   assert.ok(!root.firstElementChild.hasAttribute('name'));
 });
 

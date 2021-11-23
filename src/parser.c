@@ -136,7 +136,10 @@ static long hash(int start, int end) {
 }
 
 static char identifierToken(char c) {
-  if(c >= 97 && c <= 122) {
+  // Capital letters
+  if((c >= 65 && c <= 90) ||
+    // Lower-case letters
+    (c >= 97 && c <= 122)) {
     return true;
   } else {
     return false;
