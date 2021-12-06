@@ -26,3 +26,65 @@ QUnit.test('Comments are supported', assert => {
   sheet.update(root);
   assert.equal(root.firstElementChild.textContent, 'works');
 });
+
+QUnit.test('Can handle large sheets', assert => {
+  assert.expect(1);
+  const fn = () => {};
+
+  // Note that the indentation is important for this test.
+  let sheet = dsl`
+            #run {
+                event: click ${fn};
+            }
+
+            #runlots {
+                event: click ${fn};
+            }
+
+            #add {
+                event: click ${fn};
+            }
+
+            #update {
+                event: click ${fn};
+            }
+
+            #clear {
+                event: click ${fn};
+            }
+
+            #swaprows {
+                event: click ${fn};
+            }
+
+            table {
+                event: click ${fn};
+            }
+
+            tbody {
+                each-template: select(#row-template);
+                each-items: ${[]};
+                each-key: id;
+            }
+
+            tr {
+                attr: id get(id);
+                class-toggle: danger get(${fn});
+            }
+
+            .id-column {
+                text: get(id);
+            }
+
+            .select-action {
+                text: get(label);
+                data: id get(id);
+            }
+
+            .remove-action span {
+                data: id get(id);
+            }
+        `;
+
+  assert.ok(sheet, 'did not throw');
+});

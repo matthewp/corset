@@ -1,7 +1,12 @@
 // @ts-check
 /// <reference path="./dsl.d.ts" />
 
+/**
+ * @typedef {import('./types').RawStringTemplate} RawStringTemplate
+ */
+
 import {
+  heap8, mem8,// TODO remove this
   heap32, mem32,
   parse, next,
   readNumberOfValues,
@@ -92,12 +97,18 @@ function getValue(ptr) {
   }
 }
 
+/**
+ * 
+ * @param {RawStringTemplate} strings 
+ * @param {any[]} values 
+ * @returns 
+ */
 function compile(strings, values) {
   let sheet = new BindingSheet();
   let rule;
   parse(strings, values);
   while(next()) {
-    switch(heap32[0]) {
+    switch(heap8[0]) {
       case 1: {
         rule = new Rule(readString(heap32[1], heap32[2]));
         sheet.addRule(rule);
@@ -203,7 +214,7 @@ const cache = new WeakMap();
 
 /**
  * 
- * @param {String[]} strings 
+ * @param {RawStringTemplate} strings 
  * @param {any[]} values 
  * @returns 
  */
@@ -219,7 +230,7 @@ function memoizeCompile(strings, values) {
 
 /**
  * The main DSL
- * @param {String[]} strings 
+ * @param {RawStringTemplate} strings 
  * @param  {...any} values 
  * @returns 
  */

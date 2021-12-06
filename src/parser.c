@@ -1,23 +1,30 @@
-#define export __attribute__((visibility("default")))
+#define WASM_EXPORT(name) __attribute__((export_name(name)))
 
 extern unsigned char __heap_base;
 
 // Uncomment to debug 👇🏼
 //__attribute__((import_module("env"), import_name("printf"))) int printf(const char*, ...);
 
-unsigned int bump_pointer;
+typedef unsigned int uintptr_t;
+
+uintptr_t bump_pointer = 0;
 void* malloc(unsigned long n) {
   unsigned int r = bump_pointer;
   bump_pointer += n;
   return (void *)r;
 }
 
-unsigned int tag_pointer;
+static unsigned int round_up_by_divisor(unsigned int num, unsigned int div) {
+  return num + ((div - (num % div)) % div);
+}
+
+uintptr_t data_pointer;
+uintptr_t tag_pointer;
 
 #define true 1
 #define false 0
-#define read_char_at(idx) *((char*)idx)
-#define read_char() *((char*)parser_state->index)
+#define read_char_at(idx) *((char*)(data_pointer + idx))
+#define read_char() *((char*)(data_pointer + parser_state->index))
 
 #define RESET_MODE 0
 #define RULE_START_MODE 1
@@ -555,16 +562,18 @@ static unsigned char parse_call_start_mode() {
   return TOKEN_CONSUMED;
 }
 
-export void reset() {
-  int base_pointer = (unsigned int)&__heap_base;
+WASM_EXPORT("reset") uintptr_t reset(unsigned int msize) {
+  uintptr_t base_pointer = (uintptr_t)&__heap_base;
   // TODO create and use a memset
-  if(bump_pointer) {
-    int len = bump_pointer - base_pointer;
+  if(bump_pointer > 0) {
+    unsigned long len = bump_pointer - base_pointer;
     int* s = (int*)base_pointer;
     for(; len; len--, s++) *s = 0;
   }
 
-  bump_pointer = base_pointer; // free()
+  bump_pointer = base_pointer;
+  unsigned int data_size = round_up_by_divisor(msize, 4);
+  data_pointer = (uintptr_t)malloc(data_size);
 
   parser_state = malloc(sizeof(parser_state_t));
   parser_state->index = 0;
@@ -578,6 +587,12 @@ export void reset() {
 
   // This sets the start of where tags should be created.
   tag_pointer = bump_pointer;
+
+  return data_pointer;
+}
+
+WASM_EXPORT("get_tag") uintptr_t get_tag() {
+  return tag_pointer;
 }
 
 static int parse_next_token() {
@@ -592,11 +607,12 @@ static int parse_next_token() {
     case CALL_START_MODE: return parse_call_start_mode();
     case VALUE_STRING_MODE: return parse_string_mode();
     case COMMENT_MODE: return parse_comment_mode();
+    default: return 0;
   }
   return TOKEN_CONSUMED;
 }
 
-export int parse(int array_len) {
+WASM_EXPORT("parse") int parse(int array_len) {
   while(parser_state->index < array_len) {
     switch(parse_next_token()) {
       case TOKEN_CONSUMED: {
@@ -617,8 +633,4 @@ export int parse(int array_len) {
   exit: {
     return true;
   }
-}
-
-export void* result() {
-  return parser_state->tag;
 }
