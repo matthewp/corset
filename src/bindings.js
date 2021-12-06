@@ -54,7 +54,7 @@ const properties = {
   'each-scope': { prop: 'eachScope', flag: flags.eachScope, read: readNull },
   'each-index': { prop: 'eachIndex', flag: flags.eachIndex, read: readNull },
   'each-key': { prop: 'eachKey', flag: flags.eachKey, read: readNull },
-  prop: { prop: 'prop', flag: flags.prop, multiValue: true, read: (root, el, args, values) => el[args[0].get(root, el, values)]},
+  prop: { prop: 'prop', flag: flags.prop, multiValue: true, multiBindings: true, read: (root, el, args, values) => el[args[0].get(root, el, values)]},
   attr: { prop: 'attr', flag: flags.attr, multiValue: true, multiBindings: true, read: (root, el, args, values) => el.getAttribute(args[0].get(root, el, values))},
   'attr-toggle': { prop: 'attrToggle', flag: flags.attrToggle, multiValue: true, multiBindings: true, read: (root, el, args, values) => el.getAttribute(args[0].get(root, el, values))},
   data: { prop: 'data', flag: flags.data, multiValue: true, multiBindings: true,
@@ -117,7 +117,7 @@ export class Bindings {
     this.eachIndex = null;
     /** @type {ComputedValue} */
     this.eachKey = null;
-    /** @type {ComputedValue} */
+    /** @type {MultiBindingMap} */
     this.prop = null;
     /** @type {MultiBindingMap} */
     this.attr = null;
