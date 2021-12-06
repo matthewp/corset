@@ -1,0 +1,6 @@
+{
+  "compilerOptions": {
+    "module": "esnext",
+    "target": "ES2020"
+  }
+}
