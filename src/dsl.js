@@ -141,7 +141,8 @@ function compile(strings, values) {
           case 'class-toggle':
           case 'attr':
           case 'attr-toggle':
-          case 'data': {
+          case 'data':
+          case 'prop': {
             expectMultipleOf(propName, 2);
             let ptr = readFirstValuePointer();
             while(ptr) {

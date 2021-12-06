@@ -101,8 +101,12 @@ function render(element, bindings, values) {
     element.textContent = bindings.text.get();
   }
 
-  if(bindings.flags & flags.prop && bindings.prop.dirty(values)) {
-    element[bindings.prop.item(0)] = bindings.prop.item(1);
+  if(bindings.flags & flags.prop) {
+    for(let compute of bindings.prop.values()) {
+      if(compute.dirty(values)) {
+        element[compute.item(0)] = compute.item(1);
+      }
+    }
   }
 
   if(bindings.flags & flags.data) {
