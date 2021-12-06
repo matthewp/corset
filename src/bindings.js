@@ -61,7 +61,11 @@ const properties = {
     /** @param {any} el */
     read: (root, el, args, values) => el.dataset[args[0].get(root, el, values)]
   },
-  'attach-template': { prop: 'attachTemplate', flag: flags.attach | flags.attachTemplate, read: (_root, el) => Array.from(el.childNodes) }
+  'attach-template': { prop: 'attachTemplate', flag: flags.attach | flags.attachTemplate, read: (_root, el) => {
+    let tmpl = el.ownerDocument.createElement('template');
+    tmpl.content.append(...Array.from(el.childNodes));
+    return tmpl;
+  } }
 };
 
 /**
