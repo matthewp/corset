@@ -39,7 +39,9 @@ QUnit.test('Restores the original value when there is no patch', assert => {
     `;
   }
   let app = root.firstElementChild;
-  template(true).update(root);
+  let sheet = template(true);
+  assert.equal(app.firstChild.localName, 'strong');
+  sheet.update(root);
   assert.equal(app.firstChild.localName, 'span');
   template(false).update(root);
   assert.equal(app.firstChild.localName, 'strong');
