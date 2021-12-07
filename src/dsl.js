@@ -1,5 +1,4 @@
 // @ts-check
-/// <reference path="./dsl.d.ts" />
 
 /**
  * @typedef {import('./types').RawStringTemplate} RawStringTemplate
@@ -26,8 +25,11 @@ import {
   VarValue
 } from './value.js';
 
-/** @typedef {import('./types').ValueType} ValueType */
-/** @typedef {import('./types').Value} Value */
+/**
+ * @typedef {import('./types').ValueType} ValueType
+ * @typedef {import('./types').Value} Value
+ */
+/**  */
 
 /** @type {Map<string, ValueType>} */
 // @ts-ignore -- Not sure why this is not working
@@ -217,7 +219,7 @@ const cache = new WeakMap();
  * 
  * @param {RawStringTemplate} strings 
  * @param {any[]} values 
- * @returns 
+ * @returns {SheetWithValues}
  */
 function memoizeCompile(strings, values) {
   if(cache.has(strings)) {
@@ -233,7 +235,7 @@ function memoizeCompile(strings, values) {
  * The main DSL
  * @param {RawStringTemplate} strings 
  * @param  {...any} values 
- * @returns 
+ * @returns {SheetWithValues}
  */
 export default function(strings, ...values) {
   let sheet = memoizeCompile(strings, values);

@@ -123,12 +123,13 @@ typedef struct tag_prop_t {
   value_type_node_t* last_value;
 } tag_prop_t;
 
-// TODO remove
+#ifdef DEBUG_BUILD
 typedef struct tag_error_t {
   unsigned char type;
   int code;
   int data;
 } tag_error_t;
+#endif
 
 static long hash(int start, int end) {
   int idx = start;
@@ -182,13 +183,6 @@ static char callArgToken(char c) {
   return selectorToken(c) || c == '"' || c == '-';
 }
 
-/*
-static void memset(int* dest, int c, int len) {
-  int *s = dest;
-  for(; len; len--, s++) *s = c;
-}
-*/
-
 static void free_tag() {
   // Loop over tag and zero out
   int len = bump_pointer - tag_pointer;
@@ -198,7 +192,7 @@ static void free_tag() {
   bump_pointer = tag_pointer;
 }
 
-// TODO wrap so that this only exists in the debug build
+#ifdef DEBUG_BUILD
 static int create_error_tag(int code, int data) {
   free_tag();
   tag_error_t* err = malloc(sizeof(*err));
@@ -208,6 +202,7 @@ static int create_error_tag(int code, int data) {
   parser_state->tag = err;
   return TOKEN_EXIT;
 }
+#endif
 
 static inline tag_prop_t* get_prop_tag() {
   tag_prop_t* prop = (tag_prop_t*)parser_state->tag;
@@ -414,8 +409,11 @@ static unsigned char parse_value_reset_mode() {
     parser_state->mode = RULE_RESET_MODE;
     return TOKEN_EXIT;
   } else if(!whitespaceToken(c) && !check_for_comment(c)) {
+    #ifdef DEBUG_BUILD
     return create_error_tag(2, c);
+    #endif
   }
+
   return TOKEN_CONSUMED;
 }
 
@@ -463,7 +461,9 @@ static unsigned char parse_value_start_mode() {
     parser_state->mode = post_value_mode();
   } else if(!identifierToken(c) && c != '-') {
     if(!check_for_comment(c)) {
+      #ifdef DEBUG_BUILD
       return create_error_tag(1, c);
+      #endif
     }
   }
 
@@ -567,7 +567,7 @@ WASM_EXPORT("reset") uintptr_t reset(unsigned int msize) {
   // TODO create and use a memset
   if(bump_pointer > 0) {
     unsigned long len = bump_pointer - base_pointer;
-    int* s = (int*)base_pointer;
+    int *s = (int*)base_pointer;
     for(; len; len--, s++) *s = 0;
   }
 
