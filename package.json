@@ -2,8 +2,15 @@
   "name": "@matthewp/untitled-dsl-project",
   "version": "1.0.0",
   "description": "",
-  "main": "src/dsl.js",
+  "type": "module",
+  "main": "./lib/dsl.cjs",
+  "exports": {
+    "default": "./lib/dsl.js"
+  },
+  "source": "src/dsl.js",
+  "types": "lib/dsl.d.ts",
   "scripts": {
+    "build": "microbundle -f modern", 
     "server": "python3 -m http.server 7800",
     "test-qunit": "node node_modules/@matthewp/node-qunit-puppeteer/cli.js http://localhost:7800/test/test.html",
     "test": "npm run server & npm run test-qunit"
@@ -20,6 +27,7 @@
   },
   "homepage": "https://github.com/matthewp/untitled-dsl-project#readme",
   "devDependencies": {
-    "@matthewp/node-qunit-puppeteer": "^3.0.0"
+    "@matthewp/node-qunit-puppeteer": "^3.0.0",
+    "microbundle": "^0.14.2"
   }
 }
