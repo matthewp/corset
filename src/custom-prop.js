@@ -12,10 +12,19 @@ export function pascalCase(propertyName) {
 }
 
 /**
+ * Creates a key for dataset for looking up a key
+ * @param {string} keyName
+ * @returns {string}
+ */
+ export function datasetKey(propertyName) {
+  return 'dsl' + pascalCase(propertyName);
+}
+
+/**
  * Creates a key for dataset for looking up custom properties
  * @param {string} propertyName 
  * @returns {string}
  */
-export function datasetKey(propertyName) {
+export function datasetPropKey(propertyName) {
   return 'dslProp' + pascalCase(propertyName);
 }

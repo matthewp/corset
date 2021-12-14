@@ -29,20 +29,24 @@ export class InsertionValue {
 }
 
 /** @implements {Value} */
-export class VarValue {
-  constructor(propValue, fallbackValue) {
-    this.propName = propValue.get();
-    this.dataPropName = 'data-dsl-prop-' + this.propName.substr(2);
+class ScopeLookupValue {
+  /**
+   * Look up a value within the DOM scope
+   * @param {string} dataName
+   * @param {string} propName
+   */
+  constructor(dataName, propName) {
+    this.dataPropName = 'data-dsl-' + dataName;
     this.dataSelector = '[' + this.dataPropName + ']';
-    /** @type {Value} */
-    this.fallbackValue = fallbackValue || null;
+    /** @type {string} */
+    this.propName = propName;
   }
   /**
-   * @param {Element} rootElement
+   * @param {Element} _rootElement
    * @param {Element} element
-   * @param {any[]} values
+   * @param {any[]} _values
    */
-  get(rootElement, element, values) {
+  get(_rootElement, element, _values) {
     let el = element;
     do {
       if(el.hasAttribute(this.dataPropName)) {
@@ -50,6 +54,31 @@ export class VarValue {
       }
       el = element.closest(this.dataSelector);
     } while(el);
+  }
+}
+
+/** @implements {Value} */
+export class VarValue extends ScopeLookupValue {
+  /**
+   *
+   * @param {any} propValue
+   * @param {Value} fallbackValue
+   */
+  constructor(propValue, fallbackValue) {
+    let propName = propValue.get();
+    super('prop-' + propName.substr(2), propName);
+    /** @type {Value | null} */
+    this.fallbackValue = fallbackValue || null;
+  }
+
+  /**
+   * @param {Element} rootElement
+   * @param {Element} element
+   * @param {any[]} values
+   */
+  get(rootElement, element, values) {
+    let ret = super.get(rootElement, element, values);
+    if(ret !== undefined) return ret;
     
     if(this.fallbackValue !== null) {
       return this.fallbackValue.get(rootElement, element, values);
@@ -62,7 +91,7 @@ export class GetValue {
   constructor(objValue, propValue) {
     if(!propValue) {
       propValue = objValue;
-      objValue = new VarValue(new AnyValue('--scope'));
+      objValue = new ItemValue();
     }
     /** @type {Value} */
     this.objValue = objValue;
@@ -113,5 +142,17 @@ export class BindValue {
     let fn = this.fnValue.get(rootElement, element, values);
     let args = this.args.map(arg => arg.get(rootElement, element, values));
     return fn.bind(element, ...args);
+  }
+}
+
+export class ItemValue extends ScopeLookupValue {
+  constructor() {
+    super('item', 'dslItem');
+  }
+}
+
+export class IndexValue extends ScopeLookupValue {
+  constructor() {
+    super('index', 'dslIndex');
   }
 }

@@ -14,20 +14,14 @@ export class EachInstance {
    * @param {Element} host 
    * @param {HTMLTemplateElement} template
    * @param {string} key
-   * @param {string} scopeName
-   * @param {string} indexName
    */
-  constructor(host, template, key, scopeName, indexName) {
+  constructor(host, template, key) {
     /** @type {Element} */
     this.host = host;
     /** @type {HTMLTemplateElement} */
     this.template = template;
     /** @type {string} */
     this.key = key;
-    /** @type {string} */
-    this.scopeName = scopeName;
-    /** @type {string} */
-    this.indexName = indexName;
     /** @type {(item: any, index: number) => any} */
     this.keyFn = null;
   }
@@ -60,16 +54,16 @@ export class EachInstance {
    * @param {*} index 
    */
   setData(frag, value, index) {
-    let scopeProp = datasetKey(this.scopeName);
-    let indexProp = datasetKey(this.indexName);
+    let itemProp = datasetKey('Item');
+    let indexProp = datasetKey('Index');
     for(let element of frag.nodes) {
       if('dataset' in element) {
         /** @type {HTMLElement} */
-        (element).dataset[scopeProp] = '';
-        element[Symbol.for(this.scopeName)] = value;
+        (element).dataset[itemProp] = '';
+        element[Symbol.for(itemProp)] = value;
          /** @type {HTMLElement} */
         (element).dataset[indexProp] = '';
-        element[Symbol.for(this.indexName)] = index;
+        element[Symbol.for(indexProp)] = index;
       }
 
     }
