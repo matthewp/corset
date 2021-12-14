@@ -9,7 +9,11 @@ QUnit.test('Shorthand each syntax', assert => {
   let todos = [{label: 'walk the dog'}, {label: 'clean the dishes'}];
   let sheet = dsl`
     ul {
-      each: ${todos} select(#todos-template) --todo;
+      each: ${todos} select(#todos-template);
+    }
+
+    li {
+      --todo: item();
     }
 
     .label {
@@ -32,11 +36,10 @@ QUnit.test('Longhand syntax', assert => {
     ul {
       each-items: ${todos};
       each-template: select(#todos-template);
-      each-scope: --todo;
     }
 
     .label {
-      text: get(var(--todo), label);
+      text: get(item(), label);
     }
   `;
   sheet.update(root);
@@ -46,7 +49,7 @@ QUnit.test('Longhand syntax', assert => {
   assert.equal(ul.querySelector(':nth-child(2) span').textContent, 'clean the dishes');
 });
 
-QUnit.test('The index is available as a var', assert => {
+QUnit.test('The index is available as index()', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<ul></ul><template id="todos-template"><li></li></template>`;
 
@@ -55,11 +58,10 @@ QUnit.test('The index is available as a var', assert => {
     ul {
       each-items: ${items};
       each-template: select(#todos-template);
-      each-scope: --todo;
     }
 
     li {
-      data: index var(--index);
+      data: index index();
     }
   `;
   sheet.update(root);
@@ -82,7 +84,7 @@ QUnit.test('Deleting an item in a keyed list updates sibling indices', assert =>
         attr: id get(${item => `item-${item.id}`});
       }
       li #index {
-        text: var(--index);
+        text: index();
       }
     `;
   }

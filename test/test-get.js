@@ -56,13 +56,15 @@ QUnit.test('can take a function as the second arg', assert => {
   assert.equal(root.firstElementChild.textContent, 'Hello Wilbur');
 });
 
-QUnit.test('if one arg, implicitly uses --scope as the context', assert => {
+QUnit.test('if one arg, use item() as the context', assert => {
   let root = document.createElement('main');
-  root.innerHTML = `<div id="app">Hello <span id="name"></span></div>`;
+  root.innerHTML = `<div id="app"></div><template>Hello <span id="name"></span></template>`;
   let pet = { name: 'Wilbur' };
   let sheet = dsl`
+    #app {
+      each: ${[pet]} select(template);
+    }
     #name {
-      --scope: ${pet};
       text: get(name);
     }
   `;

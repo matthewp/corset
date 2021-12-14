@@ -3,7 +3,7 @@
 import { flags } from './bindings.js';
 import { EachInstance } from './each.js';
 import { NO_VALUE } from './compute.js';
-import { datasetKey } from './custom-prop.js';
+import { datasetPropKey } from './custom-prop.js';
 
 /**
  * @typedef {import('./bindings').Bindings} Bindings
@@ -28,7 +28,7 @@ function render(element, bindings, values) {
         if(!(element instanceof HTMLElement)) {
           throw new Error('Custom properties cannot be used on non-HTML elements.');
         }
-        element.dataset[datasetKey(propertyName)] = '';
+        element.dataset[datasetPropKey(propertyName)] = '';
         element[Symbol.for(propertyName)] = compute.get();
       }
     }
@@ -55,14 +55,10 @@ function render(element, bindings, values) {
     /** @type {HTMLTemplateElement} */
     let template = bindings.eachTemplate.compute(values);
     /** @type {string} */
-    let scope = bindings.flags & flags.eachScope ? bindings.eachScope.compute(values) : '--scope';
-    /** @type {string} */
-    let indexVar = bindings.flags & flags.eachIndex ? bindings.eachIndex.compute(values) : '--index';
-    /** @type {string} */
     let key = bindings.flags & flags.eachKey ? bindings.eachKey.compute(values) : '';
     
-    if(!inst || inst.template !== template || inst.scopeName !== scope) {
-      inst = new EachInstance(element, template, key, scope, indexVar);
+    if(!inst || inst.template !== template) {
+      inst = new EachInstance(element, template, key);
       eachInstances.set(element, inst);
     }
     return inst.set(items);

@@ -20,7 +20,9 @@ import {
   AnyValue,
   BindValue,
   GetValue,
+  IndexValue,
   InsertionValue,
+  ItemValue,
   SelectValue,
   VarValue
 } from './value.js';
@@ -37,7 +39,9 @@ const fnMap = new Map([
   ['var', VarValue],
   ['get', GetValue],
   ['select', SelectValue],
-  ['bind', BindValue]
+  ['bind', BindValue],
+  ['index', IndexValue],
+  ['item', ItemValue]
 ]);
 
 /**
@@ -127,7 +131,7 @@ function compile(strings, values) {
             break;
           }
           case 'each': {
-            expectValues(propName, 3);
+            expectValues(propName, 2);
             let ptr = readFirstValuePointer();
             let args = [];
             while(ptr) {
@@ -136,7 +140,6 @@ function compile(strings, values) {
             }
             rule.addDeclaration(new Declaration(rule, 'each-items', args[0]));
             rule.addDeclaration(new Declaration(rule, 'each-template', args[1]));
-            rule.addDeclaration(new Declaration(rule, 'each-scope', args[2]));
             break;
           }
           case 'event':
