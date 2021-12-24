@@ -1,6 +1,6 @@
 {
-  "name": "@matthewp/untitled-dsl-project",
-  "version": "1.0.0",
+  "name": "corset",
+  "version": "0.1.0",
   "description": "",
   "type": "module",
   "main": "./lib/dsl.cjs",
@@ -17,15 +17,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/matthewp/untitled-dsl-project.git"
+    "url": "git+https://github.com/matthewp/corset.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/matthewp/untitled-dsl-project/issues"
+    "url": "https://github.com/matthewp/corset/issues"
   },
-  "homepage": "https://github.com/matthewp/untitled-dsl-project#readme",
+  "homepage": "https://github.com/matthewp/corset#readme",
   "devDependencies": {
     "@matthewp/node-qunit-puppeteer": "^3.0.0",
     "microbundle": "^0.14.2"
