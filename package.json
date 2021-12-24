@@ -9,6 +9,9 @@
   },
   "source": "src/dsl.js",
   "types": "lib/dsl.d.ts",
+  "files": [
+    "lib"
+  ],
   "scripts": {
     "build": "microbundle -f modern",
     "server": "python3 -m http.server 7800",
