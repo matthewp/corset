@@ -36,9 +36,10 @@ jobs:
         make lib/dsl.wasm
 
     - name: Publish
-      uses: matthewp/cdn-spooky-deploy-action@v3.beta.2
+      uses: matthewp/cdn-spooky-deploy-action@v3
       with:
         key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        pkg: 'untitled-dsl-project'
+        host: cdn.corset.dev
+        pkg: '.'
         source: 'lib'
