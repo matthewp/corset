@@ -36,7 +36,7 @@ jobs:
         make lib/dsl.wasm
 
     - name: Publish
-      uses: matthewp/cdn-spooky-deploy-action@v3
+      uses: matthewp/cdn-spooky-deploy-action@v3.1
       with:
         key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
