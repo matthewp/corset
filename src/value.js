@@ -156,3 +156,23 @@ export class IndexValue extends ScopeLookupValue {
     super('index', 'corsetIndex');
   }
 }
+
+/** @implements {Value} */
+export class DataValue {
+  constructor(propValue) {
+    /** @type {Value} */
+    this.propValue = propValue;
+  }
+  /**
+   * @param {Element} rootElement
+   * @param {Element} element
+   * @param {any[]} values
+   */
+  get(rootElement, element, values) {
+    let prop = this.propValue.get(rootElement, element, values);
+    if(!('dataset' in element)) {
+      throw new Error('The data() function can only be used on HTMLElements.');
+    }
+    return /** @type {HTMLElement} */(element).dataset[prop];
+  }
+}
