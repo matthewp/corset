@@ -1,7 +1,9 @@
-# Untitled DSL Project
+# Corset
+
+A __work in progress__ project that's not ready to be used.
 
 ```js
-import dsl from 'https://cdn.spooky.click/untitled-dsl-project/0.1.4/dsl.js';
+import dsl from 'https://cdn.corset.dev/0.2.0/main.js';
 
 dsl`...`;
 ```
