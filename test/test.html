@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>DSL Test Suite</title>
+<title>Corset Test Suite</title>
 <link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-2.17.2.css">
 <link rel="preload" as="fetch" href="../src/main.wasm" crossorigin>
 
@@ -27,5 +27,7 @@
   import "./test-get.js";
   import "./test-bind.js";
   import "./test-error.js";
+  import "./test-mount-top-level.js";
+  import "./test-mount.js";
   QUnit.start();
 </script>

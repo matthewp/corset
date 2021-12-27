@@ -4,13 +4,18 @@ import { flags } from './bindings.js';
 import { EachInstance } from './each.js';
 import { NO_VALUE } from './compute.js';
 import { datasetPropKey } from './custom-prop.js';
+import { mount } from './mount.js';
 
 /**
  * @typedef {import('./bindings').Bindings} Bindings
+ * @typedef {import('./mount').Mountpoint} Mountpoint
  */
 
 /** @type {WeakMap<Element, EachInstance>} */
 const eachInstances = new WeakMap();
+
+/** @type {WeakMap<Element, Mountpoint>} */
+const mountPoints = new WeakMap();
 
 /**
  * 
@@ -115,6 +120,21 @@ function render(element, bindings, values) {
     }
   }
 
+  if(bindings.flags & flags.mount) {
+    const compute = bindings.mount;
+    if(compute.dirty(values)) {
+      const lastValue = compute.lastValue;
+      const value = bindings.mount.get();
+      if(lastValue !== NO_VALUE) {
+        mountPoints.get(element).unmount();
+      }
+      if(value !== null) {
+        let mountpoint = mount(/** @type {HTMLElement} */(element), value);
+        mountPoints.set(element, mountpoint);
+      }
+    }
+  }
+
   // Events last, does not affect the cascade.
   if(bindings.flags & flags.event) {
     for(let compute of bindings.event.values()) {
@@ -143,4 +163,35 @@ export function renderRoot(allBindings, values) {
       invalid = true;
   }
   return invalid;
+}
+
+/**
+ * 
+ * @param {Element} element 
+ * @param {Bindings} bindings 
+ */
+function unmount(element, bindings) {
+  if(bindings.flags & flags.mount) {
+    let compute = bindings.mount;
+    if(compute.currentValue !== NO_VALUE) {
+      mountPoints.get(element).unmount();
+    }
+  }
+
+  if(bindings.flags & flags.event) {
+    for(let compute of bindings.event.values()) {
+      if(compute.currentValue !== NO_VALUE) {
+        element.removeEventListener(compute.item(0), compute.item(1));
+      }
+    }
+  }
+}
+
+/**
+ * @param {Map<Element, Bindings>} allBindings
+ */
+export function unmountRoot(allBindings) {
+  for(let [element, bindings] of allBindings) {
+    unmount(element, bindings);
+  }
 }
