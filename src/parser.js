@@ -8,7 +8,7 @@
 const INSERTION = 'ins()';
 
 const wasm = await WebAssembly.instantiateStreaming(
-  fetch(new URL('./dsl.wasm', import.meta.url).toString())
+  fetch(new URL('./main.wasm', import.meta.url).toString())
 );
 
 const instance = wasm.instance;

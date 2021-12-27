@@ -1,38 +1,38 @@
-import dsl from '../src/dsl.js';
+import sheet from '../src/main.js';
 
 QUnit.module('Language');
 
 QUnit.test('Attribute selectors work', assert => {
   let root = document.createElement('div');
   root.innerHTML = `<div foo></div>`;
-  let sheet = dsl`
+  let bindings = sheet`
     [foo] {
       text: ${'works'};
     }
   `;
-  sheet.update(root);
+  bindings.update(root);
   assert.equal(root.firstElementChild.textContent, 'works');
 });
 
 QUnit.test('Comments are supported', assert => {
   let root = document.createElement('div');
   root.innerHTML = `<div id="app"></div>`;
-  let sheet = dsl`
+  let bindings = sheet`
     #app {
       /* Setting the text here */
       text: "works";
     }
   `;
-  sheet.update(root);
+  bindings.update(root);
   assert.equal(root.firstElementChild.textContent, 'works');
 });
 
-QUnit.test('Can handle large sheets', assert => {
+QUnit.test('Can handle large bindingss', assert => {
   assert.expect(1);
   const fn = () => {};
 
   // Note that the indentation is important for this test.
-  let sheet = dsl`
+  let bindings = sheet`
             #run {
                 event: click ${fn};
             }
@@ -86,5 +86,5 @@ QUnit.test('Can handle large sheets', assert => {
             }
         `;
 
-  assert.ok(sheet, 'did not throw');
+  assert.ok(bindings, 'did not throw');
 });

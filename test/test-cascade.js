@@ -1,4 +1,4 @@
-import dsl from '../src/dsl.js';
+import sheet from '../src/main.js';
 
 QUnit.module('Cascade');
 
@@ -8,7 +8,7 @@ QUnit.test('When a rule becomes non-matching the original value is restored', as
     <div id="app" class="on">original</div>
   `;
   function template(show) {
-    return dsl`
+    return sheet`
       #app {
         class-toggle: on ${show};
       }

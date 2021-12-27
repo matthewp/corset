@@ -1,4 +1,4 @@
-import dsl from '../src/dsl.js';
+import sheet from '../src/main.js';
 
 QUnit.module('Property - each');
 
@@ -7,7 +7,7 @@ QUnit.test('Shorthand each syntax', assert => {
   root.innerHTML = `<ul></ul><template id="todos-template"><li><span class="label"></span></li></template>`;
 
   let todos = [{label: 'walk the dog'}, {label: 'clean the dishes'}];
-  let sheet = dsl`
+  let bindings = sheet`
     ul {
       each: ${todos} select(#todos-template);
     }
@@ -20,7 +20,7 @@ QUnit.test('Shorthand each syntax', assert => {
       text: get(var(--todo), label);
     }
   `;
-  sheet.update(root);
+  bindings.update(root);
   let ul = root.firstElementChild;
   assert.equal(ul.children.length, 2);
   assert.equal(ul.querySelector(':nth-child(1) span').textContent, 'walk the dog');
@@ -32,7 +32,7 @@ QUnit.test('Longhand syntax', assert => {
   root.innerHTML = `<ul></ul><template id="todos-template"><li><span class="label"></span></li></template>`;
 
   let todos = [{label: 'walk the dog'}, {label: 'clean the dishes'}];
-  let sheet = dsl`
+  let bindings = sheet`
     ul {
       each-items: ${todos};
       each-template: select(#todos-template);
@@ -42,7 +42,7 @@ QUnit.test('Longhand syntax', assert => {
       text: get(item(), label);
     }
   `;
-  sheet.update(root);
+  bindings.update(root);
   let ul = root.firstElementChild;
   assert.equal(ul.children.length, 2);
   assert.equal(ul.querySelector(':nth-child(1) span').textContent, 'walk the dog');
@@ -54,7 +54,7 @@ QUnit.test('The index is available as index()', assert => {
   root.innerHTML = `<ul></ul><template id="todos-template"><li></li></template>`;
 
   let items = [1];
-  let sheet = dsl`
+  let bindings = sheet`
     ul {
       each-items: ${items};
       each-template: select(#todos-template);
@@ -64,7 +64,7 @@ QUnit.test('The index is available as index()', assert => {
       data: index index();
     }
   `;
-  sheet.update(root);
+  bindings.update(root);
   let li = root.querySelector('li');
   assert.equal(Number(li.dataset.index), 0);
 });
@@ -74,7 +74,7 @@ QUnit.test('Deleting an item in a keyed list updates sibling indices', assert =>
   root.innerHTML = `<ul></ul><template><li>index: <span id="index"></span></li></template>`;
   let items = [{id: 1}, {id: 2}, {id: 3}];
   function template() {
-    return dsl`
+    return sheet`
       ul {
         each-items: ${items};
         each-template: select(template);

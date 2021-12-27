@@ -33,7 +33,7 @@ jobs:
 
     - name: Build WASM
       run: |
-        make lib/dsl.wasm
+        make lib/main.wasm
 
     - name: Publish
       uses: matthewp/cdn-spooky-deploy-action@v3.1

@@ -1,4 +1,4 @@
-import dsl from '../../src/dsl.js';
+import dsl from '../../src/main.js';
 
 const root = document.querySelector('#app');
 

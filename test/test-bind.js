@@ -1,4 +1,4 @@
-import dsl from '../src/dsl.js';
+import sheet from '../src/main.js';
 
 QUnit.module('Function - bind()');
 
@@ -12,13 +12,13 @@ QUnit.test('Can bind arguments to a function', assert => {
     assert.equal(arg1, data);
     assert.equal(arg2, second);
   };
-  let sheet = dsl`
+  let bindings = sheet`
     button {
       --data: ${data};
       --second: ${second};
       event: click bind(${callback}, var(--data), var(--second));
     }
   `;
-  sheet.update(root);
+  bindings.update(root);
   root.querySelector('button').dispatchEvent(new Event('click'));
 });

@@ -17,7 +17,7 @@ export function pascalCase(propertyName) {
  * @returns {string}
  */
  export function datasetKey(propertyName) {
-  return 'dsl' + pascalCase(propertyName);
+  return 'corset' + pascalCase(propertyName);
 }
 
 /**
@@ -26,5 +26,5 @@ export function pascalCase(propertyName) {
  * @returns {string}
  */
 export function datasetPropKey(propertyName) {
-  return 'dslProp' + pascalCase(propertyName);
+  return 'corsetProp' + pascalCase(propertyName);
 }

@@ -1,4 +1,4 @@
-import dsl from '../src/dsl.js';
+import sheet from '../src/main.js';
 
 QUnit.module('Property - attr-toggle');
 
@@ -7,7 +7,7 @@ QUnit.test('Set an attribute value', assert => {
   root.innerHTML = `<div id="app"></div>`;
 
   function template(value) {
-    return dsl`
+    return sheet`
       #app {
         attr-toggle: name ${value};
       }
@@ -24,7 +24,7 @@ QUnit.test('Can set multiple attributes', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"></div>`;
 
-  let sheet =dsl`
+  let bindings =sheet`
     #app {
       attr-toggle:
         one ${true}
@@ -32,7 +32,7 @@ QUnit.test('Can set multiple attributes', assert => {
     }
   `;
 
-  sheet.update(root);
+  bindings.update(root);
   assert.ok(root.firstElementChild.hasAttribute('one'));
   assert.ok(root.firstElementChild.hasAttribute('two'));
 });

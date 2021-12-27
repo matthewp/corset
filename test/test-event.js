@@ -1,4 +1,4 @@
-import dsl from '../src/dsl.js';
+import sheet from '../src/main.js';
 
 QUnit.module('Property - event');
 
@@ -8,8 +8,8 @@ QUnit.test('Adds an event listener', assert => {
   let called = false;
   let cb = () => called = true;
 
-  let sheet = dsl`button { event: click ${cb}; }`;
-  sheet.update(root);
+  let bindings = sheet`button { event: click ${cb}; }`;
+  bindings.update(root);
   root.firstElementChild.dispatchEvent(new Event('click'));
   assert.ok(called);
 });
@@ -21,7 +21,7 @@ QUnit.test('Unbinds from previous callback when it changes', assert => {
   let cb = () => count++;
 
   function template() {
-    return dsl`
+    return sheet`
       button {
         --cb: ${cb.bind(null)};
         event: click var(--cb); 
@@ -46,7 +46,7 @@ QUnit.test('Can listen to multiple events on the same element', assert => {
   let cb1 = () => count1++;
   let cb2 = () => count2++;
 
-  let sheet = dsl`
+  let bindings = sheet`
     button {
       event:
         "custom-one" ${cb1}
@@ -55,7 +55,7 @@ QUnit.test('Can listen to multiple events on the same element', assert => {
   `;
 
 
-  sheet.update(root);
+  bindings.update(root);
   root.firstElementChild.dispatchEvent(new Event('custom-one'));
   assert.equal(count1, 1);
 
