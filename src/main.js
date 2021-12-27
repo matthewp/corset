@@ -19,6 +19,7 @@ import { BindingSheet, SheetWithValues } from './sheet.js';
 import {
   AnyValue,
   BindValue,
+  DataValue,
   GetValue,
   IndexValue,
   InsertionValue,
@@ -36,6 +37,7 @@ import {
 /** @type {Map<string, ValueType>} */
 // @ts-ignore -- Not sure why this is not working
 const fnMap = new Map([
+  ['data', DataValue],
   ['var', VarValue],
   ['get', GetValue],
   ['select', SelectValue],
