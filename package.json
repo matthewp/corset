@@ -3,12 +3,12 @@
   "version": "0.1.4",
   "description": "",
   "type": "module",
-  "main": "./lib/dsl.cjs",
+  "main": "./lib/main.cjs",
   "exports": {
-    "default": "./lib/dsl.js"
+    "default": "./lib/main.js"
   },
-  "source": "src/dsl.js",
-  "types": "lib/dsl.d.ts",
+  "source": "src/main.js",
+  "types": "lib/main.d.ts",
   "files": [
     "lib"
   ],

@@ -1,4 +1,4 @@
-import dsl from '../src/dsl.js';
+import sheet from '../src/main.js';
 
 QUnit.module('Property - class-toggle');
 
@@ -7,7 +7,7 @@ QUnit.test('Adds a class when true', assert => {
   root.innerHTML = `<div id="app"></div>`;
 
   function template(value) {
-    return dsl`
+    return sheet`
       #app {
         class-toggle: on ${value};
       }
@@ -27,8 +27,8 @@ QUnit.test('Removes a class when false', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app" class="on"></div>`;
   assert.equal(root.firstElementChild.classList.contains('on'), true);
-  let sheet = dsl`#app { class-toggle: on ${false}; }`;
-  sheet.update(root);
+  let bindings = sheet`#app { class-toggle: on ${false}; }`;
+  bindings.update(root);
   assert.equal(root.firstElementChild.classList.contains('on'), false);
 });
 
@@ -42,7 +42,7 @@ QUnit.test('Triggers update on dependent properties', assert => {
       app.update();
     },
     update() {
-      let sheet = dsl`
+      let bindings = sheet`
         article {
           class-toggle: "dark-mode" ${app.mode === 'dark'};
         }
@@ -51,7 +51,7 @@ QUnit.test('Triggers update on dependent properties', assert => {
           text: "dark";
         }
       `;
-      sheet.update(root);
+      bindings.update(root);
     }
   };
 
@@ -67,7 +67,7 @@ QUnit.test('Restores the original value', assert => {
   root.innerHTML = `<div id="app"><span class="yes"></span></div>`;
 
   function template(value) {
-    return dsl`
+    return sheet`
       #app {
         class-toggle: on ${value};
       }
@@ -88,14 +88,14 @@ QUnit.test('Restores the original value', assert => {
 QUnit.test('Setting multiple classes', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"></div>`;
-  let sheet = dsl`
+  let bindings = sheet`
     #app {
       class-toggle:
         one ${true}
         two ${true};
     }
   `;
-  sheet.update(root);
+  bindings.update(root);
   let app = root.firstElementChild;
   assert.ok(app.classList.contains('one'));
   assert.ok(app.classList.contains('two'));

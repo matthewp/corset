@@ -1,4 +1,4 @@
-import dsl from '../src/dsl.js';
+import sheet from '../src/main.js';
 
 QUnit.module('Property - prop');
 
@@ -10,12 +10,12 @@ QUnit.test('Sets a property', assert => {
   });
   let root = document.createElement('main');
   root.innerHTML = `<my-prop-element></my-prop-element>`;
-  let sheet = dsl`
+  let bindings = sheet`
     my-prop-element {
       prop: name "world";
     }
   `;
-  sheet.update(root);
+  bindings.update(root);
   assert.equal(root.firstElementChild.textContent, 'Hello world');
 });
 
@@ -28,7 +28,7 @@ QUnit.test('Can be set by a custom property', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"><my-prop-element-two></my-prop-element-two></div>`;
   function template(value) {
-    return dsl`
+    return sheet`
       #app {
         class-toggle: pet ${value};
       }
@@ -66,14 +66,14 @@ QUnit.test('Can set multiple properties', assert => {
   });
   let root = document.createElement('main');
   root.innerHTML = `<my-prop-element-three></my-prop-element-three>`;
-  let sheet = dsl`
+  let bindings = sheet`
     my-prop-element-three {
       prop:
         name "world"
         count ${2};
     }
   `;
-  sheet.update(root);
+  bindings.update(root);
   assert.equal(root.firstElementChild.firstElementChild.textContent, 'Hello world');
   assert.equal(root.firstElementChild.firstElementChild.nextElementSibling.textContent, '2');
 });

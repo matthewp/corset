@@ -36,7 +36,7 @@ class ScopeLookupValue {
    * @param {string} propName
    */
   constructor(dataName, propName) {
-    this.dataPropName = 'data-dsl-' + dataName;
+    this.dataPropName = 'data-corset-' + dataName;
     this.dataSelector = '[' + this.dataPropName + ']';
     /** @type {string} */
     this.propName = propName;
@@ -147,12 +147,12 @@ export class BindValue {
 
 export class ItemValue extends ScopeLookupValue {
   constructor() {
-    super('item', 'dslItem');
+    super('item', 'corsetItem');
   }
 }
 
 export class IndexValue extends ScopeLookupValue {
   constructor() {
-    super('index', 'dslIndex');
+    super('index', 'corsetIndex');
   }
 }

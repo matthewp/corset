@@ -1,4 +1,4 @@
-import dsl from '../src/dsl.js';
+import sheet from '../src/main.js';
 
 QUnit.module('Property - text');
 
@@ -8,10 +8,10 @@ QUnit.test('Sets the textContent if an element', assert => {
     <div class="foo"></div>
   `;
 
-  let sheet = dsl`
+  let bindings = sheet`
     .foo { text: ${'bar'}; }
   `;
 
-  sheet.update(root);
+  bindings.update(root);
   assert.equal(root.firstElementChild.textContent, 'bar');
 });

@@ -51,7 +51,7 @@ jobs:
 
     - name: Build WASM
       run: |
-        make src/dsl.wasm
+        make src/main.wasm
 
     - name: Start server
       run: |
