@@ -21,7 +21,8 @@ export const flags = {
   attrToggle: 1 << 10,
   data: 1 << 11,
   attach: 1 << 12,
-  attachTemplate: 1 << 13
+  attachTemplate: 1 << 13,
+  mount: 1 << 14,
 };
 
 /**
@@ -65,7 +66,8 @@ const properties = {
     let tmpl = el.ownerDocument.createElement('template');
     tmpl.content.append(...Array.from(el.childNodes));
     return tmpl;
-  } }
+  } },
+  mount: { prop: 'mount', flag: flags.mount, read: readNull },
 };
 
 /**
@@ -127,6 +129,8 @@ export class Bindings {
     this.data = null;
     /** @type {ComputedValue} */
     this.attachTemplate = null;
+    /** @type {ComputedValue} */
+    this.mount = null;
 
     /** @type {null | Map<string, ComputedValue>} */
     this.custom = null;

@@ -5,7 +5,7 @@
  */
 
 import {
-  heap8, mem8,// TODO remove this
+  heap8,
   heap32, mem32,
   parse, next,
   readNumberOfValues,
@@ -247,3 +247,5 @@ export default function(strings, ...values) {
   sheet.values = values;
   return sheet;
 }
+
+export { mount } from './mount.js';

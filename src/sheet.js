@@ -1,6 +1,6 @@
 // @ts-check
 import { Bindings } from './bindings.js';
-import { renderRoot } from './render.js';
+import { renderRoot, unmountRoot } from './render.js';
 
 /**
  * @typedef {import('./rule').Rule} Rule
@@ -51,6 +51,9 @@ class Root {
       }
     }
   }
+  unmount() {
+    unmountRoot(this.bindingMap);
+  }
 }
 
 export class BindingSheet {
@@ -73,6 +76,7 @@ export class SheetWithValues {
    * @param {any[]} values
    */
   constructor(sheet, values) {
+    /** @type {WeakMap<Element, Root>} */
     this.roots = new WeakMap();
     this.sheet = sheet;
     this.values = values;
@@ -82,6 +86,7 @@ export class SheetWithValues {
    * @param {HTMLElement} rootElement
    */
   update(rootElement) {
+    /** @type {Root} */
     let root;
     if(this.roots.has(rootElement)) {
       root = this.roots.get(rootElement);
@@ -90,5 +95,10 @@ export class SheetWithValues {
       this.roots.set(rootElement, root);
     }
     return root.update(this.values);
+  }
+  unmount(rootElement) {
+    if(this.roots.has(rootElement)) {
+      this.roots.get(rootElement).unmount();
+    }
   }
 }
