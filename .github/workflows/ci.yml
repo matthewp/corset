@@ -133,7 +133,7 @@ jobs:
   changelog:
     name: Changelog PR or Release
     if: ${{ github.ref_name == 'main' && github.repository_owner == 'matthewp' }}
-    needs: [build]
+    needs: [test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
