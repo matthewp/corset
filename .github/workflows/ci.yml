@@ -50,15 +50,15 @@ jobs:
         run: |
           make src/main.wasm
 
-      - name: Build WASM (Release)
-        if: ${{ github.ref_name == 'main' }}
-        run: |
-          make lib/main.wasm
-
       - name: Build JavaScript
         if: ${{ github.ref_name == 'main' }}
         run: |
           npm run build
+
+      - name: Build WASM (Release)
+        if: ${{ github.ref_name == 'main' }}
+        run: |
+          make lib/main.wasm
 
       - name: Upload Package Artifacts
         uses: actions/upload-artifact@v2
