@@ -1,0 +1,177 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+
+      - name: Cache Node Modules
+        id: cache-node
+        uses: actions/cache@v2
+        with:
+          path: "**/node_modules"
+          key: cache-node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-${{ github.run_id }}
+          restore-keys: |
+            cache-node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-${{ github.run_id }}
+            cache-node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-
+
+      - name: Cache Binary Installs
+        id: cache-binaries
+        uses: actions/cache@v2
+        with:
+          path: ./llvm
+          key: llvm-11.0
+
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v1
+        with:
+          version: "11.0"
+          cached: ${{ steps.cache-binaries.outputs.cache-hit }}
+
+      - name: Verify Clang
+        run: |
+          clang --version
+          wasm-ld --version
+
+      - name: Install NPM Dependencies
+        run: npm ci
+
+      - name: Build WASM (Debug)
+        run: |
+          make src/main.wasm
+
+      - name: Build WASM (Release)
+        if: ${{ github.ref_name == 'main' }}
+        run: |
+          make lib/main.wasm
+
+      - name: Build JavaScript
+        if: ${{ github.ref_name == 'main' }}
+        run: |
+          npm run build
+
+      - name: Upload Package Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: artifacts
+          path: |
+            src/main.wasm
+            lib/**
+          if-no-files-found: error
+
+  test:
+    name: 'Test: ${{ matrix.os }} (node@${{ matrix.node_version }})'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node_version: [16]
+      fail-fast: false
+    needs: [build]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup node@${{ matrix.node_version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node_version }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v2
+
+      - name: Extract Artifacts
+        run: ./.github/extract-artifacts.sh
+
+      - name: Cache Node Modules
+        id: cache-node
+        uses: actions/cache@v2
+        with:
+          path: "**/node_modules"
+          key: cache-node_modules-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}-${{ github.run_id }}
+          restore-keys: |
+            cache-node_modules-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}-${{ github.run_id }}
+            cache-node_modules-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}-
+
+      - name: Setup Python Alias
+        run: |
+          shopt -s expand_aliases
+          alias python3="python"
+          echo "List the aliases"
+          alias
+          which python3
+
+      - name: Install NPM Dependencies
+        run: npm ci
+        env:
+          CI: true
+
+      - name: Start server
+        run: |
+          python3 -m http.server 7800 &
+
+      - name: Test
+        run: npm run test-qunit
+        env:
+          CI: true
+
+  changelog:
+    name: Changelog PR or Release
+    if: ${{ github.ref_name == 'main' && github.repository_owner == 'matthewp' }}
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+          cache: 'yarn'
+      
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v2
+
+      - name: Extract Artifacts
+        run: ./.github/extract-artifacts.sh
+
+      - name: Cache Node Modules
+        id: cache-node
+        uses: actions/cache@v2
+        with:
+          path: "**/node_modules"
+          key: cache-node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-${{ github.run_id }}
+          restore-keys: |
+            cache-node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-${{ github.run_id }}
+            cache-node_modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-
+
+      - name: Install NPM Dependencies
+        run: npm ci
+      
+      - name: Create Release Pull Request or Publish
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          publish: npm run changeset publish
+          commit: '[ci] release'
+          title: '[ci] release'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

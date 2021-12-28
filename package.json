@@ -14,6 +14,7 @@
   ],
   "scripts": {
     "build": "microbundle -f modern",
+    "changeset": "changeset",
     "server": "python3 -m http.server 7800",
     "test-qunit": "node node_modules/@matthewp/node-qunit-puppeteer/cli.js http://localhost:7800/test/test.html",
     "test": "npm run server & npm run test-qunit"
@@ -23,13 +24,14 @@
     "url": "git+https://github.com/matthewp/corset.git"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Matthew Phillips <matthew@matthewphillips.info>",
+  "license": "BSD-2-Clause",
   "bugs": {
     "url": "https://github.com/matthewp/corset/issues"
   },
   "homepage": "https://github.com/matthewp/corset#readme",
   "devDependencies": {
+    "@changesets/cli": "^2.16.0",
     "@matthewp/node-qunit-puppeteer": "^3.0.0",
     "microbundle": "^0.14.2"
   }
