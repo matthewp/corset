@@ -181,7 +181,7 @@ jobs:
 
       - name: Publish to cdn.corset.dev
         if: steps.changesets.outputs.published == 'true'
-        uses: matthewp/cdn-spooky-deploy-action@v3.2
+        uses: matthewp/cdn-spooky-deploy-action@v3.3
         with:
           key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
