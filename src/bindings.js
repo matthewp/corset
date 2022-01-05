@@ -13,16 +13,14 @@ export const flags = {
   event: 1 << 2,
   custom: 1 << 3,
   each: 1 << 4,
-  eachScope: 1 << 5,
-  eachIndex: 1 << 6,
-  eachKey: 1 << 7,
-  prop: 1 << 8,
-  attr: 1 << 9,
-  attrToggle: 1 << 10,
-  data: 1 << 11,
-  attach: 1 << 12,
-  attachTemplate: 1 << 13,
-  mount: 1 << 14,
+  eachKey: 1 << 5,
+  prop: 1 << 6,
+  attr: 1 << 7,
+  attrToggle: 1 << 8,
+  data: 1 << 9,
+  attach: 1 << 10,
+  attachTemplate: 1 << 11,
+  mount: 1 << 12,
 };
 
 /**
@@ -52,8 +50,6 @@ const properties = {
     ) },
   'each-items': { prop: 'eachItems', flag: flags.each, read: readNull },
   'each-template': { prop: 'eachTemplate', flag: flags.each, read: readNull },
-  'each-scope': { prop: 'eachScope', flag: flags.eachScope, read: readNull },
-  'each-index': { prop: 'eachIndex', flag: flags.eachIndex, read: readNull },
   'each-key': { prop: 'eachKey', flag: flags.eachKey, read: readNull },
   prop: { prop: 'prop', flag: flags.prop, multiValue: true, multiBindings: true, read: (root, el, args, values) => el[args[0].get(root, el, values)]},
   attr: { prop: 'attr', flag: flags.attr, multiValue: true, multiBindings: true, read: (root, el, args, values) => el.getAttribute(args[0].get(root, el, values))},
@@ -113,10 +109,6 @@ export class Bindings {
     this.eachItems = null;
     /** @type {ComputedValue} */
     this.eachTemplate = null;
-    /** @type {ComputedValue} */
-    this.eachScope = null;
-    /** @type {ComputedValue} */
-    this.eachIndex = null;
     /** @type {ComputedValue} */
     this.eachKey = null;
     /** @type {MultiBindingMap} */
