@@ -68,3 +68,16 @@ QUnit.test('Dash property names work', assert => {
   bindings.update(root);
   assert.equal(root.firstElementChild.textContent, 'testing');
 });
+
+QUnit.test('Can be used as a function', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app"></div>`;
+  let bindings = sheet`
+    #app {
+      --concat: ${(...args) => args.join('')};
+      text: --concat("one", " ", "two");
+    }
+  `;
+  bindings.update(root);
+  assert.equal(root.firstElementChild.textContent, 'one two');
+});

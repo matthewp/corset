@@ -62,7 +62,7 @@ export class VarValue extends ScopeLookupValue {
   /**
    *
    * @param {any} propValue
-   * @param {Value} fallbackValue
+   * @param {Value} [fallbackValue]
    */
   constructor(propValue, fallbackValue) {
     let propName = propValue.get();
@@ -174,5 +174,25 @@ export class DataValue {
       throw new Error('The data() function can only be used on HTMLElements.');
     }
     return /** @type {HTMLElement} */(element).dataset[prop];
+  }
+}
+
+/** @implements {Value} */
+export class CustomFunctionValue {
+  constructor(varValue, ...args) {
+    /** @type {Value} */
+    this.varValue = varValue;
+    /** @type {Value[]} */
+    this.args = args;
+  }
+  /**
+   * @param {Element} rootElement
+   * @param {Element} element
+   * @param {any[]} values
+   */
+  get(rootElement, element, values) {
+    let fn = this.varValue.get(rootElement, element, values);
+    let args = this.args.map(arg => arg.get(rootElement, element, values));
+    return fn(...args);
   }
 }
