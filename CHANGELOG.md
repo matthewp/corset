@@ -1,5 +1,11 @@
 # corset
 
+## 0.4.0
+
+### Minor Changes
+
+- f218cae: Allows custom properties to be called as functions
+
 ## 0.3.1
 
 ### Patch Changes
