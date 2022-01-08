@@ -19,6 +19,7 @@ import { BindingSheet, SheetWithValues } from './sheet.js';
 import {
   AnyValue,
   BindValue,
+  CustomFunctionValue,
   DataValue,
   GetValue,
   IndexValue,
@@ -83,14 +84,19 @@ function getValue(ptr) {
     }
     case 4: {
       let fn = readString(mem32[ptrv32], mem32[ptrv32 + 1]);
-      if(!fnMap.has(fn)) {
-        throw new Error(`Unknown function ${fn}`);
-      }
       /** @type {ValueType} */
-      let ValueConstructor = fnMap.get(fn);
-
+      let ValueConstructor;
       /** @type {Value[]} */
       let args = [];
+      if(fnMap.has(fn)) {
+        ValueConstructor = fnMap.get(fn);
+      } else if(fn.startsWith('--')) {
+        ValueConstructor = CustomFunctionValue;
+        args.push(new VarValue(new AnyValue(fn)));
+      } else {
+        throw new Error(`Unknown function ${fn}`);
+      }
+
       let vptr = mem32[ptrv32 + 3];
       while(vptr) {
         args.push(getValue(vptr));
