@@ -40,11 +40,8 @@ function render(element, bindings, values) {
   }
 
   if(bindings.flags & flags.classToggle) {
-    for(let compute of bindings.classToggle.values()) {
-      if(compute.dirty(values)) {
-        element.classList.toggle(compute.item(0), compute.item(1));
-        invalid = true;
-      }
+    for(let compute of bindings.classToggle.changes(values)) {
+      element.classList.toggle(compute.key(), compute.get());
     }
   }
 
@@ -78,23 +75,13 @@ function render(element, bindings, values) {
   }
 
   if(bindings.flags & flags.attr) {
-    for(let compute of bindings.attr.values()) {
-      if(compute.dirty(values)) {
-        element.setAttribute(compute.item(0), compute.item(1));
-        invalid = true;
-      }
-    }
-  }
-
-  if(bindings.flags & flags.attrToggle) {
-    for(let compute of bindings.attrToggle.values()) {
-      if(compute.dirty(values)) {
-        let value = compute.item(1);
-        if(value === false)
-          element.removeAttribute(compute.item(0));
-        else
-          element.setAttribute(compute.item(0), value === true ? '' : value);
-      }
+    for(let value of bindings.attrValue.changes(values)) {
+      let key = value.key();
+      let toggle = bindings.attrToggle.get(key).compute(values);
+      if(toggle)
+        element.setAttribute(key, value.get());
+      else
+        element.removeAttribute(key);
     }
   }
 

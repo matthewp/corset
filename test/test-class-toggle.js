@@ -91,7 +91,7 @@ QUnit.test('Setting multiple classes', assert => {
   let bindings = sheet`
     #app {
       class-toggle:
-        one ${true}
+        one ${true},
         two ${true};
     }
   `;
@@ -99,4 +99,25 @@ QUnit.test('Setting multiple classes', assert => {
   let app = root.firstElementChild;
   assert.ok(app.classList.contains('one'));
   assert.ok(app.classList.contains('two'));
+});
+
+QUnit.test('Keyed assignment', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app"></div>`;
+
+  function template(value) {
+    return sheet`
+      #app {
+        class-toggle[on]: ${value};
+      }
+    `;
+  }
+
+  template(true).update(root);
+  assert.equal(root.firstElementChild.classList.contains('on'), true);
+  template(false).update(root);
+  assert.equal(root.firstElementChild.classList.contains('on'), false);
+  // Try false again
+  template(false).update(root);
+  assert.equal(root.firstElementChild.classList.contains('on'), false);
 });

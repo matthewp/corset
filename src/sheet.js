@@ -4,18 +4,22 @@ import { renderRoot, unmountRoot } from './render.js';
 
 /**
  * @typedef {import('./rule').Rule} Rule
+ * @typedef {Root} SheetRoot
  */
 
 class Root {
   /**
    * @param {HTMLElement} rootElement 
    * @param {BindingSheet} sheet 
+   * @param {any[]} values
    */
-  constructor(rootElement, sheet) {
+  constructor(rootElement, sheet, values) {
     /** @type {HTMLElement} */
     this.rootElement = rootElement;
     /** @type {Rule[]} */
     this.rules = sheet.rules;
+    /** @type {any[]} */
+    this.values = values;
     /** @type {Map<Element, Bindings>} */
     this.bindingMap = new Map();
   }
@@ -23,6 +27,7 @@ class Root {
    * @param {any[]} values
    */
   update(values) {
+    this.values = values;
     let invalid = true;
     while(invalid) {
       this.collect(values);
@@ -42,7 +47,7 @@ class Root {
         if(this.bindingMap.has(el)) {
           bindings = this.bindingMap.get(el);
         } else {
-          bindings = new Bindings(rootElement, el);
+          bindings = new Bindings(this, el);
           this.bindingMap.set(el, bindings);
         }
         for(let declaration of rule.declarations) {
@@ -91,7 +96,7 @@ export class SheetWithValues {
     if(this.roots.has(rootElement)) {
       root = this.roots.get(rootElement);
     } else {
-      root = new Root(rootElement, this.sheet);
+      root = new Root(rootElement, this.sheet, this.values);
       this.roots.set(rootElement, root);
     }
     return root.update(this.values);

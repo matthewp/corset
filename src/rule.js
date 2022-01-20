@@ -7,10 +7,15 @@
 export class Rule {
   /**
    * @param {string} selector
+   * @param {number} index
    */
-  constructor(selector) {
-    /** @type {String} */
+  constructor(selector, index) {
+    /** @type {string} */
     this.selector = selector;
+    /** @type {number} */
+    this.index = index;
+    /** @type {number} */
+    this.specificity = 0;
     /** @type {Array<Declaration>} */
     this.declarations = [];
   }

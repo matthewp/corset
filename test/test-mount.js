@@ -5,10 +5,7 @@ QUnit.module('Property - mount');
 QUnit.test('Updates on state changes', assert => {
   function Counter(state) {
     const { count = 0 } = state;
-
-    function increment() {
-      state.count = count + 1;
-    }
+    const increment = () => state.count = count + 1;
 
     return sheet`
       button {

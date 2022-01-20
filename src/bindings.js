@@ -1,9 +1,13 @@
 // @ts-check
 
-import { ComputedValue } from './compute.js';
+import { ComputedValue, createCompute } from './compute.js';
+import { Declaration } from './declaration.js';
+import { MultiBinding } from './multi.js';
+import { AnyValue } from './value.js';
+
+import { properties as propertyDescriptors } from './property2.js';
 
 /**
- * @typedef {import('./declaration').Declaration} Declaration
  * @typedef {import('./value').Value} Value
  */
 
@@ -24,7 +28,11 @@ export const flags = {
 };
 
 /**
- * @typedef {(rootElement: Element, element: Element, args: Value[], values: any[]) => any} ReadElementValue
+ * @typedef {(rootElement: Element, element: Element, key: ComputedValue, args: Value[] | Value[], values: any[]) => any} ReadElementValue
+ * 
+ * @typedef {object} LonghandProperty
+ * @property {string} name
+ * @property {any} default
  * 
  * @typedef {object} PropertyOptions
  * @property {string} prop
@@ -32,6 +40,7 @@ export const flags = {
  * @property {ReadElementValue} read
  * @property {boolean} [multiValue]
  * @property {boolean} [multiBindings]
+ * @property {LonghandProperty[]} [long]
  */
 
 const readNull = () => null;
@@ -39,10 +48,10 @@ const readNull = () => null;
 /** @type {Record<string, PropertyOptions>} */
 const properties = {
   text: { prop: 'text', flag: flags.text, read: (_,el) => el.textContent },
-  'class-toggle': { prop: 'classToggle', flag: flags.classToggle, multiValue: true,
+  'class-toggle': { prop: 'classToggle', flag: flags.classToggle, multiValue: false,
     multiBindings: true, read: (root, el, args, values) => {
     let name = args[0].get(root, el, values);
-    return [name, el.classList.contains(name)];
+    return  el.classList.contains(name);// [name, el.classList.contains(name)];
    } },
   event: { prop: 'event', flag: flags.event, multiValue: true, multiBindings: true,
      read: (root, el, args, values) => (
@@ -52,7 +61,15 @@ const properties = {
   'each-template': { prop: 'eachTemplate', flag: flags.each, read: readNull },
   'each-key': { prop: 'eachKey', flag: flags.eachKey, read: readNull },
   prop: { prop: 'prop', flag: flags.prop, multiValue: true, multiBindings: true, read: (root, el, args, values) => el[args[0].get(root, el, values)]},
-  attr: { prop: 'attr', flag: flags.attr, multiValue: true, multiBindings: true, read: (root, el, args, values) => el.getAttribute(args[0].get(root, el, values))},
+  attr: {
+    prop: 'attr',
+    flag: flags.attr,
+    multiValue: true,
+    multiBindings: true,
+    read: (root, el, args, values) => el.getAttribute(args[0].get(root, el, values)),
+    long: [{ name: 'attr-value', default: '' }, { name: 'attr-toggle', default: true }]
+  },
+  'attr-value': { prop: 'attrValue', flag: flags.attr, multiValue: false, multiBindings: true, read: readNull },
   'attr-toggle': { prop: 'attrToggle', flag: flags.attrToggle, multiValue: true, multiBindings: true, read: (root, el, args, values) => el.getAttribute(args[0].get(root, el, values))},
   data: { prop: 'data', flag: flags.data, multiValue: true, multiBindings: true,
     /** @param {any} el */
@@ -70,21 +87,6 @@ const properties = {
  * @typedef {Map<Declaration, ComputedValue>} MultiBindingMap
  */
 
-/**
- * 
- * @param {Bindings} bindings 
- * @param {Declaration} declaration
- * @param {ReadElementValue} read
- * @param {boolean} multiValue
- * @param {any[]} values
- * @returns {ComputedValue}
- */
-function createCompute(bindings, declaration, read, multiValue, values) {
-  return new ComputedValue(bindings.rootElement, bindings.element,
-    read(bindings.rootElement, bindings.element, declaration.args, values), multiValue || false
-  );
-}
-
 export class Bindings {
   /**
    * Create a new map of bindings
@@ -101,7 +103,7 @@ export class Bindings {
 
     /** @type {ComputedValue} */
     this.text = null;
-    /** @type {MultiBindingMap} */
+    /** @type {MultiBinding} */
     this.classToggle = null;
     /** @type {MultiBindingMap} */
     this.event = null;
@@ -113,9 +115,11 @@ export class Bindings {
     this.eachKey = null;
     /** @type {MultiBindingMap} */
     this.prop = null;
-    /** @type {MultiBindingMap} */
+    /** @type {MultiBinding} */
     this.attr = null;
-    /** @type {MultiBindingMap} */
+    /** @type {MultiBinding} */
+    this.attrValue = null;
+    /** @type {MultiBinding} */
     this.attrToggle = null;
     /** @type {MultiBindingMap} */
     this.data = null;
@@ -133,43 +137,79 @@ export class Bindings {
    * @param {any[]} values
    */
   add(declaration, values) {
-    let propertyName = declaration.propertyName;
-    if(propertyName in properties) {
-      let { prop, flag, multiValue, multiBindings, read } = properties[propertyName];
-      if(this[prop] === null) {
-        this.flags |= flag;
-        let compute = createCompute(this, declaration, read, multiValue, values);
-        if(multiBindings) {
-          this[prop]  = new Map();
-          this[prop].set(declaration, compute);
-        } else
-          this[prop] = compute;
+    let desc = propertyDescriptors.get(declaration.propertyName);
+    this.flags |= desc.flag;
+    if(desc.keyed) {
+      /** @type {Declaration | null} */
+      let parent = declaration.multi ? declaration : null;
+      for(let d of declaration.each()) {
+        let dprop = d.propertyName;
+        let ddesc = propertyDescriptors.get(dprop);
+        let cname = ddesc.cname;
+        if(!this[cname]) this[cname] = new MultiBinding(this, ddesc);
+        /** @type {MultiBinding} */ (this[cname]).add(d, values, parent);
       }
-      if(multiBindings) {
-        /** @type {ComputedValue} */
-        let compute;
-        if(this[prop].has(declaration))
-          compute = this[prop].get(declaration);
-        else {
-          compute = createCompute(this, declaration, read, multiValue, values);
-          this[prop].set(declaration, compute);
-        }
-        compute.addDeclaration(declaration);
-      }
-      else
-        this[prop].addDeclaration(declaration);
-    } else if(propertyName.startsWith('--')) { // Temporary, remove!
-      if(this.custom === null) {
-        this.flags |= flags.custom;
-        this.custom = new Map();
-      }
-      if(!this.custom.has(propertyName)) {
-        let compute = new ComputedValue(this.rootElement, this.element, null, false);
-        this.custom.set(propertyName, compute);
-      }
-      this.custom.get(propertyName).addDeclaration(declaration);
-    } else {
-      throw new Error('Unknown property ' + propertyName);
     }
   }
+  // /**
+  //  * Add a declaration for these bindings
+  //  * @param {Declaration} declaration 
+  //  * @param {any[]} values
+  //  */
+  // _add(declaration, values) {
+  //   let propertyName = declaration.propertyName;
+  //   if(propertyName in properties) {
+  //     let options = properties[propertyName];
+  //     let { prop, flag, multiValue, multiBindings, read, long } = options;
+  //     if(long) {
+  //       for(let d of declaration.each()) {
+  //         for(let i = 0; i < long.length; i++) {
+  //           let { name, default: def } = long[i];
+  //           let arg = d.args[i] || new AnyValue(def);
+  //           this.add(new Declaration(d.rule, name, d.index, d.key, arg), values);
+  //         }
+  //       }
+  //       return;
+  //     }
+  //     if(this[prop] === null) {
+  //       this.flags |= flag;
+        
+  //       if(multiBindings) {
+  //         this[prop] = new MultiBinding(this, options);
+  //       } else {
+  //         let compute = createCompute(this, declaration.args, read, multiValue, null, values);
+  //         this[prop] = compute;
+  //       }
+  //     }
+  //     // TODO maybe get rid of...
+  //     if( multiBindings) {
+  //       /** @type {MultiBinding} */
+  //       (this[prop]).add(declaration, values);
+  //       return;
+  //       /** @type {ComputedValue} */
+  //       let compute;
+  //       if(this[prop].has(declaration))
+  //         compute = this[prop].get(declaration);
+  //       else {
+  //         compute = createCompute(this, declaration, read, multiValue, values);
+  //         this[prop].set(declaration, compute);
+  //       }
+  //       compute.addDeclaration(declaration);
+  //     }
+  //     else
+  //       this[prop].addDeclaration(declaration);
+  //   } else if(propertyName.startsWith('--')) { // Temporary, remove!
+  //     if(this.custom === null) {
+  //       this.flags |= flags.custom;
+  //       this.custom = new Map();
+  //     }
+  //     if(!this.custom.has(propertyName)) {
+  //       let compute = new ComputedValue(this.rootElement, this.element, null, false, null);
+  //       this.custom.set(propertyName, compute);
+  //     }
+  //     this.custom.get(propertyName).addDeclaration(declaration);
+  //   } else {
+  //     throw new Error('Unknown property ' + propertyName);
+  //   }
+  // }
 }

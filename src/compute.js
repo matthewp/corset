@@ -3,9 +3,56 @@
 /**
  * @typedef {import('./declaration').Declaration} Declaration
  * @typedef {import('./value').Value} Value
+ * @typedef {import('./bindings').Bindings} Bindings
+ * @typedef {import('./bindings').ReadElementValue} ReadElementValue
  */
 
 export const NO_VALUE = {};
+
+/**
+ * Sort a declaration first by selector specificity, then by rule index,
+ * then by declaration index
+ * @param {Declaration} d1
+ * @param {Declaration} d2
+ * @returns {boolean}
+ */
+ function compare(d1, d2) {
+  return d1.rule.specificity === d2.rule.specificity ?
+    d1.rule.index === d2.rule.index ?
+    d1.index < d2.index :
+    d1.rule.index < d2.rule.index :
+    d1.rule.specificity < d2.rule.specificity;
+}
+
+/**
+ * 
+ * @param {any[]} sorted 
+ * @param {any} item 
+ * @param {(a: any, b: any) => boolean} comparator
+ * @returns {number}
+ */
+ function binaryInsert(sorted, item, comparator) {
+  if(sorted.length === 0) {
+    sorted.push(item);
+    return 0;
+  }
+  let low = 0, high = sorted.length - 1, mid = 0;
+  while (low <= high) {
+    mid = low + (high - low >> 1);
+    if(comparator(sorted[mid], item)) {
+      low = mid + 1;
+    } else {
+      high = mid -1;
+    }
+  }
+
+  if(comparator(sorted[mid], item)) {
+    mid++;
+  }
+
+  sorted.splice(mid, 0, item);
+  return mid;
+}
 
 /**
  * 
@@ -91,8 +138,9 @@ export class ComputedValue {
    * @param {Element} element The element this compute targets
    * @param {any} initialValue The initial value of the compute
    * @param {Boolean} isMultiValue Contains multiple values
+   * @param {ComputedValue | null} keyCompute The compute for the key value
    */
-  constructor(rootElement, element, initialValue, isMultiValue) {
+  constructor(rootElement, element, initialValue, isMultiValue, keyCompute) {
     /** @type {Set<Declaration>} */
     this.set = new Set();
 
@@ -106,6 +154,8 @@ export class ComputedValue {
     this.initialValue = initialValue;
     /** @type {boolean} */
     this.isMultiValue = isMultiValue;
+    /** @type {ComputedValue | null} */
+    this.keyCompute = keyCompute
     /** @type {typeof callArg} */
     this.callArg = isMultiValue ? callMultiArg : callArg;
     /** @type {typeof computeDirty} */
@@ -122,7 +172,8 @@ export class ComputedValue {
   addDeclaration(declaration) {
     if(!this.set.has(declaration)) {
       this.set.add(declaration);
-      this.sorted.push(declaration); // TODO PUT THEM IN ORDER
+      binaryInsert(this.sorted, declaration, compare);
+      //this.sorted.push(declaration); // TODO PUT THEM IN ORDER
     }
   }
   /**
@@ -146,7 +197,8 @@ export class ComputedValue {
    * @returns {boolean}
    */
   dirty(values) {
-    return this.computeDirty(this, values);
+    let keyDirty = !!(this.keyCompute && this.computeDirty(this.keyCompute, values));
+    return this.computeDirty(this, values) || keyDirty;
   }
   /**
    * 
@@ -157,4 +209,24 @@ export class ComputedValue {
     this.computeDirty(this, values);
     return this.currentValue;
   }
+
+  key() {
+    return this.keyCompute ? this.keyCompute.get() : null;
+  }
+}
+
+/**
+ * 
+ * @param {Bindings} bindings 
+ * @param {Value[]} args
+ * @param {ReadElementValue} read
+ * @param {boolean} multiValue
+ * @param {ComputedValue | null} keyCompute
+ * @param {any[]} values
+ * @returns {ComputedValue}
+ */
+ export function createCompute(bindings, args, read, multiValue, keyCompute, values) {
+  return new ComputedValue(bindings.rootElement, bindings.element,
+    read(bindings.rootElement, bindings.element, keyCompute, args, values), multiValue, keyCompute
+  );
 }

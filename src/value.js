@@ -196,3 +196,16 @@ export class CustomFunctionValue {
     return fn(...args);
   }
 }
+
+/**
+ * Get the key of a value
+ * @param {Value} value
+ * @returns {string | number | null}
+ */
+export function getKey(value) {
+  if(value instanceof AnyValue)
+    return value.value;
+  else if(value instanceof VarValue)
+    return value.propName;
+  return null;
+}

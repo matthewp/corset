@@ -22,7 +22,7 @@ QUnit.test('Can set multiple attributes', assert => {
   let bindings = sheet`
     table {
       attr:
-        id "my-table"
+        id "my-table",
         class "flat";
     }
   `;
@@ -30,4 +30,20 @@ QUnit.test('Can set multiple attributes', assert => {
   let table = root.querySelector('table');
   assert.equal(table.id, 'my-table');
   assert.equal(table.className, 'flat');
+});
+
+QUnit.only('Keyed attribute long-form', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<input>`;
+  let bindings = sheet`
+    input {
+      attr-value[type]: "text";
+      attr-toggle[disabled]: ${true};
+    }
+  `;
+  bindings.update(root);
+  let input = root.querySelector('input');
+  assert.equal(input.getAttribute('type'), 'text');
+  assert.ok(input.hasAttribute('disabled'));
+  assert.equal(input.getAttribute('disabled'), '');
 });

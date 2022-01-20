@@ -10,12 +10,14 @@ import {
   parse, next,
   readNumberOfValues,
   readFirstValuePointer,
+  readKey,
   readProperty,
   readString
 } from './parser.js';
-import { Declaration } from './declaration.js';
+import { Declaration, MultiDeclaration } from './declaration.js';
 import { Rule } from './rule.js';
 import { BindingSheet, SheetWithValues } from './sheet.js';
+import { properties } from './property2.js';
 import {
   AnyValue,
   BindValue,
@@ -65,15 +67,35 @@ const expectMultipleOf = (name, num) => {
 }
 
 /**
+ * 
+ * @param {Value} keyValue 
+ */
+const expectKeyValueType = (keyValue) => {
+  if(!((keyValue instanceof AnyValue) || (keyValue instanceof VarValue))) {
+    throw new Error(`Unexpected key value type. Must be an identifier, a string, or a var`);    
+  }
+}
+
+/**
+ * Get the value type
+ * @param {Number} ptr 
+ * @returns {Number}
+ */
+function getValueType(ptr) {
+  let ptr32 = ptr >> 2;  
+  let valueType = mem32[ptr32];
+  return valueType;
+}
+
+/**
  * Gets the value at the pointer location.
  * @param {Number} ptr 
  * @returns {Value}
  */
 function getValue(ptr) {
-  let ptr32 = ptr >> 2;
-  let ptrv32 = ptr32 + 3;
+  let ptrv32 = (ptr >> 2) + 3;
   
-  let valueType = mem32[ptr32];
+  let valueType = getValueType(ptr);
   switch(valueType) {
     case 1: {
       return new InsertionValue(mem32[ptrv32]);
@@ -112,6 +134,20 @@ function getValue(ptr) {
 }
 
 /**
+ * Read the key into a value
+ * @returns {Value | null}
+ */
+function readKeyValue() {
+  let key = readKey();
+  switch(true) {
+    case key.startsWith('--'): return new VarValue(key);
+    case !!key: return new AnyValue(key);
+    default: return null;
+  }
+}
+
+
+/**
  * 
  * @param {RawStringTemplate} strings 
  * @param {any[]} values 
@@ -119,12 +155,13 @@ function getValue(ptr) {
  */
 function compile(strings, values) {
   let sheet = new BindingSheet();
-  let rule;
+  let rule, ruleIndex = 0, declIndex = 0;
   parse(strings, values);
   while(next()) {
     switch(heap8[0]) {
       case 1: {
-        rule = new Rule(readString(heap32[1], heap32[2]));
+        declIndex = 0;
+        rule = new Rule(readString(heap32[1], heap32[2]), ruleIndex++);
         sheet.addRule(rule);
         break;
       }
@@ -135,7 +172,7 @@ function compile(strings, values) {
             expectValues(propName, 1);
             let ptr = readFirstValuePointer();
             let value = getValue(ptr);
-            rule.addDeclaration(new Declaration(rule, 'text', value));
+            rule.addDeclaration(new Declaration(rule, 'text', declIndex++, value));
             break;
           }
           case 'each': {
@@ -146,32 +183,137 @@ function compile(strings, values) {
               args.push(getValue(ptr));
               ptr = mem32[(ptr >> 2) + 1];
             }
-            rule.addDeclaration(new Declaration(rule, 'each-items', args[0]));
-            rule.addDeclaration(new Declaration(rule, 'each-template', args[1]));
+            rule.addDeclaration(new Declaration(rule, 'each-items', declIndex++, args[0]));
+            rule.addDeclaration(new Declaration(rule, 'each-template', declIndex++, args[1]));
             break;
           }
-          case 'event':
-          case 'class-toggle':
-          case 'attr':
-          case 'attr-toggle':
-          case 'data':
-          case 'prop': {
-            expectMultipleOf(propName, 2);
-            let ptr = readFirstValuePointer();
-            while(ptr) {
-              let args = [];
-              for(let i = 0; i < 2; i++) {
-                args.push(getValue(ptr));
-                ptr = mem32[(ptr >> 2) + 1];
-              }
+          // case 'event':
+          // case 'class-toggle':
+          // case 'attr':
+          // case 'attr-toggle':
+          // case 'data':
+          // case 'prop': {
+          //   //expectMultipleOf(propName, 2); TODO needed some times?
+          //   let key = readKey();
+          //   let values = readNumberOfValues();
+          //   let ptr = readFirstValuePointer();
+          //   while(ptr) {
+          //     /** @type {Value[] | Value[][]} */
+          //     let args = [];
+          //     /** @type {Value} */
+          //     let keyValue;
+          //     switch(true) {
+          //       case key.startsWith('--'):
+          //         keyValue = new VarValue(key);
+          //         break;
+          //       case !!key:
+          //         keyValue = new AnyValue(key);
+          //         break;
+          //     }
+          //     /** @type {Value[]} */
+          //     let _args = keyValue ? /** @type {Value[]} */(args) : [];
+          //     for(let i = 0; i < values; i++) {
+          //       let vt = getValueType(ptr);
+          //       switch(vt) {
+          //         case 5: {
+          //           /** @type {Value[][]} */(args).push(_args);
+          //           _args = [];
+          //           break;
+          //         }
+          //         default: {
+          //           _args.push(getValue(ptr));
+          //           break;
+          //         }
+          //       }
 
-              rule.addDeclaration(new Declaration(rule, propName, ...args));
-            }
-            break;
-          }
+          //       ptr = mem32[(ptr >> 2) + 1];
+          //     }
+          //     let DCtr = Declaration;
+          //     let index = declIndex;
+          //     if(!keyValue && _args.length) {
+          //       /** @type {Value[][]} */(args).push(_args);
+          //       DCtr = MultiDeclaration;
+          //       declIndex += args.length;
+          //     }
+          //     rule.addDeclaration(new DCtr(rule, propName, index, keyValue, ...args));
+          //   }
+          //   break;
+          // }
           default: {
             let prop = readProperty();
-            if(prop.startsWith('--')) {
+            if(properties.has(prop)) {
+              let desc = properties.get(prop);
+              let ptr = readFirstValuePointer();
+              let num = readNumberOfValues();
+              if(desc.keyed) {
+                let keyValue = readKeyValue();
+                if(desc.hand === 'short') {
+                  let declaration = new MultiDeclaration(rule, prop, declIndex++);
+                  let cur = declaration;
+                  let i = 0;
+                  while(ptr) {
+                    if(!keyValue) {
+                      keyValue = getValue(ptr);
+                      expectKeyValueType(keyValue);
+                      ptr = mem32[(ptr >> 2) + 1];
+                    }
+
+                    if(getValueType(ptr) === 5) {
+                      while(i < desc.explode.length) {
+                        let eprop = desc.explode[i];
+                        cur.add(new Declaration(rule, eprop, declIndex++, keyValue,
+                          new AnyValue(properties.get(eprop).default)));
+                        i++;
+                      }
+                      if(cur === declaration) {
+                        let index = cur.index;
+                        cur.index = declIndex++;
+                        declaration = new MultiDeclaration(rule, prop, index);
+                        declaration.add(cur);
+                      }
+                      cur = new MultiDeclaration(rule, prop, declIndex++, keyValue);
+                      i = 0;
+                      keyValue = null;
+                    } else {
+                      let value = getValue(ptr);
+                      cur.add(new Declaration(rule, desc.explode[i], declIndex++, keyValue, value));
+                      i++;
+                    }
+
+                    ptr = mem32[(ptr >> 2) + 1];
+                  }
+                  while(i < desc.explode.length) {
+                    let eprop = desc.explode[i];
+                    cur.add(new Declaration(rule, eprop, declIndex++, keyValue,
+                      new AnyValue(properties.get(eprop).default)));
+                    i++;
+                  }
+                  if(cur !== declaration)
+                    declaration.add(cur);
+                  rule.addDeclaration(declaration);
+                } else {
+                  let keyValue = readKeyValue();
+                  if(!keyValue) {
+                    throw new Error(`A key must be provided for the property ${prop}`);
+                  }
+                  if(num > 1) {
+                    let m = new MultiDeclaration(rule, prop, declIndex++);
+                    while(ptr) {
+                      let value = getValue(ptr);
+                      m.add(new Declaration(rule, prop, declIndex++, keyValue, value));
+                      ptr = mem32[(ptr >> 2) + 1];
+                    }
+                    rule.addDeclaration(m);
+                  } else {
+                    rule.addDeclaration(
+                      new Declaration(rule, prop, declIndex++, keyValue, getValue(ptr))
+                    );
+                  }
+                }
+              } else {
+                throw new Error('Non-keyed not supported');
+              }
+            } else if(prop.startsWith('--')) {
               let values = readNumberOfValues();
               let ptr = readFirstValuePointer();
               /** @type {Value[]} */
@@ -181,7 +323,7 @@ function compile(strings, values) {
                 args.push(value);
                 values--;
               }
-              rule.addDeclaration(new Declaration(rule, prop, ...args));
+              rule.addDeclaration(new Declaration(rule, prop, null, ...args));
             } else {
               let ptr = readFirstValuePointer();
               let args = [];
@@ -189,7 +331,7 @@ function compile(strings, values) {
                 args.push(getValue(ptr));
                 ptr = mem32[(ptr >> 2) + 1];
               }
-              rule.addDeclaration(new Declaration(rule, prop, ...args));
+              rule.addDeclaration(new Declaration(rule, prop, null, ...args));
             }
           }
         }
