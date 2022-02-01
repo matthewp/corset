@@ -12,7 +12,7 @@ QUnit.test('Updates on state changes', assert => {
 
     return sheet`
       button {
-        attr: id get(${item => `item-${item.id}`});
+        attr: id get(item(), ${item => `item-${item.id}`});
         event: click ${increment};
       }
 
@@ -96,9 +96,49 @@ QUnit.test('Unbinds when mount changes', assert => {
   assert.equal(countEl.textContent, 0);
 
   // Remove class
-  //root.querySelector('.count').classList.remove('count');
   update(false);
   root.querySelector('#item-1').dispatchEvent(new Event('click'));
   assert.equal(countEl.textContent, 0);
   assert.equal(incrementCalled, false, 'Didn\'t get called due to unmount');
+});
+
+QUnit.test('Unbinds nested mounts', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `
+    <div id="app"><div class="one show"><div class="two"><button class="inc">inc</button></div></div>
+  `;
+  let count = 0;
+  let inc = () => count++;
+  function One() {
+    return sheet`
+      .two {
+        mount: ${Two};
+      }
+    `;
+  }
+  function Two() {
+    return sheet`
+      .inc {
+        event[click]: ${inc};
+      }
+    `;
+  }
+  function app(show) {
+    return sheet`
+      .one {
+        class-toggle[show]: ${show};
+      }
+      .one.show {
+        mount: ${One};
+      }
+    `;
+  }
+  app(true).update(root);
+  let btn = root.querySelector('.inc');
+  btn.dispatchEvent(new Event('click'));
+  assert.equal(count, 1, 'incremented');
+  //assert.equal(root.querySelector('.name').textContent, 'world');
+  app(false).update(root);
+  btn.dispatchEvent(new Event('click'));
+  assert.equal(count, 1, 'did not increment');
 });

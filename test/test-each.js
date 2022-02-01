@@ -81,7 +81,7 @@ QUnit.test('Deleting an item in a keyed list updates sibling indices', assert =>
         each-key: id;
       }
       li {
-        attr: id get(${item => `item-${item.id}`});
+        attr: id get(item(), ${item => `item-${item.id}`});
       }
       li #index {
         text: index();

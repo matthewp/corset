@@ -91,7 +91,7 @@ QUnit.test('Setting multiple classes', assert => {
   let bindings = sheet`
     #app {
       class-toggle:
-        one ${true}
+        one ${true},
         two ${true};
     }
   `;
@@ -99,4 +99,62 @@ QUnit.test('Setting multiple classes', assert => {
   let app = root.firstElementChild;
   assert.ok(app.classList.contains('one'));
   assert.ok(app.classList.contains('two'));
+});
+
+QUnit.test('Source order is preferred', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app"></div>`;
+  function run() {
+    return sheet`
+      #app {
+        class-toggle: one ${true}, three ${true};
+      }
+
+      #app {
+        class-toggle: one ${true}, two ${true};
+      }
+
+      #app {
+        class-toggle[four]: ${true};
+      }
+    `
+  }
+  run('one').update(root);
+  let app = root.firstElementChild;
+  assert.equal(app.classList.contains('one'), true);
+  assert.equal(app.classList.contains('two'), true);
+  assert.equal(app.classList.contains('three'), false);
+  assert.equal(app.classList.contains('four'), true);
+});
+
+QUnit.test('Source order is preferred on change', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app"></div>`;
+  function run(step) {
+    return sheet`
+      #app {
+        class-toggle: one ${true}, three ${true};
+      }
+
+      #app {
+        class-toggle: one ${true}, two ${true};
+        attr[two]: "two" ${step === 'two'};
+      }
+
+      #app {
+        class-toggle[four]: ${true};
+      }
+    `
+  }
+  run('one').update(root);
+  let app = root.firstElementChild;
+  assert.equal(app.classList.contains('one'), true);
+  assert.equal(app.classList.contains('two'), true);
+  assert.equal(app.classList.contains('three'), false);
+
+  run('two').update(root);
+  assert.equal(app.classList.contains('one'), true);
+  assert.equal(app.classList.contains('two'), true);
+  assert.equal(app.classList.contains('three'), false);
+  assert.equal(app.classList.contains('four'), true);
 });

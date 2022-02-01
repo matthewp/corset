@@ -49,6 +49,7 @@ uintptr_t tag_pointer;
 #define VALUE_TYPE_STRING 2
 #define VALUE_TYPE_IDENTIFIER 3
 #define VALUE_TYPE_CALL 4
+#define VALUE_TYPE_ARRAY 5
 
 #define TOKEN_NOTCONSUMED 0
 #define TOKEN_CONSUMED 1
@@ -114,10 +115,16 @@ typedef struct value_type_ins_t {
   int index;
 } value_type_ins_t;
 
+typedef struct value_type_arr_t {
+  value_type_node_t type;
+} value_type_arr_t;
+
 typedef struct tag_prop_t {
   unsigned char type;
   int prop_start;
   int prop_end;
+  int mod_start;
+  int mod_end;
   int num_of_values;
   value_type_node_t* first_value;
   value_type_node_t* last_value;
@@ -353,6 +360,8 @@ static unsigned char parse_rule_reset_mode() {
     prop->type = TAG_PROPERTY;
     prop->prop_start = parser_state->index;
     prop->prop_end = 0;
+    prop->mod_start = 0;
+    prop->mod_end = 0;
     prop->num_of_values = 0;
     prop->first_value = 0;
     prop->last_value = 0;
@@ -370,11 +379,17 @@ static unsigned char parse_rule_reset_mode() {
 
 static unsigned char parse_prop_start_mode() {
   char c = read_char();
-  if(identifierToken(c)) {
+  tag_prop_t* prop = get_prop_tag();
+  if(identifierToken(c) && prop->mod_end == 0) {
     parser_state->last_non_whitespace = parser_state->index;
-  } else if(c == ':') {
-    tag_prop_t* prop = get_prop_tag();
+  } else if(c == '[') {
     prop->prop_end = parser_state->last_non_whitespace + 1;
+    prop->mod_start = parser_state->index + 1;
+  } else if(c == ']') {
+    prop->mod_end = parser_state->last_non_whitespace + 1;
+  } else if(c == ':') {
+    if(prop->prop_end == 0)
+      prop->prop_end = parser_state->last_non_whitespace + 1;
     parser_state->mode = VALUE_RESET_MODE;
   } else {
     check_for_comment(c);
@@ -408,6 +423,11 @@ static unsigned char parse_value_reset_mode() {
   } else if(c == ';') {
     parser_state->mode = RULE_RESET_MODE;
     return TOKEN_EXIT;
+  } else if(c == ',') {
+    value_type_arr_t* value_arr = malloc(sizeof(value_type_arr_t));
+    value_type_node_t* node = (value_type_node_t*)value_arr;
+    node->type = VALUE_TYPE_ARRAY;
+    append_value_to_tree(node);
   } else if(!whitespaceToken(c) && !check_for_comment(c)) {
     #ifdef DEBUG_BUILD
     return create_error_tag(2, c);
@@ -459,6 +479,16 @@ static unsigned char parse_value_start_mode() {
       parse_value_end();
     }
     parser_state->mode = post_value_mode();
+  } else if(c == ',') {
+    if(get_prop_tag()->last_value != 0) {
+      parse_value_end();
+    }
+
+    parser_state->mode = post_value_mode();
+    value_type_arr_t* value_arr = malloc(sizeof(value_type_arr_t));
+    value_type_node_t* node = (value_type_node_t*)value_arr;
+    node->type = VALUE_TYPE_ARRAY;
+    append_value_to_tree(node);
   } else if(!identifierToken(c) && c != '-') {
     if(!check_for_comment(c)) {
       #ifdef DEBUG_BUILD

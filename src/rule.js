@@ -13,6 +13,8 @@ export class Rule {
     this.selector = selector;
     /** @type {Array<Declaration>} */
     this.declarations = [];
+    /** @type {number} */
+    this.specificity = 0;
   }
 
   /** @param {Declaration} declaration */

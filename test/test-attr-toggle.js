@@ -9,7 +9,7 @@ QUnit.test('Set an attribute value', assert => {
   function template(value) {
     return sheet`
       #app {
-        attr-toggle: name ${value};
+        attr-toggle[name]: ${value};
       }
     `;
   }
@@ -26,13 +26,32 @@ QUnit.test('Can set multiple attributes', assert => {
 
   let bindings =sheet`
     #app {
-      attr-toggle:
-        one ${true}
-        two ${true};
+      attr-toggle[one]: ${true};
+      attr-toggle[two]: ${true};
     }
   `;
 
   bindings.update(root);
   assert.ok(root.firstElementChild.hasAttribute('one'));
   assert.ok(root.firstElementChild.hasAttribute('two'));
+});
+
+QUnit.test('Source order is preferred', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app"></div>`;
+  function run() {
+    return sheet`
+      #app {
+        attr-value[one]: one;
+        attr-toggle[one]: ${false};
+      }
+
+      #app {
+        attr-toggle[one]: ${true};
+      }
+    `;
+  }
+  run().update(root);
+  let app = root.firstElementChild;
+  assert.equal(app.getAttribute('one'), 'one');
 });

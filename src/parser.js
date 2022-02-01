@@ -25,7 +25,9 @@ export const mem32 = new Uint32Array($memory.buffer);
 
 /** @type {Uint8Array} The array of the heap */
 export let heap8;
+/** @type {Uint32Array} */
 export let heap32;
+/** @type {Uint8Array} */
 export let data8;
 
 const enc = new TextEncoder();
@@ -40,7 +42,7 @@ const dec = new TextDecoder();
  */
 const readFromBuffer = (buffer, start, end) => dec.decode(buffer.slice(start, end));
 
-// The length of the source
+/** @type {number} - The length of the source */
 let len;
 
 /**
@@ -87,13 +89,19 @@ export const readString = (start, end) => {
 export const readProperty = () => readFromBuffer(data8, heap32[1], heap32[2]);
 
 /**
+ * Reads the property key.
+ * @returns {string}
+ */
+ export const readKey = () => readFromBuffer(data8, heap32[3], heap32[4]);
+
+/**
  * Reads the number of values in the property value.
  * @returns {number}
  */
-export const readNumberOfValues = () => heap32[3];
+export const readNumberOfValues = () => heap32[5];
 
 /**
  * Gets the first value pointer in the property.
  * @returns {number}
  */
-export const readFirstValuePointer = () => heap32[4];
+export const readFirstValuePointer = () => heap32[6];

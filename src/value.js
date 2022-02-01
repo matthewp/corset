@@ -1,16 +1,49 @@
 // @ts-check
 
 /**
+ * @typedef {import('./binding').Binding} Binding
+ * @typedef {import('./changeset').Changeset} Changeset
+ * @typedef {import('./compute').ComputedValue} ComputedValue
  * @typedef {import('./types').Value} Value
+ * @typedef {import('./types').ValueType} ValueType
+ * @typedef {import('./function').ICorsetFunctionClass} ICorsetFunctionClass
+ * @typedef {import('./function').ICorsetFunction} ICorsetFunction
  */
 
+export const NO_VALUE = Symbol('corset.noValue');
+
+/**
+ * 
+ * @param {any} value 
+ * @returns {ValueType}
+ */
+ export const anyValue = value => 
+ /** @implements {Value} */
+ class AnyValue{get(){ return value }};
+
 /** @implements {Value} */
-export class AnyValue {
+export class InsertionValue {
+  constructor() {
+    /** @type {number} */
+    this.current = 0;
+    /** @type {any} */
+    this.value = NO_VALUE;
+  }
   /**
-   * @param {any} value 
+   * 
+   * @param {[number]} args 
+   * @param {Binding} _binding 
+   * @param {Map<string, any>} _props
+   * @param {Changeset} changeset 
+   * @returns {boolean}
    */
-  constructor(value) {
-    this.value = value;
+  check([index], _binding, _props, {values}) {
+    let value = values[index];
+    if(this.value !== value) {
+      this.value = value;
+      return true;
+    }
+    return false;
   }
   get() {
     return this.value;
@@ -18,181 +51,163 @@ export class AnyValue {
 }
 
 /** @implements {Value} */
-export class InsertionValue {
-  constructor(index) {
-    this.index = index;
-  }
-
-  get(_, __, values) {
-    return values[this.index];
+export class SpaceSeparatedListValue {
+  /**
+   * 
+   * @param {any[]} values 
+   * @returns 
+   */
+  get(values = []) {
+    return values;
   }
 }
 
+export class CommaSeparatedListValue extends SpaceSeparatedListValue {}
+
 /** @implements {Value} */
-class ScopeLookupValue {
-  /**
-   * Look up a value within the DOM scope
-   * @param {string} dataName
-   * @param {string} propName
-   */
-  constructor(dataName, propName) {
-    this.dataPropName = 'data-corset-' + dataName;
-    this.dataSelector = '[' + this.dataPropName + ']';
-    /** @type {string} */
-    this.propName = propName;
+export class PlaceholderValue {
+  constructor() {
+    this.current = 0;
+    /** @type {NO_VALUE | ComputedValue} */
+    this.compute = NO_VALUE;
+    /** @type {any} */
+    this.value = null;
   }
   /**
-   * @param {Element} _rootElement
-   * @param {Element} element
-   * @param {any[]} _values
+   * 
+   * @param {[string, any]} args 
+   * @param {Binding} binding 
+   * @param {Map<string, any>} _props
+   * @param {Changeset} changeset 
+   * @returns {boolean}
    */
-  get(_rootElement, element, _values) {
+  check(args, binding, _props, changeset) {
+    let check = false;
+    if(changeset.selectors) check = true;
+    else if(this.compute === NO_VALUE) check = true;
+    else {
+      this.compute.dirty(changeset);
+      let value = this.compute.check(changeset);
+      if(value !== this.value) {
+        this.value = value;
+        return true;
+      }
+      return false;
+    }
+    if(check) {
+      let scope = this.#get(args, binding);
+      if(scope) {
+        if(scope.value !== this.value || scope.compute !== this.compute) {
+          this.compute = scope.compute;
+          this.value = scope.value;
+          return true;
+        } else {
+          // Nothing has changed.
+          return false;
+        }
+      } else if(args.length > 1) {
+        let value = args[1];
+        if(!this.value || value !== this.value[0]) {
+          this.value = [value];
+          return true;
+        }
+        return false;
+      }
+    }
+    return false;
+  }
+  /**
+   * 
+   * @param {[string, any]} args 
+   * @param {Binding} param1 
+   * @returns 
+   */
+  #get(args, { element }) {
+    let [propName] = args;
+    let dataName = 'prop-' + propName.substr(2);
+    let dataPropName = 'data-corset-' + dataName;
+    let dataSelector = '[' + dataPropName + ']';
+    /** @type {Element | null} */
     let el = element;
     do {
-      if(el.hasAttribute(this.dataPropName)) {
-        return el[Symbol.for(this.propName)];
+      if(el.hasAttribute(dataPropName)) {
+        let scope = /** @type {any} */ (el)[Symbol.for(propName)];
+        return scope;
       }
-      el = element.closest(this.dataSelector);
+      el = element.closest(dataSelector);
     } while(el);
   }
+  get() {
+    return this.value;
+  }
 }
 
-/** @implements {Value} */
-export class VarValue extends ScopeLookupValue {
+export class ShorthandItemValue {
   /**
-   *
-   * @param {any} propValue
-   * @param {Value} [fallbackValue]
+   * 
+   * @param {[number, any[]]} param0 
+   * @returns 
    */
-  constructor(propValue, fallbackValue) {
-    let propName = propValue.get();
-    super('prop-' + propName.substr(2), propName);
-    /** @type {Value | null} */
-    this.fallbackValue = fallbackValue || null;
+  get([index, items]) {
+    return items[index];
   }
+}
 
-  /**
-   * @param {Element} rootElement
-   * @param {Element} element
-   * @param {any[]} values
-   */
-  get(rootElement, element, values) {
-    let ret = super.get(rootElement, element, values);
-    if(ret !== undefined) return ret;
-    
-    if(this.fallbackValue !== null) {
-      return this.fallbackValue.get(rootElement, element, values);
+/**
+ * 
+ * @param {ICorsetFunctionClass} CorsetFunction 
+ * @returns {ValueType}
+ */
+export const functionValue = (CorsetFunction) => {
+  /** @type {ICorsetFunction | undefined} */
+  let prototype = CorsetFunction.prototype;
+  if(typeof prototype !== 'object') throw new Error(`Functions must contain a prototype`);
+  /** @type {ICorsetFunction['call']} */
+  let callValue = prototype.call;
+
+  class FunctionValue {
+    static inputProperties = CorsetFunction.inputProperties;
+
+    constructor() {
+      /** @type {ICorsetFunction} */
+      this.fn = new CorsetFunction();
+    }
+    /**
+     * 
+     * @param {any[]} args 
+     * @param {Binding} binding 
+     * @param {Map<string, any> | null} props
+     * @returns {any}
+     */
+    get(args, binding, props) {
+      return callValue.call(this.fn, args, binding, props);
     }
   }
+
+  if(prototype.check) {
+    let checkValue = prototype.check;
+    /**
+     * 
+     * @param {any[]} args 
+     * @param {Binding} binding 
+     * @param {Map<string, any> | null} props
+     * @param {Changeset} changeset
+     */
+    FunctionValue.prototype.check = function(args, binding, props, changeset) {
+      return checkValue.call(this.fn, args, binding, props, changeset);
+    };
+  }
+
+  return FunctionValue;
 }
 
-/** @implements {Value} */
-export class GetValue {
-  constructor(objValue, propValue) {
-    if(!propValue) {
-      propValue = objValue;
-      objValue = new ItemValue();
-    }
-    /** @type {Value} */
-    this.objValue = objValue;
-    /** @type {Value} */
-    this.propValue = propValue;
-  }
+export class InitialValue {
   /**
-   * @param {Element} rootElement
-   * @param {Element} element 
-   * @param {any[]} values
+   * 
+   * @param {any[]} _args 
+   * @param {Binding} _binding 
    */
-  get(rootElement, element, values) {
-    let obj = this.objValue.get(rootElement, element, values);
-    let prop = this.propValue.get(rootElement, element, values);
-    if(typeof prop === 'function') {
-      return prop(obj);
-    } else {
-      return obj[prop];
-    }
-  }
-}
-
-/** @implements {Value} */
-export class SelectValue {
-  constructor(selectorValue) {
-    this.selector = selectorValue.get();
-  }
-  /**
-   * @param {Element} rootElement
-   */
-  get(rootElement) {
-    return rootElement.querySelector(this.selector);
-  }
-}
-
-/** @implements {Value} */
-export class BindValue {
-  constructor(fnValue, ...args) {
-    this.fnValue = fnValue;
-    this.args = args;
-  }
-  /**
-   * @param {Element} rootElement
-   * @param {Element} element
-   * @param {any[]} values
-   */
-  get(rootElement, element, values) {
-    let fn = this.fnValue.get(rootElement, element, values);
-    let args = this.args.map(arg => arg.get(rootElement, element, values));
-    return fn.bind(element, ...args);
-  }
-}
-
-export class ItemValue extends ScopeLookupValue {
-  constructor() {
-    super('item', 'corsetItem');
-  }
-}
-
-export class IndexValue extends ScopeLookupValue {
-  constructor() {
-    super('index', 'corsetIndex');
-  }
-}
-
-/** @implements {Value} */
-export class DataValue {
-  constructor(propValue) {
-    /** @type {Value} */
-    this.propValue = propValue;
-  }
-  /**
-   * @param {Element} rootElement
-   * @param {Element} element
-   * @param {any[]} values
-   */
-  get(rootElement, element, values) {
-    let prop = this.propValue.get(rootElement, element, values);
-    if(!('dataset' in element)) {
-      throw new Error('The data() function can only be used on HTMLElements.');
-    }
-    return /** @type {HTMLElement} */(element).dataset[prop];
-  }
-}
-
-/** @implements {Value} */
-export class CustomFunctionValue {
-  constructor(varValue, ...args) {
-    /** @type {Value} */
-    this.varValue = varValue;
-    /** @type {Value[]} */
-    this.args = args;
-  }
-  /**
-   * @param {Element} rootElement
-   * @param {Element} element
-   * @param {any[]} values
-   */
-  get(rootElement, element, values) {
-    let fn = this.varValue.get(rootElement, element, values);
-    let args = this.args.map(arg => arg.get(rootElement, element, values));
-    return fn(...args);
+  get(_args, _binding) {
+    throw new Error('InitialValue not implemented');
   }
 }

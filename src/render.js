@@ -1,13 +1,16 @@
 // @ts-check
 
-import { flags } from './bindings.js';
+import { flags } from './property.js';
 import { EachInstance } from './each.js';
-import { NO_VALUE } from './compute.js';
 import { datasetPropKey } from './custom-prop.js';
 import { mount } from './mount.js';
+import { NO_VALUE } from './value.js';
 
 /**
+ * @typedef {import('./binding').Binding} Binding
  * @typedef {import('./bindings').Bindings} Bindings
+ * @typedef {import('./changeset').Changeset} Changeset
+ * @typedef {import('./multi-binding').MultiBinding} MultiBinding
  * @typedef {import('./mount').Mountpoint} Mountpoint
  */
 
@@ -21,112 +24,107 @@ const mountPoints = new WeakMap();
  * 
  * @param {Element} element 
  * @param {Bindings} bindings 
- * @param {any[]} values
+ * @param {Changeset} changeset
  * @returns {boolean}
  */
-function render(element, bindings, values) {
+function render(element, bindings, changeset) {
   let invalid = false;
+  let bflags = bindings.flags;
 
-  if(bindings.flags & flags.custom) {
-    for(let [propertyName, compute] of bindings.custom) {
-      if(compute.dirty(values)) {
-        if(!(element instanceof HTMLElement)) {
-          throw new Error('Custom properties cannot be used on non-HTML elements.');
-        }
+  if(bflags & flags.custom) {
+    if(!(element instanceof HTMLElement)) {
+      throw new Error('Custom properties cannot be used on non-HTML elements.');
+    }
+
+    for(let [propertyName, binding] of bindings.custom) {
+      if(binding.dirty(changeset)) {
+        binding.update(changeset);
+        let value = binding.getList();
         element.dataset[datasetPropKey(propertyName)] = '';
-        element[Symbol.for(propertyName)] = compute.get();
+        /** @type {any} */
+        (element)[Symbol.for(propertyName)] = {
+          value,
+          compute: binding.compute
+        };
       }
     }
   }
 
   if(bindings.flags & flags.classToggle) {
-    for(let compute of bindings.classToggle.values()) {
-      if(compute.dirty(values)) {
-        element.classList.toggle(compute.item(0), compute.item(1));
-        invalid = true;
+    let binding = /** @type {MultiBinding} */(bindings.classToggle);
+    for(let [className, toggle] of binding.changes(changeset)) {
+      element.classList.toggle(className, toggle);
+      invalid = true;
+    }
+  }
+
+  if(bflags & flags.each) {
+    let binding = /** @type {MultiBinding} */(bindings.each);
+    for(let [items, template, key] of binding.values(changeset)) {
+      /** @type {EachInstance | undefined} */
+      let inst;
+      if(eachInstances.has(element)) {
+        inst = /** @type {EachInstance} */(eachInstances.get(element));
       }
-    }
-  }
 
-  if(bindings.flags & flags.each) {
-    /** @type {EachInstance} */
-    let inst;
-    if(eachInstances.has(element)) {
-      inst = eachInstances.get(element);
-    }
-
-    /** @type {any[]} */
-    let items = bindings.eachItems.compute(values);
-    /** @type {HTMLTemplateElement} */
-    let template = bindings.eachTemplate.compute(values);
-    /** @type {string} */
-    let key = bindings.flags & flags.eachKey ? bindings.eachKey.compute(values) : '';
-    
-    if(!inst || inst.template !== template) {
-      inst = new EachInstance(element, template, key);
-      eachInstances.set(element, inst);
-    }
-    return inst.set(items);
-  }
-
-  if(bindings.flags & flags.attach && bindings.attachTemplate.dirty(values)) {
-    /** @type {HTMLTemplateElement} */
-    let result = bindings.attachTemplate.get();
-    let frag = element.ownerDocument.importNode(result.content, true);
-    element.replaceChildren(frag);
-    invalid = true;
-  }
-
-  if(bindings.flags & flags.attr) {
-    for(let compute of bindings.attr.values()) {
-      if(compute.dirty(values)) {
-        element.setAttribute(compute.item(0), compute.item(1));
-        invalid = true;
+      if(!inst || inst.template !== template) {
+        inst = new EachInstance(element, template, key);
+        eachInstances.set(element, inst);
       }
+      return inst.set(items);
     }
   }
 
-  if(bindings.flags & flags.attrToggle) {
-    for(let compute of bindings.attrToggle.values()) {
-      if(compute.dirty(values)) {
-        let value = compute.item(1);
-        if(value === false)
-          element.removeAttribute(compute.item(0));
-        else
-          element.setAttribute(compute.item(0), value === true ? '' : value);
-      }
+  if(bflags & flags.attach) {
+    let binding = /** @type {Binding} */(bindings.attachTemplate);
+    if(binding.dirty(changeset)) {
+      /** @type {HTMLTemplateElement} */
+      let result = binding.update(changeset);
+      let frag = element.ownerDocument.importNode(result.content, true);
+      element.replaceChildren(frag);
+      invalid = true;
     }
   }
 
-  if(bindings.flags & flags.text && bindings.text.dirty(values)) {
-    element.textContent = bindings.text.get();
-  }
-
-  if(bindings.flags & flags.prop) {
-    for(let compute of bindings.prop.values()) {
-      if(compute.dirty(values)) {
-        element[compute.item(0)] = compute.item(1);
-      }
+  if(bflags & flags.attr) {
+    for(let [key, value, toggle] of /** @type {MultiBinding} */(bindings.attr).changes(changeset)) {
+      if(toggle)
+        element.setAttribute(key, value);
+      else
+        element.removeAttribute(key);
+      invalid = true;
     }
   }
 
-  if(bindings.flags & flags.data) {
-    for(let compute of bindings.data.values()) {
-      if(compute.dirty(values)) {
-        /** @type {any} */
-        let el = element;
-        el.dataset[compute.item(0)] = compute.item(1);
-      }
+  if(bflags & flags.text) {
+    let binding = /** @type {Binding} */(bindings.text);
+    if(binding.dirty(changeset))
+      element.textContent = binding.update(changeset);
+  }
+
+  if(bflags & flags.prop) {
+    let binding = /** @type {MultiBinding} */(bindings.prop);
+    for(let [key, value] of binding.changes(changeset)) {
+      /** @type {any} */(element)[key] = value;
     }
   }
 
-  if(bindings.flags & flags.mount) {
-    const compute = bindings.mount;
-    if(compute.dirty(values)) {
-      const lastValue = compute.lastValue;
-      const value = bindings.mount.get();
-      if(lastValue !== NO_VALUE) {
-        mountPoints.get(element).unmount();
+  if(bflags & flags.data) {
+    let binding = /** @type {MultiBinding} */(bindings.data);
+    for(let [prop, value] of binding.changes(changeset)) {
+      /** @type {HTMLElement} */
+      (element).dataset[prop] = value;
+    }
+  }
+
+  if(bflags & flags.mount) {
+    let binding = /** @type {Binding} */(bindings.mount);
+    if(binding.dirty(changeset)) {
+      let hasExisingValue = binding.hasValue();
+      let value = binding.update(changeset);
+      if(hasExisingValue) {
+        let mp = /** @type {Mountpoint} */(mountPoints.get(element));
+        mp.unmount();
       }
       if(value !== null) {
         let mountpoint = mount(/** @type {HTMLElement} */(element), value);
@@ -136,15 +134,13 @@ function render(element, bindings, values) {
   }
 
   // Events last, does not affect the cascade.
-  if(bindings.flags & flags.event) {
-    for(let compute of bindings.event.values()) {
-      if(compute.dirty(values)) {
-        const lastValue = compute.lastValue;
-        if(lastValue !== NO_VALUE) {
-          element.removeEventListener(lastValue[0], lastValue[1]);
-        }
-        element.addEventListener(compute.item(0), compute.item(1));
+  if(bflags & flags.event) {
+    let binding = /** @type {MultiBinding} */(bindings.event);
+    for(let [eventName, listener, oldListener] of binding.changes(changeset)) {
+      if(oldListener !== undefined) {
+        element.removeEventListener(eventName, oldListener);
       }
+      element.addEventListener(eventName, listener);
     }
   }
 
@@ -153,13 +149,13 @@ function render(element, bindings, values) {
 
 /**
  * @param {Map<Element, Bindings>} allBindings
- * @param {any[]} values
+ * @param {Changeset} changeset
  * @returns {boolean}
  */
-export function renderRoot(allBindings, values) {
+export function renderRoot(allBindings, changeset) {
   let invalid = false;
   for(let [element, bindings] of allBindings) {
-    if(render(element, bindings, values))
+    if(render(element, bindings, changeset))
       invalid = true;
   }
   return invalid;
@@ -171,18 +167,19 @@ export function renderRoot(allBindings, values) {
  * @param {Bindings} bindings 
  */
 function unmount(element, bindings) {
-  if(bindings.flags & flags.mount) {
-    let compute = bindings.mount;
-    if(compute.currentValue !== NO_VALUE) {
-      mountPoints.get(element).unmount();
+  let bflags = bindings.flags;
+  if(bflags & flags.mount) {
+    let binding = /** @type {Binding} */(bindings.mount);
+    if(binding.hasValue()) {
+      let mp = /** @type {Mountpoint} */(mountPoints.get(element));
+      mp.unmount();
     }
   }
 
-  if(bindings.flags & flags.event) {
-    for(let compute of bindings.event.values()) {
-      if(compute.currentValue !== NO_VALUE) {
-        element.removeEventListener(compute.item(0), compute.item(1));
-      }
+  if(bflags & flags.event) {
+    let eventBinding = /** @type {MultiBinding} */(bindings.event);
+    for(let [eventName, listener] of eventBinding.current()) {
+      element.removeEventListener(eventName, listener);
     }
   }
 }
