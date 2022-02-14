@@ -19,7 +19,7 @@ function createState(mountpoint) {
   });
 }
 
-class Mountpoint {
+export class Mountpoint {
   /**
    * 
    * @param {HTMLElement} rootElement 
@@ -42,14 +42,9 @@ class Mountpoint {
   }
 
   unmount() {
-    if(this.bindings !== null) {
-      this.bindings.unmount(this.rootElement);
-    }
+    this.bindings.unmount(this.rootElement);
   }
 }
-
-// Export the type
-/** @typedef {Mountpoint} Mountpoint */
 
 /**
  * 

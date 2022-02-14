@@ -56,7 +56,7 @@ QUnit.test('can take a function as the second arg', assert => {
   assert.equal(root.firstElementChild.textContent, 'Hello Wilbur');
 });
 
-QUnit.test('if one arg, use item() as the context', assert => {
+QUnit.skip('if one arg, use item() as the context', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"></div><template>Hello <span id="name"></span></template>`;
   let pet = { name: 'Wilbur' };

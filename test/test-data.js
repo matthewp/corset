@@ -23,7 +23,7 @@ QUnit.test('Can set multiple properties', assert => {
   let bindings = sheet`
     #app {
       data:
-        firstOne "one"
+        firstOne "one",
         secondOne "two";
     }
   `;

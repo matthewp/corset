@@ -1,160 +1,184 @@
 // @ts-check
 
+import { PlaceholderValue, SpaceSeparatedListValue } from './value.js';
+
 /**
- * @typedef {import('./declaration').Declaration} Declaration
+ * @typedef {import('./binding').Binding} Binding
+ * @typedef {import('./changeset').Changeset} Changeset
  * @typedef {import('./value').Value} Value
- */
-
-export const NO_VALUE = {};
-
-/**
+ * @typedef {import('./types').CheckedValue} CheckedValue
+ * @typedef {import('./types').VersionedValue} VersionedValue
+ * @typedef {import('./template').ValueTemplate} ValueTemplate
  * 
- * @param {Value[]} args
- * @param {Element} rootElement
- * @param {Element} element
- * @param {any[]} values
+ * @typedef {(c: Changeset, v: number) => number} VersionCalculate
  */
-function callArg(args, rootElement, element, values) {
-  return args[0].get(rootElement, element, values);
-}
-
-/**
- * 
- * @param {Value[]} args
- * @param {Element} rootElement
- * @param {Element} element
- * @param {any[]} values
- */
-function callMultiArg(args, rootElement, element, values) {
-  return args.map(arg => arg.get(rootElement, element, values));
-}
-
-/**
- * 
- * @param {ComputedValue} compute
- * @param {any[]} values
- */
-function computeValue(compute, values) {
-  let { callArg, element, initialValue, rootElement, sorted } = compute;
-
-  let i = sorted.length;
-  /** @type {Declaration} */
-  let declaration;
-  while(i > 0) {
-    i--;
-    declaration = sorted[i];
-    if(element.matches(declaration.rule.selector)) {
-      let args = declaration.args;
-      return callArg(args, rootElement, element, values);
-    }
-  }
-  return initialValue;
-}
-
-/**
- * 
- * @param {ComputedValue} compute
- * @param {any[]} values
- */
- function computeMultiDirty(compute, values) {
-  let { currentValue } = compute;
-  let newValue = computeValue(compute, values);
-  for(let i = 0, len = newValue.length; i < len; i++) {
-    if(currentValue[i] !== newValue[i]) {
-      compute.lastValue = currentValue;
-      compute.currentValue = newValue;
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
- * 
- * @param {ComputedValue} compute
- * @param {any[]} values
- */
-function computeDirty(compute, values) {
-  let { currentValue } = compute;
-  let newValue = computeValue(compute, values);
-  if(newValue !== currentValue) {
-    compute.lastValue = currentValue;
-    compute.currentValue = newValue;
-    return true;
-  }
-  return false;
-}
 
 export class ComputedValue {
+  /** @type {boolean} */
+  #initial = true;
+  /** @type {any} */
+  #value;
+  /** @type {WeakMap<Changeset, boolean>} */
+  #dirty = new WeakMap();
+  /** @type {CheckedValue['check'] | undefined} */
+  #check;
   /**
-   * @param {Element} rootElement The root element of the tree
-   * @param {Element} element The element this compute targets
-   * @param {any} initialValue The initial value of the compute
-   * @param {Boolean} isMultiValue Contains multiple values
+   * 
+   * @param {ValueTemplate} template 
+   * @param {Binding} binding 
+   * @param {number} index
    */
-  constructor(rootElement, element, initialValue, isMultiValue) {
-    /** @type {Set<Declaration>} */
-    this.set = new Set();
+  constructor(template, binding, index = 0) {
+    /** @type {Binding} */
+    this.binding = binding;
+    /** @type {number} */
+    this.index = index;
+    /** @type {any[]} */
+    this.args = [];
+    /** @type {ComputedValue[]} */
+    this.argDeps = [];
+    /** @type {Map<string, ComputedValue> | null} */
+    this.inputDeps = null;
+    /** @type {Map<string, any> | null} */
+    this.inputProps = null;
+    /** @type {Value} */
+    this.raw = hydrate(this, template);
+    /** @type {() => any[]} */
+    this.listValue = this.raw instanceof SpaceSeparatedListValue ?
+      () => this.#value :
+      () => [this.#value];
 
-    /** @type {Array<Declaration>} */
-    this.sorted = [];
-    /** @type {Element} */
-    this.rootElement = rootElement;
-    /** @type {Element} */
-    this.element = element;
-    /** @type {any} */
-    this.initialValue = initialValue;
-    /** @type {boolean} */
-    this.isMultiValue = isMultiValue;
-    /** @type {typeof callArg} */
-    this.callArg = isMultiValue ? callMultiArg : callArg;
-    /** @type {typeof computeDirty} */
-    this.computeDirty = isMultiValue ? computeMultiDirty : computeDirty;
-    /** @type {any} */
-    this.currentValue = NO_VALUE;
-    /** @type {any} */
-    this.lastValue = NO_VALUE;
-  }
-  /**
-   * Add a declaration
-   * @param {Declaration} declaration 
-   */
-  addDeclaration(declaration) {
-    if(!this.set.has(declaration)) {
-      this.set.add(declaration);
-      this.sorted.push(declaration); // TODO PUT THEM IN ORDER
-    }
+    // Private
+    this.#value = null;
+    this.#check = this.raw.check;
   }
   /**
    * 
-   * @returns {any}
-   */
-  get() {
-    return this.currentValue;
-  }
-  /**
-   * Get an item at this index
    * @param {number} index 
-   * @returns {any}
+   * @param {ComputedValue} dep
+   * @param {Changeset} changeset
    */
-  item(index) {
-    return this.currentValue[index];
+  set(index, dep, changeset) {
+    let deps = this.argDeps;
+    if(deps[index] !== dep) {
+      this.#dirty.set(changeset, true);
+    }
+    deps[index] = dep;
   }
   /**
-   * 
-   * @param {any[]} values 
+   * @param {Changeset} changeset
    * @returns {boolean}
    */
-  dirty(values) {
-    return this.computeDirty(this, values);
+  dirty(changeset) {
+    if(this.#initial) {
+      this.calculate(changeset);
+      this.#dirty.set(changeset, true);
+      this.#initial = false;
+    }
+    if(this.#dirty.has(changeset)) {
+      return /** @type {boolean} */(this.#dirty.get(changeset));
+    }
+    this.calculate(changeset);
+    return /** @type {boolean} */(this.#dirty.get(changeset));
   }
   /**
    * 
-   * @param {any[]} values 
+   * @param {Changeset} changeset 
+   */
+  compute(changeset) {
+    this.#value = call(this, changeset, this.raw.get);
+  }
+  /**
+   * 
+   * @param {Changeset} changeset 
    * @returns {any}
    */
-  compute(values) {
-    this.computeDirty(this, values);
-    return this.currentValue;
+  check(changeset) {
+    if(this.dirty(changeset)) {
+      this.compute(changeset);
+    }
+    return this.#value;
   }
+  /**
+   * 
+   * @param {Changeset} changeset 
+   * @returns {boolean}
+   */
+  calculate(changeset) {
+    if(this.#dirty.has(changeset)) {
+      return /** @type {boolean} */(this.#dirty.get(changeset));
+    }
+    let dirty = false;
+    if(this.#check) {
+      if(call(this, changeset, this.#check)) {
+        dirty = true;
+      }
+    }
+
+    for(let dep of this.#allDeps()) {
+      if(dep.calculate(changeset)) {
+        dirty = true;
+      }
+    }
+
+    this.#dirty.set(changeset, dirty);
+    return dirty;
+  }
+  * #allDeps() {
+    yield * this.argDeps;
+    if(this.inputDeps) {
+      yield * this.inputDeps.values();
+    }
+  }
+}
+
+/**
+ * 
+ * @param {ComputedValue} compute 
+ * @param {ValueTemplate} template 
+ * @returns {Value}
+ */
+function hydrate(compute, template) {
+  let value = new template.Value();
+  for(let dep of template.deps) {
+    compute.argDeps.push(new ComputedValue(dep, compute.binding));
+  }
+  let inputProperties = template.inputProperties;
+  if(inputProperties) {
+    compute.inputProps = new Map();
+    compute.inputDeps = new Map();
+    for(let [propName, template] of inputProperties) {
+      compute.inputDeps.set(propName, new ComputedValue(template, compute.binding));
+    }
+  }
+  return value;
+}
+
+/**
+ * @param {ComputedValue} compute 
+ * @param {Changeset} changeset
+ * @param {Value['get'] | VersionedValue['version']} method
+ * @returns {any}
+ */
+function call(compute, changeset, method) {
+  let {args, binding, raw: value, inputProps: props} = compute;
+  if(compute.inputDeps) {
+    for(let [propName, v] of compute.inputDeps) {
+      let value = v.check(changeset);
+      if((v.raw instanceof PlaceholderValue) && Array.isArray(value)) {
+        value = value[0];
+      }
+      /** @type {Map<string, any>} */(props).set(propName, value);
+    }
+  }
+  args.length = 0;
+  for(let v of compute.argDeps) {
+    if(v.raw instanceof PlaceholderValue) {
+      let values = v.check(changeset);
+      if(values) args.push(...values);
+    }
+    else
+      args.push(v.check(changeset)); 
+  }
+  return method.call(value, args, binding, props, changeset);
 }

@@ -1,6 +1,7 @@
 // @ts-check
 import { Bindings } from './bindings.js';
 import { renderRoot, unmountRoot } from './render.js';
+import { Changeset } from './changeset.js';
 
 /**
  * @typedef {import('./rule').Rule} Rule
@@ -25,28 +26,29 @@ class Root {
   update(values) {
     let invalid = true;
     while(invalid) {
-      this.collect(values);
-      invalid = renderRoot(this.bindingMap, values);
+      let changeset = new Changeset(values);
+      this.collect(changeset);
+      invalid = renderRoot(this.bindingMap, changeset);
     }
   }
   /**
    * 
-   * @param {any[]} values 
+   * @param {Changeset} changeset 
    */
-  collect(values) {
+  collect(changeset) {
     let rootElement = this.rootElement;
     for(let rule of this.rules) {
       for(let el of rootElement.querySelectorAll(rule.selector)) {
         /** @type {Bindings} */
         let bindings;
         if(this.bindingMap.has(el)) {
-          bindings = this.bindingMap.get(el);
+          bindings = /** @type {Bindings} */(this.bindingMap.get(el));
         } else {
           bindings = new Bindings(rootElement, el);
           this.bindingMap.set(el, bindings);
         }
         for(let declaration of rule.declarations) {
-          bindings.add(declaration, values);
+          bindings.add(declaration);
         }
       }
     }
@@ -89,16 +91,21 @@ export class SheetWithValues {
     /** @type {Root} */
     let root;
     if(this.roots.has(rootElement)) {
-      root = this.roots.get(rootElement);
+      root = /** @type {Root} */(this.roots.get(rootElement));
     } else {
       root = new Root(rootElement, this.sheet);
       this.roots.set(rootElement, root);
     }
     return root.update(this.values);
   }
+  /**
+   * 
+   * @param {Element} rootElement 
+   */
   unmount(rootElement) {
     if(this.roots.has(rootElement)) {
-      this.roots.get(rootElement).unmount();
+      let root = /** @type {Root} */(this.roots.get(rootElement));
+      root.unmount();
     }
   }
 }

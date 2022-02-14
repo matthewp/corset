@@ -1,175 +1,123 @@
 // @ts-check
 
-import { ComputedValue } from './compute.js';
+import { Binding } from './binding.js';
+import { MultiBinding } from './multi-binding.js';
+import { SimpleBinding } from './simple-binding.js';
+import { flags, properties } from './property.js';
 
 /**
  * @typedef {import('./declaration').Declaration} Declaration
- * @typedef {import('./value').Value} Value
+ * @typedef {import('./property').KeyedMultiPropertyDefinition} KeyedMultiPropertyDefinition
+ * @typedef {import('./property').PropertyDefinition} PropertyDefinition
+ * @typedef {import('./property').SimplePropertyDefinition} SimplePropertyDefinition
+ * @typedef {import('./property').ShorthandPropertyDefinition} ShorthandPropertyDefinition
+ * @typedef {import('./property').LonghandPropertyDefinition} LonghandPropertyDefinition
  */
 
-export const flags = {
-  text: 1 << 0,
-  classToggle: 1 << 1,
-  event: 1 << 2,
-  custom: 1 << 3,
-  each: 1 << 4,
-  eachKey: 1 << 5,
-  prop: 1 << 6,
-  attr: 1 << 7,
-  attrToggle: 1 << 8,
-  data: 1 << 9,
-  attach: 1 << 10,
-  attachTemplate: 1 << 11,
-  mount: 1 << 12,
-};
-
-/**
- * @typedef {(rootElement: Element, element: Element, args: Value[], values: any[]) => any} ReadElementValue
- * 
- * @typedef {object} PropertyOptions
- * @property {string} prop
- * @property {number} flag
- * @property {ReadElementValue} read
- * @property {boolean} [multiValue]
- * @property {boolean} [multiBindings]
- */
-
-const readNull = () => null;
-
-/** @type {Record<string, PropertyOptions>} */
-const properties = {
-  text: { prop: 'text', flag: flags.text, read: (_,el) => el.textContent },
-  'class-toggle': { prop: 'classToggle', flag: flags.classToggle, multiValue: true,
-    multiBindings: true, read: (root, el, args, values) => {
-    let name = args[0].get(root, el, values);
-    return [name, el.classList.contains(name)];
-   } },
-  event: { prop: 'event', flag: flags.event, multiValue: true, multiBindings: true,
-     read: (root, el, args, values) => (
-      el['on' + args[0].get(root, el, values)] || null
-    ) },
-  'each-items': { prop: 'eachItems', flag: flags.each, read: readNull },
-  'each-template': { prop: 'eachTemplate', flag: flags.each, read: readNull },
-  'each-key': { prop: 'eachKey', flag: flags.eachKey, read: readNull },
-  prop: { prop: 'prop', flag: flags.prop, multiValue: true, multiBindings: true, read: (root, el, args, values) => el[args[0].get(root, el, values)]},
-  attr: { prop: 'attr', flag: flags.attr, multiValue: true, multiBindings: true, read: (root, el, args, values) => el.getAttribute(args[0].get(root, el, values))},
-  'attr-toggle': { prop: 'attrToggle', flag: flags.attrToggle, multiValue: true, multiBindings: true, read: (root, el, args, values) => el.getAttribute(args[0].get(root, el, values))},
-  data: { prop: 'data', flag: flags.data, multiValue: true, multiBindings: true,
-    /** @param {any} el */
-    read: (root, el, args, values) => el.dataset[args[0].get(root, el, values)]
-  },
-  'attach-template': { prop: 'attachTemplate', flag: flags.attach | flags.attachTemplate, read: (_root, el) => {
-    let tmpl = el.ownerDocument.createElement('template');
-    tmpl.content.append(...Array.from(el.childNodes));
-    return tmpl;
-  } },
-  mount: { prop: 'mount', flag: flags.mount, read: readNull },
-};
-
-/**
- * @typedef {Map<Declaration, ComputedValue>} MultiBindingMap
- */
-
-/**
- * 
- * @param {Bindings} bindings 
- * @param {Declaration} declaration
- * @param {ReadElementValue} read
- * @param {boolean} multiValue
- * @param {any[]} values
- * @returns {ComputedValue}
- */
-function createCompute(bindings, declaration, read, multiValue, values) {
-  return new ComputedValue(bindings.rootElement, bindings.element,
-    read(bindings.rootElement, bindings.element, declaration.args, values), multiValue || false
-  );
-}
 
 export class Bindings {
   /**
-   * Create a new map of bindings
-   * @param {Element} rootElement
+   * Create bindings for a specific element.
+   * @param {Element} rootElement 
    * @param {Element} element 
    */
   constructor(rootElement, element) {
-    /** @type {rootElement} */
+    /** @type {Element} */
     this.rootElement = rootElement;
     /** @type {Element} */
     this.element = element;
+    /** @type {WeakSet<Declaration>} */
+    this.seen = new WeakSet();
 
-    this.flags = 0;
-
-    /** @type {ComputedValue} */
-    this.text = null;
-    /** @type {MultiBindingMap} */
-    this.classToggle = null;
-    /** @type {MultiBindingMap} */
-    this.event = null;
-    /** @type {ComputedValue} */
-    this.eachItems = null;
-    /** @type {ComputedValue} */
-    this.eachTemplate = null;
-    /** @type {ComputedValue} */
-    this.eachKey = null;
-    /** @type {MultiBindingMap} */
-    this.prop = null;
-    /** @type {MultiBindingMap} */
-    this.attr = null;
-    /** @type {MultiBindingMap} */
-    this.attrToggle = null;
-    /** @type {MultiBindingMap} */
-    this.data = null;
-    /** @type {ComputedValue} */
+    /** @type {Binding | null} */
     this.attachTemplate = null;
-    /** @type {ComputedValue} */
+    /** @type {Binding | null} */
+    this.text = null;
+    /** @type {MultiBinding | null} */
+    this.data = null;
+    /** @type {Binding | null} */
+    this.each = null;
+    /** @type {MultiBinding | null} */
+    this.event = null;
+    /** @type {MultiBinding | null} */
+    this.attr = null;
+    /** @type {MultiBinding | null} */
+    this.classToggle = null;
+    /** @type {Binding | null} */
     this.mount = null;
+    /** @type {MultiBinding | null} */
+    this.prop = null;
 
-    /** @type {null | Map<string, ComputedValue>} */
-    this.custom = null;
+    /** @type {Map<string, Binding>} */
+    this.custom = new Map();
+    /** @type {number} */
+    this.flags = 0;
   }
+
   /**
-   * Add a declaration for these bindings
+   * Add a declaration to the binding map
    * @param {Declaration} declaration 
-   * @param {any[]} values
+   * @returns 
    */
-  add(declaration, values) {
-    let propertyName = declaration.propertyName;
-    if(propertyName in properties) {
-      let { prop, flag, multiValue, multiBindings, read } = properties[propertyName];
-      if(this[prop] === null) {
-        this.flags |= flag;
-        let compute = createCompute(this, declaration, read, multiValue, values);
-        if(multiBindings) {
-          this[prop]  = new Map();
-          this[prop].set(declaration, compute);
-        } else
-          this[prop] = compute;
-      }
-      if(multiBindings) {
-        /** @type {ComputedValue} */
-        let compute;
-        if(this[prop].has(declaration))
-          compute = this[prop].get(declaration);
-        else {
-          compute = createCompute(this, declaration, read, multiValue, values);
-          this[prop].set(declaration, compute);
+  add(declaration) {
+    if(this.seen.has(declaration)) return;
+    this.seen.add(declaration);
+    let propName = declaration.propertyName;
+
+    if(propName in properties) {
+      /** @type {PropertyDefinition} */
+      let defn = properties[propName];
+
+      this.flags |= defn.flag;
+
+      /** @type {KeyedMultiPropertyDefinition | ShorthandPropertyDefinition | undefined} */
+      let multiDef = undefined;
+      if('multi' in defn || 'longhand' in defn) multiDef = defn;
+      else if('shorthand' in defn)
+        multiDef = /** @type {KeyedMultiPropertyDefinition | ShorthandPropertyDefinition} */(properties[defn.shorthand]);
+      if(multiDef) {
+        if(!this[multiDef.prop]) {
+          this[multiDef.prop] = new MultiBinding(multiDef, propName, this.rootElement, this.element);
         }
-        compute.addDeclaration(declaration);
+
+        let kb = /** @type {MultiBinding} */(this[multiDef.prop]);
+        kb.add(declaration);
+      } else {
+        let binding = this.#getOrAddBinding(
+          propName,
+          /** @type {SimplePropertyDefinition} */(defn)
+        );
+        binding.push(declaration);
+        binding.add(declaration);
       }
-      else
-        this[prop].addDeclaration(declaration);
-    } else if(propertyName.startsWith('--')) { // Temporary, remove!
-      if(this.custom === null) {
-        this.flags |= flags.custom;
-        this.custom = new Map();
-      }
-      if(!this.custom.has(propertyName)) {
-        let compute = new ComputedValue(this.rootElement, this.element, null, false);
-        this.custom.set(propertyName, compute);
-      }
-      this.custom.get(propertyName).addDeclaration(declaration);
-    } else {
-      throw new Error('Unknown property ' + propertyName);
+    } else if(propName.startsWith('--')) {
+      /** @type {Binding} */
+      let binding = this.#getOrAddBinding(propName, null);
+      binding.push(declaration);
+      binding.add(declaration);
+      this.flags |= flags.custom;
+      this.custom.set(propName, binding);
     }
+  }
+
+  /**
+   * 
+   * @param {string} propertyName
+   * @param {SimplePropertyDefinition | null} defn
+   * @returns {Binding}
+   */
+  #getOrAddBinding(propertyName, defn) {
+    let bindingProp = defn ? defn.prop : propertyName;
+    if(!defn) {
+      if(!this.custom.has(propertyName)) {
+        let binding = new Binding(propertyName, this.rootElement, this.element);
+        this.custom.set(propertyName, binding);
+      }
+      return /** @type {Binding} */(this.custom.get(propertyName));
+    } else if(! /** @type {any} */(this)[bindingProp]) {
+      let binding = new SimpleBinding(defn, propertyName, this.rootElement, this.element);
+      /** @type {any} */(this)[bindingProp] = binding;
+    }
+    return /** @type {any} */(this)[bindingProp];
   }
 }

@@ -6,10 +6,12 @@ import { datasetKey } from './custom-prop.js';
  * @property {any} item
  * @property {number} index
  * 
- * @typedef {DocumentFragment & { nodes?: Array<ChildNode>; data?: FragData }} EachFragment
+ * @typedef {DocumentFragment & { nodes: Array<ChildNode>; data: FragData }} EachFragment
  */
 
 export class EachInstance {
+  /** @type {Map<any, EachFragment>} */
+  keyMap = new Map();
   /**
    * @param {Element} host 
    * @param {HTMLTemplateElement} template
@@ -23,28 +25,28 @@ export class EachInstance {
     /** @type {string} */
     this.key = key;
     /** @type {(item: any, index: number) => any} */
-    this.keyFn = null;
+    this.keyFn = this.key ? this.keyKeyed : this.keyNonKeyed;
+
+    let doc = this.host.ownerDocument;
+
+    /** @type {Comment} */
+    this.start = doc.createComment(`each(items)`)
+    /** @type {Comment} */
+    this.end = doc.createComment(`end each(items)`);
+
+    this.host.append(this.start);
+    this.start.after(this.end);
+
+    /** @type {EachFragment[]} */
+    this.frags = [];
+    /** @type {any[]} */
+    this.keys = [];
   }
   /**
    * 
    * @param {any[]} values
    */
   set(values) {
-    if(!this.start) {
-      let doc = this.host.ownerDocument;
-      this.keyFn = this.key ? this.keyKeyed : this.keyNonKeyed;
-      this.start = doc.createComment(`each(items)`);
-      this.end = doc.createComment(`end each(items)`);
-      //this.node.replaceWith(this.start);
-      this.host.append(this.start);
-      this.start.after(this.end);
-      /** @type {EachFragment[]} */
-      this.frags = [];
-      /** @type {any[]} */
-      this.keys = [];
-      /** @type {Map<any, EachFragment>} */
-      this.keyMap = new Map();
-    }
     return this.updateValues(values);
   }
   /**
@@ -60,17 +62,25 @@ export class EachInstance {
       if('dataset' in element) {
         /** @type {HTMLElement} */
         (element).dataset[itemProp] = '';
-        element[Symbol.for(itemProp)] = value;
+        /** @type {any} */
+        (element)[Symbol.for(itemProp)] = value;
          /** @type {HTMLElement} */
         (element).dataset[indexProp] = '';
-        element[Symbol.for(indexProp)] = index;
+        /** @type {any} */
+        (element)[Symbol.for(indexProp)] = index;
       }
 
     }
   }
+  /**
+   * 
+   * @param {number} index 
+   * @param {any} value 
+   * @returns 
+   */
   render(index, value) {
     /** @type {EachFragment} */
-    let frag = this.host.ownerDocument.importNode(this.template.content, true);
+    let frag = /** @type {EachFragment} */(this.host.ownerDocument.importNode(this.template.content, true));
     frag.nodes = Array.from(frag.childNodes);
     frag.data = { item: value, index };
     this.setData(frag, value, index);
@@ -85,31 +95,57 @@ export class EachInstance {
   keyNonKeyed(_, index) {
     return index;
   }
+  /**
+   * 
+   * @param {any} value 
+   * @returns 
+   */
   keyKeyed(value) {
     return value[this.key];
   }
+  /**
+   * 
+   * @param {EachFragment} frag 
+   * @returns 
+   */
   refrag(frag) {
     if(!frag.firstChild && frag.nodes)
       frag.append(...frag.nodes);
     return frag;
   }
+  /**
+   * @param {EachFragment} frag
+   * @param {EachFragment} ref
+   */
   append(frag, ref) {
     let sibling = ref ? ref.nodes[ref.nodes.length - 1] : this.start;
     sibling.after(this.refrag(frag));
   }
+  /**
+   * 
+   * @param {EachFragment} frag 
+   * @param {EachFragment} ref 
+   */
   before(frag, ref) {
     let sibling = ref ? ref.nodes[0] : this.end;
     sibling.before(this.refrag(frag));
   }
+  /**
+   * 
+   * @param {EachFragment} frag 
+   */
   remove(frag) {
-    this.clear(frag.nodes[0], frag.nodes[frag.nodes.length - 1].nextSibling);
+    let lastNode = frag.nodes[frag.nodes.length - 1];
+    this.clear(frag.nodes[0], /** @type {Comment} */(lastNode.nextSibling));
   }
   clear(startNode = this.start.nextSibling, end = this.end) {
-    let node = startNode;
+    /** @type {ChildNode | null} */
+    let node = /** @type {ChildNode} */(startNode);
+    /** @type {ChildNode | null} */
     let next;
     while(node !== end) {
-      next = node.nextSibling;
-      node.remove();
+      next = /** @type {ChildNode} */(node).nextSibling;
+      /** @type {ChildNode} */(node).remove();
       node = next;
     }
   }
@@ -194,6 +230,7 @@ export class EachInstance {
             this.keyMap.set(this.keyFn(value, newHead), frag);
           } else {
             frag = this.updateFrag(frag, newHead, value);
+            // @ts-ignore
             oldFrags[oldFrags.indexOf(frag)] = null;
           }
           newFrags[newHead] = frag;

@@ -69,7 +69,7 @@ QUnit.test('Can set multiple properties', assert => {
   let bindings = sheet`
     my-prop-element-three {
       prop:
-        name "world"
+        name "world",
         count ${2};
     }
   `;

@@ -13,11 +13,12 @@
     "lib"
   ],
   "scripts": {
-    "build": "microbundle -f modern",
+    "build": "microbundle -f modern --tsconfig jsconfig.json",
     "changeset": "changeset",
     "server": "python3 -m http.server 7800",
     "test-qunit": "node node_modules/@matthewp/node-qunit-puppeteer/cli.js http://localhost:7800/test/test.html",
-    "test": "npm run server & npm run test-qunit"
+    "test": "npm run server & npm run test-qunit",
+    "typecheck": "tsc -p jsconfig.json"
   },
   "repository": {
     "type": "git",

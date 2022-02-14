@@ -24,7 +24,7 @@ QUnit.test('Unbinds from previous callback when it changes', assert => {
     return sheet`
       button {
         --cb: ${cb.bind(null)};
-        event: click var(--cb); 
+        event: click var(--cb);
       }
     `;
   }
@@ -49,7 +49,7 @@ QUnit.test('Can listen to multiple events on the same element', assert => {
   let bindings = sheet`
     button {
       event:
-        "custom-one" ${cb1}
+        "custom-one" ${cb1},
         "custom-two" ${cb2};
     }
   `;
