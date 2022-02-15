@@ -39,6 +39,36 @@ QUnit.test('Unbinds from previous callback when it changes', assert => {
   assert.equal(count, 2);
 });
 
+QUnit.test('Unbinds from previous callback when it changes (keyed syntax)', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app"><button type="button"></button></div>`;
+  let count = 0;
+  let cb = () => count++;
+
+  function template() {
+    return sheet`
+      #app {
+        --inc: ${() => cb()};
+      }
+
+      button {
+        --cb: ${cb.bind(null)};
+        event[click]: var(--cb);
+      }
+    `;
+  }
+
+  let btn = root.querySelector('button');
+
+  template().update(root);
+  btn.dispatchEvent(new Event('click'));
+  assert.equal(count, 1);
+
+  template().update(root);
+  btn.dispatchEvent(new Event('click'));
+  assert.equal(count, 2);
+});
+
 QUnit.test('Can listen to multiple events on the same element', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<button type="button"></button>`;
