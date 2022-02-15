@@ -33,19 +33,19 @@ export class Bindings {
     this.attachTemplate = null;
     /** @type {Binding | null} */
     this.text = null;
-    /** @type {MultiBinding | null} */
+    /** @type {MultiBinding<string> | null} */
     this.data = null;
-    /** @type {Binding | null} */
+    /** @type {MultiBinding<any[]> | null} */
     this.each = null;
-    /** @type {MultiBinding | null} */
+    /** @type {MultiBinding<string> | null} */
     this.event = null;
-    /** @type {MultiBinding | null} */
+    /** @type {MultiBinding<string> | null} */
     this.attr = null;
-    /** @type {MultiBinding | null} */
+    /** @type {MultiBinding<string> | null} */
     this.classToggle = null;
     /** @type {Binding | null} */
     this.mount = null;
-    /** @type {MultiBinding | null} */
+    /** @type {MultiBinding<string> | null} */
     this.prop = null;
 
     /** @type {Map<string, Binding>} */
@@ -77,10 +77,11 @@ export class Bindings {
         multiDef = /** @type {KeyedMultiPropertyDefinition | ShorthandPropertyDefinition} */(properties[defn.shorthand]);
       if(multiDef) {
         if(!this[multiDef.prop]) {
-          this[multiDef.prop] = new MultiBinding(multiDef, propName, this.rootElement, this.element);
+          this[multiDef.prop] = /** @type {MultiBinding<string> & MultiBinding<any[]>} */
+          (new MultiBinding(multiDef, propName, this.rootElement, this.element));
         }
 
-        let kb = /** @type {MultiBinding} */(this[multiDef.prop]);
+        let kb = /** @type {MultiBinding<any>} */(this[multiDef.prop]);
         kb.add(declaration);
       } else {
         let binding = this.#getOrAddBinding(
