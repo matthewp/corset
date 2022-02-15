@@ -10,7 +10,8 @@ import { NO_VALUE } from './value.js';
  * @typedef {import('./binding').Binding} Binding
  * @typedef {import('./bindings').Bindings} Bindings
  * @typedef {import('./changeset').Changeset} Changeset
- * @typedef {import('./multi-binding').MultiBinding} MultiBinding
+ * @typedef {import('./multi-binding').MultiBinding<string>} KeyedMultiBinding
+ * @typedef {import('./multi-binding').MultiBinding<any[]>} ArrayMultiBinding
  * @typedef {import('./mount').Mountpoint} Mountpoint
  */
 
@@ -51,7 +52,7 @@ function render(element, bindings, changeset) {
   }
 
   if(bindings.flags & flags.classToggle) {
-    let binding = /** @type {MultiBinding} */(bindings.classToggle);
+    let binding = /** @type {KeyedMultiBinding} */(bindings.classToggle);
     for(let [className, toggle] of binding.changes(changeset)) {
       element.classList.toggle(className, toggle);
       invalid = true;
@@ -59,7 +60,7 @@ function render(element, bindings, changeset) {
   }
 
   if(bflags & flags.each) {
-    let binding = /** @type {MultiBinding} */(bindings.each);
+    let binding = /** @type {ArrayMultiBinding} */(bindings.each);
     for(let [items, template, key] of binding.values(changeset)) {
       /** @type {EachInstance | undefined} */
       let inst;
@@ -87,7 +88,7 @@ function render(element, bindings, changeset) {
   }
 
   if(bflags & flags.attr) {
-    for(let [key, value, toggle] of /** @type {MultiBinding} */(bindings.attr).changes(changeset)) {
+    for(let [key, value, toggle] of /** @type {KeyedMultiBinding} */(bindings.attr).changes(changeset)) {
       if(toggle)
         element.setAttribute(key, value);
       else
@@ -103,14 +104,14 @@ function render(element, bindings, changeset) {
   }
 
   if(bflags & flags.prop) {
-    let binding = /** @type {MultiBinding} */(bindings.prop);
+    let binding = /** @type {KeyedMultiBinding} */(bindings.prop);
     for(let [key, value] of binding.changes(changeset)) {
       /** @type {any} */(element)[key] = value;
     }
   }
 
   if(bflags & flags.data) {
-    let binding = /** @type {MultiBinding} */(bindings.data);
+    let binding = /** @type {KeyedMultiBinding} */(bindings.data);
     for(let [prop, value] of binding.changes(changeset)) {
       /** @type {HTMLElement} */
       (element).dataset[prop] = value;
@@ -135,7 +136,7 @@ function render(element, bindings, changeset) {
 
   // Events last, does not affect the cascade.
   if(bflags & flags.event) {
-    let binding = /** @type {MultiBinding} */(bindings.event);
+    let binding = /** @type {KeyedMultiBinding} */(bindings.event);
     for(let [eventName, listener, oldListener] of binding.changes(changeset)) {
       if(oldListener !== undefined) {
         element.removeEventListener(eventName, oldListener);
@@ -177,7 +178,7 @@ function unmount(element, bindings) {
   }
 
   if(bflags & flags.event) {
-    let eventBinding = /** @type {MultiBinding} */(bindings.event);
+    let eventBinding = /** @type {KeyedMultiBinding} */(bindings.event);
     for(let [eventName, listener] of eventBinding.current()) {
       element.removeEventListener(eventName, listener);
     }

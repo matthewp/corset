@@ -2,6 +2,10 @@
 
 import { NO_VALUE } from './value.js';
 
+/**
+ * @template {string | null} K
+ * @extends {Array}
+ */
 export class SparseArray extends Array {
   /**
    * 

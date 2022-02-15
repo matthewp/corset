@@ -28,6 +28,9 @@ import { SpaceSeparatedListValue } from './value.js';
   ].concat(declaration.template.deps))
 }
 
+/**
+ * @template {string | Array<any>} K
+ */
 export class MultiBinding extends Binding {
   /**
    * @param {ShorthandPropertyDefinition | KeyedMultiPropertyDefinition} defn
@@ -103,13 +106,18 @@ export class MultiBinding extends Binding {
   /**
   * 
   * @param {Changeset} changeset 
+  * @returns {Generator<[[K, ...any[]], boolean], void, unknown>}
   */
   * calculate(changeset) {
     let { element } = this;
     let sorted = this.declarations;
     let active = new Set(this.active);
 
-    /** @type {Map<string | null, SparseArray>} */
+    /**
+     * @typedef {SparseArray<K extends string ? K : null>} KeyedSparseArray
+     */
+
+    /** @type {Map<string | null, KeyedSparseArray>} */
     let valueMap = new Map();
 
     /** @type {Set<string | null>} */
@@ -132,8 +140,8 @@ export class MultiBinding extends Binding {
           case declFlags.multi | declFlags.shorthand:
           // class-toggle: one "one", two "two"
           case declFlags.multi: {
-            for(let values of computedValue) {
-              let key = values[0];
+            for(let values of /** @type {[K, ...any[]][]} */(computedValue)) {
+              let key = /** @type {string} */(values[0]);
               this.#bookkeep(active, key);
               let allValues = this.#appendToValues(key, values);
               yield [allValues, dirty];
@@ -163,10 +171,10 @@ export class MultiBinding extends Binding {
             let propValue = keyed ? computedValue[1] : computedValue[0];
 
             this.#bookkeep(active, key);
-            /** @type {SparseArray} */
+            /** @type {KeyedSparseArray} */
             let valueList;
             if(valueMap.has(key))
-              valueList = /** @type {SparseArray} */(valueMap.get(key));
+              valueList = /** @type {KeyedSparseArray} */(valueMap.get(key));
             else {
               valueList = new SparseArray(numOfValues);
               valueMap.set(key, valueList);
@@ -178,7 +186,10 @@ export class MultiBinding extends Binding {
                 if(this.oldValues)
                   this.oldValues.set(key, Array.from(valueList));
                 if(key) valueList.unshift(key);
-                yield [valueList, dirty || dirtyKeys.has(key)];
+                yield [
+                  /** @type {[K, ...any[]]} */(/** @type {unknown} */(valueList)),
+                  dirty || dirtyKeys.has(key)
+                ];
                 valueMap.delete(key);
                 dirtyKeys.delete(key);
                 break;
@@ -226,24 +237,31 @@ export class MultiBinding extends Binding {
         i++;
       }
       if(key) values.unshift(key);
-      yield [values, true];
+      yield [/** @type {[K, ...any[]]} */(/** @type {unknown} */(values)), true];
     }
 
     // Yield out to reset to initial state.
     for(let key of active) {
-      yield [[key, ...this.initial.get(key) || []], true];
+      let initialValues = this.initial.get(key) || [];
+      let allValues = key ? [key, ...initialValues] : Array.from(initialValues);
+      yield [/** @type {[K, ...any[]]} */(allValues), true];
       this.active.delete(key);
     }
   }
   /**
    * 
    * @param {Changeset} changeset 
+   * @returns {Generator<any[], void, unknown>}
    */
   * values(changeset) {
     for(let [values] of this.calculate(changeset)) {
       yield values;
     }
   }
+  /**
+   * 
+   * @returns {Generator<any[], void, unknown>}
+   */
   * current() {
     if(!this.oldValues) return;
     for(let [key, values] of this.oldValues) {
@@ -296,8 +314,9 @@ export class MultiBinding extends Binding {
   }
   /**
    * @param {string | null} key
-   * @param {any[]} values 
+   * @param {[K, ...any[]]} values 
    * @param {boolean} keyed
+   * @returns {[K, ...any[]]}
    */
   #appendToValues(key, values, keyed = true) {
     if(values.length === this.numberOfValuesWithKey) return values;
@@ -313,6 +332,6 @@ export class MultiBinding extends Binding {
       let oldValues = /** @type {any[]} */(this.oldValues.get(key));
       append.push(...oldValues);
     }
-    return values.concat(append);
+    return /** @type {[K, ...any[]]} */(values.concat(append));
   }
 }
