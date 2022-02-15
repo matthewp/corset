@@ -4,5 +4,7 @@
   "initialVersions": {
     "corset": "0.4.0"
   },
-  "changesets": []
+  "changesets": [
+    "calm-paws-remember"
+  ]
 }
