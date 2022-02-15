@@ -1,5 +1,11 @@
 # corset
 
+## 0.5.0-next.1
+
+### Patch Changes
+
+- 59a963d: Fix for unbinding events using keyed syntax
+
 ## 0.5.0-next.0
 
 ### Minor Changes

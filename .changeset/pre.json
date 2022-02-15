@@ -5,6 +5,7 @@
     "corset": "0.4.0"
   },
   "changesets": [
-    "calm-paws-remember"
+    "calm-paws-remember",
+    "dull-eels-fly"
   ]
 }
