@@ -121,6 +121,9 @@ jobs:
         env:
           CI: true
 
+      - name: Type check
+        run: npm run typecheck
+
       - name: Start server
         run: |
           python3 -m http.server 7800 &
