@@ -50,12 +50,15 @@ uintptr_t tag_pointer;
 #define VALUE_TYPE_IDENTIFIER 3
 #define VALUE_TYPE_CALL 4
 #define VALUE_TYPE_ARRAY 5
+#define VALUE_TYPE_BOOLEAN 6
 
 #define TOKEN_NOTCONSUMED 0
 #define TOKEN_CONSUMED 1
 #define TOKEN_EXIT 2
 
 #define INS_HASH 193495087
+#define TRUE_HASH 2090770405
+#define FALSE_HASH 258723568
 
 typedef struct parser_state_t {
   unsigned char mode;
@@ -118,6 +121,11 @@ typedef struct value_type_ins_t {
 typedef struct value_type_arr_t {
   value_type_node_t type;
 } value_type_arr_t;
+
+typedef struct value_type_bool_t {
+  value_type_node_t type;
+  char value;
+} value_type_bool_t;
 
 typedef struct tag_prop_t {
   unsigned char type;
@@ -451,6 +459,21 @@ static void parse_value_end() {
     case VALUE_TYPE_IDENTIFIER: {
       value_type_identifier_t* value_id = (value_type_identifier_t*)value_node;
       value_id->end = parser_state->index;
+
+      long h = hash(value_id->start, value_id->end);
+      char hash_true = h == TRUE_HASH;
+      if(hash_true || h == FALSE_HASH) {
+        value_type_bool_t* value_bool = malloc(sizeof(value_type_bool_t));
+        value_type_node_t* value_bool_node = (value_type_node_t*)value_bool;
+        value_bool_node->type = VALUE_TYPE_BOOLEAN;
+        value_bool_node->prev = 0;
+        value_bool_node->next = 0;
+        value_bool->value = hash_true ? 1 : 0;
+
+        replace_node(value_node, value_bool_node);
+      }
+
+
       break;
     }
   }

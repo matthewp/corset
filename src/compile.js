@@ -110,6 +110,9 @@ function getValue(ptr) {
 
       return createValueTemplate(Value, args);
     }
+    case 6: {
+      return createValueTemplate(anyValue(Boolean(mem32[ptrv32])));
+    }
     default: {
       throw new Error(`Unknown value type [${valueType}]`);
     }

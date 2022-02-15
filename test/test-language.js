@@ -88,3 +88,33 @@ QUnit.test('Can handle large bindingss', assert => {
 
   assert.ok(bindings, 'did not throw');
 });
+
+QUnit.test('Supports boolean identifiers (true/false)', assert => {
+  let root = document.createElement('div');
+  root.innerHTML = `<div id="app"></div>`;
+  let trueProp = Symbol('corset.true');
+  let falseProp = Symbol('corset.false');
+  let worksProp = Symbol('corset.works');
+  let bindings = sheet`
+    #app {
+      --does-work: ${(a, b) => {
+        return a === false && b === true;
+      }};
+
+      --works-prop: ${worksProp};
+      --true-prop: ${trueProp};
+      --false-prop: ${falseProp};
+      --true: true;
+      --false: false;
+      prop[--true-prop]: var(--true);
+      prop[--false-prop]: var(--false);
+      prop[--works-prop]: --does-work(false, true);
+    }
+  `;
+  bindings.update(root);
+  let app = root.firstElementChild;
+
+  assert.equal(app[trueProp], true);
+  assert.equal(app[falseProp], false);
+  assert.equal(app[worksProp], true);
+});
