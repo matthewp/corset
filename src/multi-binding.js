@@ -195,8 +195,9 @@ export class MultiBinding extends Binding {
           case declFlags.keyed | declFlags.multi: {
             let key = computedValue[0];
             this.#bookkeep(active, key);
+            let allValues = this.#appendToValues(key, computedValue);
             if(dirty && this.oldValues) this.oldValues.set(key, computedValue.slice(1));
-            yield [computedValue, dirty];
+            yield [allValues, dirty];
             break;
           }
           // each: ${items} select(template)
