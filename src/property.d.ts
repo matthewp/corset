@@ -27,15 +27,16 @@ export interface KeyedMultiPropertyDefinition extends BasePropertyDefinition {
   read: ReadKeyedValue;
   oldValues?: boolean;
   longhand?: never;
-  prop: 'classToggle' | 'data' | 'event' | 'prop';
+  prop: 'classToggle' | 'data' | 'prop';
 }
 
 export interface ShorthandPropertyDefinition extends BasePropertyDefinition {
   longhand: string[];
-  prop: 'each' | 'attr';
+  prop: 'each' | 'attr' | 'event';
   defaults: any[];
   keyed?: boolean;
   multi?: boolean;
+  oldValues?: boolean;
 }
 
 export interface LonghandPropertyDefinition extends BasePropertyDefinition {

@@ -137,7 +137,6 @@ QUnit.test('Source order is preferred', assert => {
   assert.equal(app.getAttribute('four'), 'four');
 
   run(true).update(root);
-  console.log(root);
   assert.equal(app.getAttribute('one'), 'one');
   assert.equal(app.getAttribute('two'), 'two');
   assert.equal(app.getAttribute('three'), 'three');
