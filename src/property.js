@@ -134,7 +134,7 @@ export const properties = {
     default: null,
     read: () => null
   },
-  /** @type {KeyedMultiPropertyDefinition} */
+  /** @type {ShorthandPropertyDefinition} */
   event: {
     flag: flags.event,
     feat: features.multi | features.keyed | features.oldValues,
@@ -142,7 +142,53 @@ export const properties = {
     multi: true,
     keyed: true,
     oldValues: true,
+    longhand: ['event-listener', 'event-capture', 'event-once', 'event-passive', 'event-signal'],
+    defaults: [null, false, false, false, undefined]
+  },
+  'event-listener': {
+    flag: flags.event,
+    feat: features.keyed | features.longhand,
+    shorthand: 'event',
+    index: 0,
+    keyed: true,
+    default: null,
     read: () => null
+  },
+  'event-capture': {
+    flag: flags.event,
+    feat: features.keyed | features.longhand,
+    shorthand: 'event',
+    index: 1,
+    keyed: true,
+    default: false,
+    read: () => false
+  },
+  'event-once': {
+    flag: flags.event,
+    feat: features.keyed | features.longhand,
+    shorthand: 'event',
+    index: 2,
+    keyed: true,
+    default: false,
+    read: () => false
+  },
+  'event-passive': {
+    flag: flags.event,
+    feat: features.keyed | features.longhand,
+    shorthand: 'event',
+    index: 3,
+    keyed: true,
+    default: false,
+    read: () => false
+  },
+  'event-signal': {
+    flag: flags.event,
+    feat: features.keyed | features.longhand,
+    shorthand: 'event',
+    index: 4,
+    keyed: true,
+    default: undefined,
+    read: () => undefined
   },
   /** @type {SimplePropertyDefinition} */
   mount: {

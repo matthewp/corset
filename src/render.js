@@ -137,11 +137,16 @@ function render(element, bindings, changeset) {
   // Events last, does not affect the cascade.
   if(bflags & flags.event) {
     let binding = /** @type {KeyedMultiBinding} */(bindings.event);
-    for(let [eventName, listener, oldListener] of binding.changes(changeset)) {
-      if(oldListener !== undefined) {
-        element.removeEventListener(eventName, oldListener);
-      }
-      element.addEventListener(eventName, listener);
+    for(let [eventName, listener, capture, once, passive, signal, oldListener, oldCapture] of binding.changes(changeset)) {
+      if(oldListener !== undefined)
+        element.removeEventListener(eventName, oldListener, oldCapture);
+      if(listener)
+        element.addEventListener(eventName, listener, {
+          capture,
+          once,
+          passive,
+          signal
+        });
     }
   }
 

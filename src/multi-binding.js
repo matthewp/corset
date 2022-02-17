@@ -146,7 +146,7 @@ export class MultiBinding extends Binding {
               let allValues = this.#appendToValues(key, values);
               yield [allValues, dirty];
               if(this.oldValues)
-                this.oldValues.set(key, allValues.slice(1));
+                this.oldValues.set(key, allValues.slice(1, this.numberOfValues + 1));
             }
             break loop;
           }
@@ -154,7 +154,9 @@ export class MultiBinding extends Binding {
           case declFlags.multi | declFlags.shorthand | declFlags.keyed: {
             let key = computedValue[0];
             this.#bookkeep(active, key);
-            yield [this.#appendToValues(key, computedValue), dirty];
+            let allValues = this.#appendToValues(key, computedValue);
+            yield [allValues, dirty];
+            if(this.oldValues) this.oldValues.set(key, allValues.slice(1, this.numberOfValues + 1));
             break;
           }
           
@@ -183,8 +185,7 @@ export class MultiBinding extends Binding {
               valueList.set(compute.index, propValue);
 
               if(valueList.full()) {
-                if(this.oldValues)
-                  this.oldValues.set(key, Array.from(valueList));
+                if(this.oldValues) this.oldValues.set(key, Array.from(valueList));
                 if(key) valueList.unshift(key);
                 yield [
                   /** @type {[K, ...any[]]} */(/** @type {unknown} */(valueList)),
@@ -236,6 +237,7 @@ export class MultiBinding extends Binding {
         }
         i++;
       }
+      if(this.oldValues) this.oldValues.set(key, Array.from(values));
       if(key) values.unshift(key);
       yield [/** @type {[K, ...any[]]} */(/** @type {unknown} */(values)), true];
     }
@@ -243,8 +245,9 @@ export class MultiBinding extends Binding {
     // Yield out to reset to initial state.
     for(let key of active) {
       let initialValues = this.initial.get(key) || [];
-      let allValues = key ? [key, ...initialValues] : Array.from(initialValues);
-      yield [/** @type {[K, ...any[]]} */(allValues), true];
+      let valuesWithKey = key ? [key, ...initialValues] : Array.from(initialValues);
+      let allValues = this.#appendToValues(key, /** @type {[K, ...any[]]} */(valuesWithKey));
+      yield [allValues, true];
       this.active.delete(key);
     }
   }
@@ -319,7 +322,8 @@ export class MultiBinding extends Binding {
    * @returns {[K, ...any[]]}
    */
   #appendToValues(key, values, keyed = true) {
-    if(values.length === this.numberOfValuesWithKey) return values;
+    if(values.length === this.numberOfValuesWithKey && this.oldValues === null)
+      return values;
     /** @type {any[]} */
     let append = [];
     let i = values.length;
