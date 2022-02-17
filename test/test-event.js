@@ -218,3 +218,33 @@ QUnit.test('Supports longhand event-signal', assert => {
   btn.dispatchEvent(new CustomEvent('one'));
   assert.equal(count, 1);
 });
+
+QUnit.test('Options work in shorthand keyed syntax', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="outer"><button type="button"></button></div>`;
+  let count1 = 0, count2 = 0;
+  let cb1 = () => count1++;
+  let cb2 = ev => {
+    ev.stopPropagation();
+    count2++;
+  };
+
+  let bindings = sheet`
+    #outer {
+      event[one]: ${cb2} true true;
+    }
+
+    button {
+      event-listener[one]: ${cb1};
+    }
+  `;
+
+  bindings.update(root);
+  let btn = root.querySelector('button');
+  btn.dispatchEvent(new CustomEvent('one', { bubbles: true }));
+  assert.equal(count1, 0);
+  assert.equal(count2, 1);
+  btn.dispatchEvent(new CustomEvent('one', { bubbles: true }));
+  assert.equal(count1, 1);
+  assert.equal(count2, 1);
+});
