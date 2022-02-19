@@ -3,32 +3,35 @@
 import { flags } from './property.js';
 import { EachInstance } from './each.js';
 import { datasetPropKey } from './custom-prop.js';
-import { mount } from './mount.js';
+import { Mountpoint } from './mount.js';
 import { NO_VALUE } from './value.js';
 
 /**
  * @typedef {import('./binding').Binding} Binding
  * @typedef {import('./bindings').Bindings} Bindings
+ * @typedef {import('./types').MountedBehaviorType} MountedBehaviorType
  * @typedef {import('./changeset').Changeset} Changeset
  * @typedef {import('./multi-binding').MultiBinding<string>} KeyedMultiBinding
  * @typedef {import('./multi-binding').MultiBinding<any[]>} ArrayMultiBinding
- * @typedef {import('./mount').Mountpoint} Mountpoint
+ * @typedef {import('./multi-binding').MultiBinding<MountedBehaviorType>} BehaviorMultiBinding
+ * @typedef {import('./sheet').Root} Root
  */
 
 /** @type {WeakMap<Element, EachInstance>} */
 const eachInstances = new WeakMap();
 
-/** @type {WeakMap<Element, Mountpoint>} */
+/** @type {WeakMap<Element, Map<MountedBehaviorType, Mountpoint>>} */
 const mountPoints = new WeakMap();
 
 /**
  * 
  * @param {Element} element 
  * @param {Bindings} bindings 
+ * @param {Root} root
  * @param {Changeset} changeset
  * @returns {boolean}
  */
-function render(element, bindings, changeset) {
+function render(element, bindings, root, changeset) {
   let invalid = false;
   let bflags = bindings.flags;
 
@@ -118,18 +121,30 @@ function render(element, bindings, changeset) {
     }
   }
 
-  if(bflags & flags.mount) {
-    let binding = /** @type {Binding} */(bindings.mount);
-    if(binding.dirty(changeset)) {
-      let hasExisingValue = binding.hasValue();
-      let value = binding.update(changeset);
-      if(hasExisingValue) {
-        let mp = /** @type {Mountpoint} */(mountPoints.get(element));
-        mp.unmount();
+  if(bflags & flags.behavior) {
+    let binding = /** @type {BehaviorMultiBinding} */(bindings.behavior);
+    for(let [Behavior, props, OldBehavior] of binding.changes(changeset)) {
+      let hasOldValue = OldBehavior !== undefined;
+      let sameBehavior = hasOldValue && OldBehavior === Behavior;
+
+      /** @type {Map<MountedBehaviorType, Mountpoint>} */
+      let map;
+      if(mountPoints.has(element))
+        map = /** @type {Map<MountedBehaviorType, Mountpoint>} */(mountPoints.get(element));
+      else {
+        map = new Map();
+        mountPoints.set(element, map);
       }
-      if(value !== null) {
-        let mountpoint = mount(/** @type {HTMLElement} */(element), value);
-        mountPoints.set(element, mountpoint);
+
+      if(hasOldValue || sameBehavior) {
+        let mp = /** @type {Mountpoint} */(map.get(OldBehavior));
+        if(sameBehavior) mp.update();
+        else mp.unmount();
+      }
+      if(!sameBehavior && Behavior !== null) {
+        let mountpoint = new Mountpoint(/** @type {HTMLElement} */(element), Behavior, props);
+        mountpoint.update();
+        map.set(Behavior, mountpoint);
       }
     }
   }
@@ -139,9 +154,9 @@ function render(element, bindings, changeset) {
     let binding = /** @type {KeyedMultiBinding} */(bindings.event);
     for(let [eventName, listener, capture, once, passive, signal, oldListener, oldCapture] of binding.changes(changeset)) {
       if(oldListener !== undefined)
-        element.removeEventListener(eventName, oldListener, oldCapture);
+        element.removeEventListener(eventName, root.getCallback(oldListener), oldCapture);
       if(listener)
-        element.addEventListener(eventName, listener, {
+        element.addEventListener(eventName, root.getCallback(listener), {
           capture,
           once,
           passive,
@@ -155,13 +170,14 @@ function render(element, bindings, changeset) {
 
 /**
  * @param {Map<Element, Bindings>} allBindings
+ * @param {Root} root
  * @param {Changeset} changeset
  * @returns {boolean}
  */
-export function renderRoot(allBindings, changeset) {
+export function renderRoot(allBindings, root, changeset) {
   let invalid = false;
   for(let [element, bindings] of allBindings) {
-    if(render(element, bindings, changeset))
+    if(render(element, bindings, root, changeset))
       invalid = true;
   }
   return invalid;
@@ -171,30 +187,34 @@ export function renderRoot(allBindings, changeset) {
  * 
  * @param {Element} element 
  * @param {Bindings} bindings 
+ * @param {Root} root
  */
-function unmount(element, bindings) {
+function unmount(element, bindings, root) {
   let bflags = bindings.flags;
-  if(bflags & flags.mount) {
-    let binding = /** @type {Binding} */(bindings.mount);
-    if(binding.hasValue()) {
-      let mp = /** @type {Mountpoint} */(mountPoints.get(element));
-      mp.unmount();
+  if(bflags & flags.behavior) {
+    let binding = /** @type {BehaviorMultiBinding} */(bindings.behavior);
+    let map = /** @type {Map<MountedBehaviorType, Mountpoint>} */(mountPoints.get(element));
+    for(let [OldBehavior] of binding.current()) {
+      map.get(OldBehavior)?.unmount();
     }
+    // TODO allow multiple
+    ///** @type {Mountpoint} */(mountPoints.get(element)).unmount();
   }
 
   if(bflags & flags.event) {
     let eventBinding = /** @type {KeyedMultiBinding} */(bindings.event);
     for(let [eventName, listener] of eventBinding.current()) {
-      element.removeEventListener(eventName, listener);
+      element.removeEventListener(eventName, root.getCallback(listener));
     }
   }
 }
 
 /**
  * @param {Map<Element, Bindings>} allBindings
+ * @param {Root} root
  */
-export function unmountRoot(allBindings) {
+export function unmountRoot(allBindings, root) {
   for(let [element, bindings] of allBindings) {
-    unmount(element, bindings);
+    unmount(element, bindings, root);
   }
 }

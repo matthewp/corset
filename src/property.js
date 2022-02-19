@@ -1,6 +1,4 @@
 // @ts-check
-import { anyValue } from './value.js';
-import { createValueTemplate } from './template.js';
 
 export const flags = {
   text: 1 << 0,
@@ -12,7 +10,7 @@ export const flags = {
   attr: 1 << 6,
   data: 1 << 7,
   attach: 1 << 8,
-  mount: 1 << 9,
+  behavior: 1 << 9
 };
 
 /**
@@ -21,6 +19,7 @@ export const flags = {
  * @typedef {import('./property').ShorthandPropertyDefinition} ShorthandPropertyDefinition
  * @typedef {import('./property').LonghandPropertyDefinition} LonghandPropertyDefinition
  * @typedef {import('./property').KeyedMultiPropertyDefinition} KeyedMultiPropertyDefinition
+ * @typedef {import('./property').BehaviorMultiPropertyDefinition} BehaviorMultiPropertyDefinition
  */
 
  export const features = {
@@ -28,7 +27,8 @@ export const flags = {
   longhand: 1 << 1,
   keyed: 1 << 2,
   multi: 1 << 3,
-  oldValues: 1 << 4
+  oldValues: 1 << 4,
+  behavior: 1 << 5
 };
 
 /** @type {Record<string, PropertyDefinition>} */
@@ -88,6 +88,7 @@ export const properties = {
     read(el, key) {
       return el.classList.contains(key);
     }
+
   },
   /** @type {KeyedMultiPropertyDefinition} */
   data: {
@@ -190,12 +191,14 @@ export const properties = {
     default: undefined,
     read: () => undefined
   },
-  /** @type {SimplePropertyDefinition} */
-  mount: {
-    flag: flags.mount,
-    feat: 0,
-    prop: 'mount',
-    read: () => null
+  /** @type {BehaviorMultiPropertyDefinition} */
+  behavior: {
+    flag: flags.behavior,
+    feat: features.multi | features.behavior,
+    prop: 'behavior',
+    multi: true,
+    keyed: false, // TODO get rid of
+    oldValues: true,
   },
   /** @type {KeyedMultiPropertyDefinition} */
   prop: {

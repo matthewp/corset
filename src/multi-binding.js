@@ -2,12 +2,13 @@
 import { Binding } from './binding.js';
 import { ComputedValue } from './compute.js';
 import { flags as declFlags } from './declaration.js';
-import { properties } from './property.js';
+import { properties, features } from './property.js';
 import { SparseArray } from './sparse-array.js';
 import { createValueTemplate } from './template.js';
 import { SpaceSeparatedListValue } from './value.js';
 
 /**
+ * @typedef {import('./types').MountedBehaviorType} MountedBehaviorType
  * @typedef {import('./changeset').Changeset} Changeset
  * @typedef {import('./declaration').Declaration} Declaration
  * @typedef {import('./template').ValueTemplate} ValueTemplate
@@ -15,6 +16,7 @@ import { SpaceSeparatedListValue } from './value.js';
  * @typedef {import('./property').KeyedMultiPropertyDefinition} KeyedMultiPropertyDefinition
  * @typedef {import('./property').ShorthandPropertyDefinition} ShorthandPropertyDefinition
  * @typedef {import('./property').LonghandPropertyDefinition} LonghandPropertyDefinition
+ * @typedef {import('./property').BehaviorMultiPropertyDefinition} BehaviorMultiPropertyDefinition
  */
 
 /**
@@ -29,17 +31,17 @@ import { SpaceSeparatedListValue } from './value.js';
 }
 
 /**
- * @template {string | Array<any>} K
+ * @template {string | Array<any> | MountedBehaviorType} K
  */
 export class MultiBinding extends Binding {
   /**
-   * @param {ShorthandPropertyDefinition | KeyedMultiPropertyDefinition} defn
+   * @param {ShorthandPropertyDefinition | KeyedMultiPropertyDefinition | BehaviorMultiPropertyDefinition} defn
    * @param {ConstructorParameters<typeof Binding>} args
    */
   constructor(defn, ...args) {
     super(...args);
 
-    /** @type {ShorthandPropertyDefinition | KeyedMultiPropertyDefinition} */
+    /** @type {ShorthandPropertyDefinition | KeyedMultiPropertyDefinition | BehaviorMultiPropertyDefinition} */
     this.defn = defn;
 
     /** @type {number} */
@@ -49,15 +51,14 @@ export class MultiBinding extends Binding {
     /** @type {number} */
     this.numberOfValuesWithKey = this.numberOfValues + (defn.keyed ? 1 : 0);
 
-    /** @type {Set<string | null>} */
+    /** @type {Set<string | null | MountedBehaviorType>} */
     this.active = new Set();
-    /** @type {Map<string | null, readonly any[]>} */
+    /** @type {Map<string | null | MountedBehaviorType, readonly any[]>} */
     this.initial = new Map();
-    /** @type {Map<string | null, any[]> | null} */
+    /** @type {Map<string | null | MountedBehaviorType, any[]> | null} */
     this.oldValues = /** @type {KeyedMultiPropertyDefinition} */(defn).oldValues
       ? new Map() : null;
   }
-  init(){}
   /**
   * 
   * @param {Declaration} declaration 
@@ -73,7 +74,13 @@ export class MultiBinding extends Binding {
         return this.addTemplate(declaration, template);
       }
       // Unkeyed multi
-      case declFlags.multi | declFlags.shorthand: {
+      case declFlags.multi | declFlags.shorthand:
+      // behavior: mount(Behavior)
+      case declFlags.multi | declFlags.behavior:
+      // class-toggle: one "one", two "two"
+      case declFlags.multi:
+      // each: ${items} select(template)
+      case declFlags.shorthand: {
         return this.addTemplate(declaration, declaration.template);
       }
       case declFlags.longhand | declFlags.keyed: {
@@ -85,18 +92,10 @@ export class MultiBinding extends Binding {
         let template = createPrependedKeyedTemplate(declaration);
         return this.addTemplate(declaration, template);
       }
-      // each: ${items} select(template)
-      case declFlags.shorthand: {
-        return this.addTemplate(declaration, declaration.template);
-      }
       // each-items: ${items}
       case declFlags.longhand: {
         let defn = /** @type {LonghandPropertyDefinition} */(properties[propName]);
         return this.addTemplate(declaration, declaration.template, defn.index);
-      }
-      // class-toggle: one "one", two "two"
-      case declFlags.multi: {
-        return this.addTemplate(declaration, declaration.template);
       }
       default: {
         throw new Error('Unknown property type');
@@ -147,6 +146,17 @@ export class MultiBinding extends Binding {
               yield [allValues, dirty];
               if(this.oldValues)
                 this.oldValues.set(key, allValues.slice(1, this.numberOfValues + 1));
+            }
+            break loop;
+          }
+          // behavior: mount(Behavior)
+          case declFlags.multi | declFlags.behavior: {
+            for(let [values] of computedValue) {
+              let Behavior = values[0];
+              this.#bookkeep(active, Behavior);
+              let allValues = this.#appendToValues(Behavior, values);
+              yield [allValues, dirty];
+              this.oldValues?.set(Behavior, values);
             }
             break loop;
           }
@@ -245,7 +255,7 @@ export class MultiBinding extends Binding {
     // Yield out to reset to initial state.
     for(let key of active) {
       let initialValues = this.initial.get(key) || [];
-      let valuesWithKey = key ? [key, ...initialValues] : Array.from(initialValues);
+      let valuesWithKey = this.defn.keyed ? [key, ...initialValues] : Array.from(initialValues);
       let allValues = this.#appendToValues(key, /** @type {[K, ...any[]]} */(valuesWithKey));
       yield [allValues, true];
       this.active.delete(key);
@@ -285,7 +295,7 @@ export class MultiBinding extends Binding {
   }
   /**
    * 
-   * @param {string} key 
+   * @param {string | MountedBehaviorType} key 
    */
   #setInitials(key) {
     if(!this.initial.has(key)) {
@@ -295,28 +305,32 @@ export class MultiBinding extends Binding {
         let i = 0, len = this.defn.longhand.length;
         while(i < len) {
           let lhDefn = /** @type {LonghandPropertyDefinition} */(properties[this.defn.longhand[i]]);
-          values[i] = lhDefn.read(this.element, key);
+          values[i] = lhDefn.read(
+            this.element,
+            /** @type {string} */(key)
+          );
           i++;
         }
-      } else {
-        
-        values[0] = this.defn.read(this.element, key);
+      } else if(this.defn.feat & features.behavior) {
+        values = [null, null];
+      } else if(this.defn.read) {
+        values[0] = this.defn.read(this.element, /** @type {string} */(key));
       }
       this.initial.set(key, Object.freeze(values));
     }
   }
   /**
    * 
-   * @param {Set<string | null>} active 
-   * @param {string | null} key 
+   * @param {Set<string | null | MountedBehaviorType>} active 
+   * @param {string | null | MountedBehaviorType} key 
    */
   #bookkeep(active, key) {
     active.delete(key);
-    if(key) this.#setInitials(key);
+    if(key !== null) this.#setInitials(key);
     this.active.add(key);
   }
   /**
-   * @param {string | null} key
+   * @param {string | null | MountedBehaviorType} key
    * @param {[K, ...any[]]} values 
    * @param {boolean} keyed
    * @returns {[K, ...any[]]}

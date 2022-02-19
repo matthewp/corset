@@ -1,4 +1,4 @@
-import { properties } from './property.js';
+import { properties, features } from './property.js';
 
 /** @typedef {import('./rule').Rule} Rule */
 /** @typedef {import('./property').PropertyDefinition} PropertyDefinition */ 
@@ -43,6 +43,8 @@ export class Declaration {
         this.flags |= flags.longhand;
       } else if(defn.longhand) {
         this.flags |= flags.shorthand;
+      } else if(defn.feat & features.behavior) {
+        this.flags |= flags.behavior;
       }
     }
   }
@@ -52,5 +54,6 @@ export const flags = {
   shorthand: 1 << 0,
   longhand: 1 << 1,
   keyed: 1 << 2,
-  multi: 1 << 3
+  multi: 1 << 3,
+  behavior: 1 << 4
 };

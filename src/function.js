@@ -1,11 +1,16 @@
 // @ts-check
 
-import { NO_VALUE } from './value.js';
+import { anyValue, NO_VALUE } from './value.js';
+import { createValueTemplate } from './template.js';
+import { ComputedValue } from './compute.js';
+import { registry as behaviorRegistry } from './mount.js';
 
 /**
+ * @typedef {import('./binding').Binding} Binding
  * @typedef {import('./changeset').Changeset} Changeset
  * @typedef {import('./function').ICorsetFunctionClass} ICorsetFunctionClass
  * @typedef {import('./function').FunctionContext} FunctionContext
+ * @typedef {import('./types').MountedBehaviorType} MountedBehaviorType
  */
 
 /**
@@ -177,6 +182,68 @@ registerFunction.call(registry, 'data', class {
     if(!(element instanceof HTMLElement))
       throw new Error(`data() only works on HTMLElements.`);
     return /** @type {HTMLElement} */(element).dataset[prop];
+  }
+});
+
+/**
+ * @typedef {Readonly<[MountedBehaviorType, Map<string, any> | null]>} MountValue
+ */
+
+registerFunction.call(registry, 'mount', class {
+  constructor() {
+    /** @type {ComputedValue | null} */
+    this.compute = null;
+    /** @type {MountedBehaviorType | null} */
+    this.Behavior = null;
+    /** @type {MountValue | null} */
+    this.value = null;
+  }
+  /**
+   *
+   * @param {[MountedBehaviorType | string]} param0
+   * @param {FunctionContext} context
+   * @param {Map<string, any>} _props
+   * @param {Changeset} changeset
+   * @returns {boolean}
+   */
+  check([Ctr], context, _props, changeset) {
+    /** @type {MountedBehaviorType} */
+    let Behavior = /** @type {MountedBehaviorType} */(Ctr);
+    if(typeof Ctr === 'string') {
+      let name = Ctr;
+      if(!behaviorRegistry.has(name))
+        throw new Error(`Unregistered behavior ${name}`);
+      Behavior = /** @type {MountedBehaviorType} */(behaviorRegistry.get(name));
+    }
+
+    if(Behavior !== this.Behavior) {
+      let ValueType = anyValue(Behavior);
+      ValueType.inputProperties = Behavior.inputProperties;
+      let template = createValueTemplate(ValueType);
+      this.Behavior = Behavior;
+      this.compute = new ComputedValue(
+        template,
+        // A FunctionContext is actually a Binding at runtime. If this ever changes,
+        // the following will be a wrong cast.
+        /** @type {Binding} */(context)
+      );
+      this.compute.check(changeset);
+      this.value = /** @type {MountValue} */
+        (Object.freeze([Behavior, this.compute.inputProps]));
+      return true;
+    } else if(this.compute) {
+      let dirty = this.compute.dirty(changeset);
+      this.compute.check(changeset);
+      return dirty;
+    }
+    return false;
+  }
+  /**
+   *
+   * @param {[]} param0
+   */
+  call([]) {
+    return this.value;
   }
 });
 

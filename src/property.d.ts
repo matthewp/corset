@@ -4,11 +4,11 @@ type PropertyPropName = 'attr' |
   'attrValue' |
   'attrToggle' |
   'attachTemplate' |
+  'behavior' |
   'classToggle' | 
   'data' |
   'each' |
   'event' |
-  'mount' |
   'prop' |
   'text'
 
@@ -28,6 +28,15 @@ export interface KeyedMultiPropertyDefinition extends BasePropertyDefinition {
   oldValues?: boolean;
   longhand?: never;
   prop: 'classToggle' | 'data' | 'prop';
+}
+
+export interface BehaviorMultiPropertyDefinition extends BasePropertyDefinition {
+  keyed: false;
+  multi: true;
+  oldValues: boolean;
+  longhand?: never;
+  prop: 'behavior';
+  read?: never;
 }
 
 export interface ShorthandPropertyDefinition extends BasePropertyDefinition {
@@ -55,12 +64,14 @@ export interface SimplePropertyDefinition extends BasePropertyDefinition {
 export type PropertyDefinition = SimplePropertyDefinition
   | ShorthandPropertyDefinition
   | LonghandPropertyDefinition
-  | KeyedMultiPropertyDefinition;
+  | KeyedMultiPropertyDefinition
+  | BehaviorMultiPropertyDefinition;
 
 export declare const properties: Record<string, PropertyDefinition>;
 
 export declare const flags: Record<
   'text' |
+  'behavior' |
   'classToggle' |
   'event' |
   'custom' | 
@@ -68,11 +79,10 @@ export declare const flags: Record<
   'prop' |
   'attr' |
   'data' |
-  'attach' |
-  'mount'
+  'attach'
 , number>;
 
-type featureNames = 'keyed' | 'multi' | 'oldValues' | 'longhand';
+type featureNames = 'keyed' | 'multi' | 'oldValues' | 'longhand' | 'behavior';
 
 export declare const features: Record<featureNames, number>;
 
