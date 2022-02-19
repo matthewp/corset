@@ -7,6 +7,9 @@
  * @typedef {import('./types').MountedBehaviorType} MountedBehaviorType
 */
 
+/** @type {Map<string, MountedBehaviorType>} */
+export let registry = new Map();
+
 /**
  * @typedef {(...args: any[]) => any} CallbackFunction
  * @typedef {{}} EventListener
@@ -90,3 +93,12 @@ export function mount(element, behavior) {
   mp.update();
 }
 
+/**
+ * 
+ * @param {string} name 
+ * @param {MountedBehaviorType} behavior
+ * @returns {void} 
+ */
+export function registerBehavior(name, behavior) {
+  registry.set(name, behavior);
+}

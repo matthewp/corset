@@ -1,4 +1,4 @@
-import sheet from '../src/main.js';
+import sheet, { registerBehavior } from '../src/main.js';
 
 QUnit.module('Property - behavior');
 
@@ -235,4 +235,25 @@ QUnit.test('Can take multiple mounted behaviors', assert => {
   inner.dispatchEvent(new CustomEvent('foo'));
   assert.equal(count2, 0);
   assert.equal(count1, 1);
+});
+
+QUnit.test('registerBehavior allows defining named behaviors', assert => {
+  registerBehavior('one', class {
+    bind() {
+      return sheet`
+        #inner {
+          text: "works";
+        }
+      `
+    }
+  });
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app"><div id="inner"></div></div>`;
+  sheet`
+    #app {
+      behavior: mount(one);
+    }
+  `.update(root);
+  let inner = root.firstElementChild.firstElementChild;
+  assert.equal(inner.textContent, 'works');
 });
