@@ -1,8 +1,11 @@
 import type { Binding } from './bindings';
 import type { Changeset } from './changeset';
+import type { SheetWithValues } from './sheet';
+
+type DeclaredInputProperties = string[];
 
 export interface ValueType {
-  static inputProperties?: string[];
+  static inputProperties?: DeclaredInputProperties;
   new(...args: Value[]): Value;
 }
 
@@ -33,3 +36,25 @@ export interface WasmParser extends WebAssembly.Exports {
 }
 
 export type RawStringTemplate = { raw: readonly string[] | ArrayLike<string>};
+
+
+type InputProperties = Map<string, string>;
+
+export interface MountedBehaviorTypeWithInputProperties {
+  inputProperties: DeclaredInputProperties;
+  new(props: DeclaredInputProperties): MountedBehavior;
+}
+
+export interface MountedBehaviorTypeWithoutInputProperties {
+  inputProperties: never;
+  new(props: null): MountedBehavior;
+}
+
+export type MountedBehaviorType = 
+  MountedBehaviorTypeWithInputProperties |
+  MountedBehaviorTypeWithoutInputProperties;
+
+export interface MountedBehavior {
+  bind(props: InputProps): SheetWithValues;
+}
+

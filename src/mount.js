@@ -1,60 +1,92 @@
+// @ts-check
+
 /**
  * @typedef {import('./sheet').SheetWithValues} SheetWithValues
  * @typedef {Record<string, any>} State 
- * @typedef {(state: State) => SheetWithValues} UpdaterFn
+ * @typedef {import('./types').MountedBehavior} MountedBehavior
+ * @typedef {import('./types').MountedBehaviorType} MountedBehaviorType
 */
 
 /**
- * 
- * @param {Mountpoint} mountpoint 
- * @returns {State}
+ * @typedef {(...args: any[]) => any} CallbackFunction
+ * @typedef {{}} EventListener
+ * @property {(ev: Event) => any} handleEvent
  */
-function createState(mountpoint) {
-  return new Proxy(Object.create(null), {
-    set(target, key, value, receiver) {
-      Reflect.set(target, key, value, receiver);
-      mountpoint.update();
-      return true;
+
+/**
+ * 
+ * @param {Mountpoint} mp 
+ * @param {CallbackFunction} fn 
+ * @returns {EventListener}
+ */
+function createListener(mp, fn) {
+  return {
+    /**
+     * 
+     * @param {Event} ev 
+     * @returns {any}
+     */
+    handleEvent(ev) {
+      let res = fn.call(mp.behavior, ev);
+      mp.update();
+      return res;
     }
-  });
+  };
 }
 
 export class Mountpoint {
   /**
    * 
    * @param {HTMLElement} rootElement 
-   * @param {UpdaterFn} updater 
+   * @param {MountedBehaviorType} Behavior 
+   * @param {Map<string, any> | null} props
    */
-  constructor(rootElement, updater) {
+  constructor(rootElement, Behavior, props) {
     /** @type {HTMLElement} */
     this.rootElement = rootElement;
-    /** @type {UpdaterFn} */
-    this.updater = updater;
-    /** @type {State} */
-    this.state = createState(this);
+    /** @type {Map<string, any> | null} */
+    this.props = props;
+    /** @type {MountedBehavior} */
+    this.behavior = new Behavior(/** @type {never} */(props));
     /** @type {SheetWithValues | null} */
     this.bindings = null;
+    /** @type {WeakMap<CallbackFunction, EventListener>} */
+    this.callbacks = new WeakMap();
   }
-
+  /**
+   * 
+   * @param {(...args: any[]) => any} callbackFn 
+   * @returns {EventListener}
+   */
+  getCallback(callbackFn) {
+    if(this.callbacks.has(callbackFn))
+      return /** @type {EventListener} */(this.callbacks.get(callbackFn));
+    let listener = createListener(this, callbackFn);
+    this.callbacks.set(callbackFn, listener);
+    return listener;
+  }
+  /**
+   * 
+   */
   update() {
-    this.bindings = this.updater(this.state);
-    this.bindings.update(this.rootElement);
+    this.bindings = this.behavior.bind(this.props);
+    this.bindings.update(this);
   }
 
   unmount() {
-    this.bindings.unmount(this.rootElement);
+    if(this.bindings)
+      this.bindings.unmount(this);
   }
 }
 
 /**
  * 
  * @param {HTMLElement} element 
- * @param {UpdaterFn} updater 
- * @returns {Mountpoint}
+ * @param {MountedBehaviorType} behavior 
+ * @returns {void}
  */
-export function mount(element, updater) {
-  let mp = new Mountpoint(element, updater);
+export function mount(element, behavior) {
+  let mp = new Mountpoint(element, behavior, null);
   mp.update();
-  return mp;
 }
 

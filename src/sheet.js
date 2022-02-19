@@ -2,23 +2,36 @@
 import { Bindings } from './bindings.js';
 import { renderRoot, unmountRoot } from './render.js';
 import { Changeset } from './changeset.js';
+import { Mountpoint } from './mount.js';
+
+/**
+ * 
+ * @param {Function} a 
+ * @returns {Function}
+ */
+const identity = (a) => a;
 
 /**
  * @typedef {import('./rule').Rule} Rule
  */
 
-class Root {
+export class Root {
   /**
-   * @param {HTMLElement} rootElement 
+   * @param {HTMLElement | Mountpoint} rootElement 
    * @param {BindingSheet} sheet 
    */
   constructor(rootElement, sheet) {
+    /** @type {Mountpoint | null} */
+    this.mount = (rootElement instanceof Mountpoint) ? rootElement : null;
     /** @type {HTMLElement} */
-    this.rootElement = rootElement;
+    this.rootElement = this.mount ? this.mount.rootElement :
+      /** @type {HTMLElement} */(rootElement);
     /** @type {Rule[]} */
     this.rules = sheet.rules;
     /** @type {Map<Element, Bindings>} */
     this.bindingMap = new Map();
+    /** @type {(a: () => any) => any} */
+    this.getCallback = this.mount ? this.mount.getCallback.bind(this.mount) : identity;
   }
   /**
    * @param {any[]} values
@@ -27,15 +40,14 @@ class Root {
     let invalid = true;
     while(invalid) {
       let changeset = new Changeset(values);
-      this.collect(changeset);
-      invalid = renderRoot(this.bindingMap, changeset);
+      this.collect();
+      invalid = renderRoot(this.bindingMap, this, changeset);
     }
   }
   /**
-   * 
-   * @param {Changeset} changeset 
+   * Collect all of the bindings
    */
-  collect(changeset) {
+  collect() {
     let rootElement = this.rootElement;
     for(let rule of this.rules) {
       for(let el of rootElement.querySelectorAll(rule.selector)) {
@@ -54,7 +66,7 @@ class Root {
     }
   }
   unmount() {
-    unmountRoot(this.bindingMap);
+    unmountRoot(this.bindingMap, this);
   }
 }
 
@@ -78,14 +90,14 @@ export class SheetWithValues {
    * @param {any[]} values
    */
   constructor(sheet, values) {
-    /** @type {WeakMap<Element, Root>} */
+    /** @type {WeakMap<Element | Mountpoint, Root>} */
     this.roots = new WeakMap();
     this.sheet = sheet;
     this.values = values;
   }
 
   /**
-   * @param {HTMLElement} rootElement
+   * @param {HTMLElement | Mountpoint} rootElement
    */
   update(rootElement) {
     /** @type {Root} */
@@ -100,7 +112,7 @@ export class SheetWithValues {
   }
   /**
    * 
-   * @param {Element} rootElement 
+   * @param {Element | Mountpoint} rootElement 
    */
   unmount(rootElement) {
     if(this.roots.has(rootElement)) {

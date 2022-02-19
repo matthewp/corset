@@ -6,11 +6,13 @@ import { SimpleBinding } from './simple-binding.js';
 import { flags, properties } from './property.js';
 
 /**
+ * @typedef {import('./types').MountedBehaviorType} MountedBehaviorType
  * @typedef {import('./declaration').Declaration} Declaration
  * @typedef {import('./property').KeyedMultiPropertyDefinition} KeyedMultiPropertyDefinition
  * @typedef {import('./property').PropertyDefinition} PropertyDefinition
  * @typedef {import('./property').SimplePropertyDefinition} SimplePropertyDefinition
  * @typedef {import('./property').ShorthandPropertyDefinition} ShorthandPropertyDefinition
+ * @typedef {import('./property').BehaviorMultiPropertyDefinition} BehaviorMultiPropertyDefinition
  * @typedef {import('./property').LonghandPropertyDefinition} LonghandPropertyDefinition
  */
 
@@ -31,6 +33,8 @@ export class Bindings {
 
     /** @type {Binding | null} */
     this.attachTemplate = null;
+    /** @type {MultiBinding<MountedBehaviorType> | null} */
+    this.behavior = null;
     /** @type {Binding | null} */
     this.text = null;
     /** @type {MultiBinding<string> | null} */
@@ -70,14 +74,14 @@ export class Bindings {
 
       this.flags |= defn.flag;
 
-      /** @type {KeyedMultiPropertyDefinition | ShorthandPropertyDefinition | undefined} */
+      /** @type {KeyedMultiPropertyDefinition | ShorthandPropertyDefinition | BehaviorMultiPropertyDefinition | undefined} */
       let multiDef = undefined;
       if('multi' in defn || 'longhand' in defn) multiDef = defn;
       else if('shorthand' in defn)
         multiDef = /** @type {KeyedMultiPropertyDefinition | ShorthandPropertyDefinition} */(properties[defn.shorthand]);
       if(multiDef) {
         if(!this[multiDef.prop]) {
-          this[multiDef.prop] = /** @type {MultiBinding<string> & MultiBinding<any[]>} */
+          this[multiDef.prop] = /** @type {MultiBinding<string> & MultiBinding<any[]> & MultiBinding<MountedBehaviorType>} */
           (new MultiBinding(multiDef, propName, this.rootElement, this.element));
         }
 

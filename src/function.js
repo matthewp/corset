@@ -1,8 +1,11 @@
 // @ts-check
 
-import { NO_VALUE } from './value.js';
+import { anyValue, NO_VALUE } from './value.js';
+import { createValueTemplate } from './template.js';
+import { ComputedValue } from './compute.js';
 
 /**
+ * @typedef {import('./binding').Binding} Binding
  * @typedef {import('./changeset').Changeset} Changeset
  * @typedef {import('./function').ICorsetFunctionClass} ICorsetFunctionClass
  * @typedef {import('./function').FunctionContext} FunctionContext
@@ -177,6 +180,51 @@ registerFunction.call(registry, 'data', class {
     if(!(element instanceof HTMLElement))
       throw new Error(`data() only works on HTMLElements.`);
     return /** @type {HTMLElement} */(element).dataset[prop];
+  }
+});
+
+registerFunction.call(registry, 'mount', class {
+  constructor() {
+    this.compute = null;
+    this.Ctr = null;
+    this.value = null;
+  }
+  /**
+   *
+   * @param {any[]} param0
+   * @param {FunctionContext} context
+   * @param {Map<string, any>} _props
+   * @param {Changeset} changeset
+   * @returns {boolean}
+   */
+  check([Ctr], context, _props, changeset) {
+    if(Ctr !== this.Ctr) {
+      let ValueType = anyValue(Ctr);
+      ValueType.inputProperties = Ctr.inputProperties;
+      let template = createValueTemplate(ValueType);
+      this.Ctr = Ctr;
+      this.compute = new ComputedValue(
+        template,
+        // A FunctionContext is actually a Binding at runtime. If this ever changes,
+        // the following will be a wrong cast.
+        /** @type {Binding} */(context)
+      );
+      this.compute.check(changeset);
+      this.value = Object.freeze([Ctr, this.compute.inputProps]);
+      return true;
+    } else if(this.compute) {
+      let dirty = this.compute.dirty(changeset);
+      this.compute.check(changeset);
+      return dirty;
+    }
+    return false;
+  }
+  /**
+   *
+   * @param {[]} param0
+   */
+  call([]) {
+    return this.value;
   }
 });
 
