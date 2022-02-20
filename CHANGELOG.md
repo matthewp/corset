@@ -1,5 +1,11 @@
 # corset
 
+## 0.6.1
+
+### Patch Changes
+
+- 5280f3c: Adds a wrap function for wrapping callbacks in behaviors
+
 ## 0.6.0
 
 ### Minor Changes
