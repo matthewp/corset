@@ -12,6 +12,7 @@ export let registry = new Map();
 
 /**
  * @typedef {(...args: any[]) => any} CallbackFunction
+ * @typedef {(...args: any[]) => Promise<any>} AsyncCallbackFunction
  */
 
 /**
@@ -30,12 +31,27 @@ function scopedCallback(mp, fn, ...args) {
 /**
  * 
  * @param {Mountpoint} mp 
+ * @param {CallbackFunction} fn
+ * @param {...any[]} args
+ * @returns {Promise<any>}
+ */
+ async function scopedAsyncCallback(mp, fn, ...args) {
+  let res = await Promise.resolve(fn.call(mp.behavior, ...args));
+  mp.update();
+  return res;
+}
+
+/**
+ * 
+ * @param {Mountpoint} mp 
  */
 export function BehaviorContext(mp) {
   /** @type {Element} */
   this.element = mp.rootElement;
   /** @type {(fn: CallbackFunction) => CallbackFunction} */
   this.wrap = fn => scopedCallback.bind(null, mp, fn);
+  /** @type {(fn: CallbackFunction) => AsyncCallbackFunction} */
+  this.wrapAsync = fn => scopedAsyncCallback.bind(null, mp, fn);
 }
 
 export class Mountpoint {
