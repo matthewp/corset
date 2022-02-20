@@ -12,29 +12,30 @@ export let registry = new Map();
 
 /**
  * @typedef {(...args: any[]) => any} CallbackFunction
- * @typedef {{}} EventListener
- * @property {(ev: Event) => any} handleEvent
  */
 
 /**
  * 
  * @param {Mountpoint} mp 
- * @param {CallbackFunction} fn 
- * @returns {EventListener}
+ * @param {CallbackFunction} fn
+ * @param {...any[]} args
+ * @returns {any}
  */
-function createListener(mp, fn) {
-  return {
-    /**
-     * 
-     * @param {Event} ev 
-     * @returns {any}
-     */
-    handleEvent(ev) {
-      let res = fn.call(mp.behavior, ev);
-      mp.update();
-      return res;
-    }
-  };
+function scopedCallback(mp, fn, ...args) {
+  let res = fn.call(mp.behavior, ...args);
+  mp.update();
+  return res;
+}
+
+/**
+ * 
+ * @param {Mountpoint} mp 
+ */
+export function BehaviorContext(mp) {
+  /** @type {Element} */
+  this.element = mp.rootElement;
+  /** @type {(fn: CallbackFunction) => CallbackFunction} */
+  this.wrap = fn => scopedCallback.bind(null, mp, fn);
 }
 
 export class Mountpoint {
@@ -49,22 +50,24 @@ export class Mountpoint {
     this.rootElement = rootElement;
     /** @type {Map<string, any> | null} */
     this.props = props;
+    /** @type {BehaviorContext} */
+    this.context = new BehaviorContext(this);
     /** @type {MountedBehavior} */
-    this.behavior = new Behavior(/** @type {never} */(props));
+    this.behavior = new Behavior(/** @type {never} */(props), this.context);
     /** @type {SheetWithValues | null} */
     this.bindings = null;
-    /** @type {WeakMap<CallbackFunction, EventListener>} */
+    /** @type {WeakMap<CallbackFunction, CallbackFunction>} */
     this.callbacks = new WeakMap();
   }
   /**
    * 
    * @param {(...args: any[]) => any} callbackFn 
-   * @returns {EventListener}
+   * @returns {CallbackFunction}
    */
   getCallback(callbackFn) {
     if(this.callbacks.has(callbackFn))
-      return /** @type {EventListener} */(this.callbacks.get(callbackFn));
-    let listener = createListener(this, callbackFn);
+      return /** @type {CallbackFunction} */(this.callbacks.get(callbackFn));
+    let listener = scopedCallback.bind(null, this, callbackFn);
     this.callbacks.set(callbackFn, listener);
     return listener;
   }
@@ -72,7 +75,7 @@ export class Mountpoint {
    * 
    */
   update() {
-    this.bindings = this.behavior.bind(this.props);
+    this.bindings = this.behavior.bind(this.props, this.context);
     this.bindings.update(this);
   }
 
