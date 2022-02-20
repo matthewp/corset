@@ -1,5 +1,6 @@
 import type { Binding } from './bindings';
 import type { Changeset } from './changeset';
+import type { BehaviorContext } from './mount';
 import type { SheetWithValues } from './sheet';
 
 type DeclaredInputProperties = string[];
@@ -42,12 +43,12 @@ type InputProperties = Map<string, string>;
 
 export interface MountedBehaviorTypeWithInputProperties {
   inputProperties: DeclaredInputProperties;
-  new(props: DeclaredInputProperties): MountedBehavior;
+  new(props: InputProps, ctx: BehaviorContext): MountedBehavior;
 }
 
 export interface MountedBehaviorTypeWithoutInputProperties {
   inputProperties: never;
-  new(props: null): MountedBehavior;
+  new(props: null, ctx: BehaviorContext): MountedBehavior;
 }
 
 export type MountedBehaviorType = 
@@ -55,6 +56,6 @@ export type MountedBehaviorType =
   MountedBehaviorTypeWithoutInputProperties;
 
 export interface MountedBehavior {
-  bind(props: InputProps): SheetWithValues;
+  bind(props: InputProps | null, ctx: BehaviorContext): SheetWithValues;
 }
 
