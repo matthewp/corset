@@ -258,7 +258,7 @@ QUnit.test('registerBehavior allows defining named behaviors', assert => {
   assert.equal(inner.textContent, 'works');
 });
 
-QUnit.only('wrap will wrap a function inside of the mountpoint', assert => {
+QUnit.test('wrap will wrap a function inside of the mountpoint', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"><div id="inner"></div></div>`;
   let run;
@@ -286,5 +286,42 @@ QUnit.only('wrap will wrap a function inside of the mountpoint', assert => {
 
   let inner = root.firstElementChild.firstElementChild;
   run();
+  assert.equal(inner.textContent, 'works');
+});
+
+QUnit.only('wrap will wrap an async function inside of the mountpoint', async assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app"><div id="inner"></div></div>`;
+  let run;
+  class One {
+    constructor(_p, { wrapAsync }) {
+      run = wrapAsync(() => {
+        return new Promise(resolve => {
+          setTimeout(() => {
+            this.text = 'works';
+            resolve();
+          }, 5);
+        });
+      });
+    }
+
+    bind() {
+      const { text = 'does not work' } = this;
+      return sheet`
+        #inner {
+          text: ${text};
+        }
+      `;
+    }
+  }
+  sheet`
+    #app {
+      behavior: mount(${One});
+    }
+  `.update(root);
+
+  let inner = root.firstElementChild.firstElementChild;
+  let p = run();
+  await p;
   assert.equal(inner.textContent, 'works');
 });
