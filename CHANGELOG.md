@@ -1,5 +1,11 @@
 # corset
 
+## 0.6.2
+
+### Patch Changes
+
+- 60e1b7b: Adds the wrapAsync method to the behavior context
+
 ## 0.6.1
 
 ### Patch Changes
