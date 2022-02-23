@@ -164,11 +164,21 @@ registerFunction.call(registry, 'bind', class {
   /**
    * 
    * @param {[Function, ...any[]]} param0
-   * @param {FunctionContext} param1
    * @returns 
    */
-  call([fn, ...args], { element }) {
-    return fn.bind(element, ...args);
+  call([fn, ...boundArgs]) {
+    /**
+     * @this {MountedBehaviorType | Element}
+     * @param {...any[]} callArgs
+     * @returns {(...args: any[]) => any}
+     */
+    function boundFn(...callArgs) {
+      return fn.call(this, ...boundArgs, ...callArgs);
+    }
+    Object.defineProperty(boundFn, 'name', {
+      value: 'bound ' + fn.name
+    });
+    return boundFn;
   }
 });
 
