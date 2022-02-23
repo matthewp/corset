@@ -48,10 +48,8 @@ function scopedCallback(mp, fn, ...args) {
 export function BehaviorContext(mp) {
   /** @type {Element} */
   this.element = mp.rootElement;
-  /** @type {(fn: CallbackFunction) => CallbackFunction} */
-  this.wrap = fn => scopedCallback.bind(null, mp, fn);
-  /** @type {(fn: CallbackFunction) => AsyncCallbackFunction} */
-  this.wrapAsync = fn => scopedAsyncCallback.bind(null, mp, fn);
+  /** @type {() => void} */
+  this.rebind = mp.update.bind(mp);
 }
 
 export class Mountpoint {
