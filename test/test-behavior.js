@@ -289,7 +289,7 @@ QUnit.test('wrap will wrap a function inside of the mountpoint', assert => {
   assert.equal(inner.textContent, 'works');
 });
 
-QUnit.only('wrap will wrap an async function inside of the mountpoint', async assert => {
+QUnit.test('wrap will wrap an async function inside of the mountpoint', async assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"><div id="inner"></div></div>`;
   let run;
