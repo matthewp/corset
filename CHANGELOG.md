@@ -1,5 +1,15 @@
 # corset
 
+## 0.7.0
+
+### Minor Changes
+
+- 15b70f6: Replace wrap/wrapAsync with rebind
+
+  This is a breaking change which removes wrap and wrapAsync with a new `rebind` function. Just call rebind any time state has change that necessitates calling `bind()` to get new values.
+
+- f0594ca: Changes bind() to pass the `this` forward
+
 ## 0.6.2
 
 ### Patch Changes
