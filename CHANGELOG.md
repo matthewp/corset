@@ -1,5 +1,11 @@
 # corset
 
+## 0.8.2
+
+### Patch Changes
+
+- d32acba: Use cdn-spooky-deploy-action 3.5
+
 ## 0.8.1
 
 ### Patch Changes
