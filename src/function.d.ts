@@ -6,8 +6,8 @@ export interface FunctionContext {
 }
 
 export interface ICorsetFunction {
-  call(args: any[], c: FunctionContext, props: Map<string, any> | null): any;
-  check?(args: any[], c: FunctionContext, props: Map<string, any> | null, cs: Changeset): boolean;
+  call(args: any[], props: Map<string, any> | null, c: FunctionContext): any;
+  check?(args: any[], props: Map<string, any> | null, c: FunctionContext, cs: Changeset): boolean;
 }
 
 export interface ICorsetFunctionClass {

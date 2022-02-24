@@ -180,7 +180,7 @@ export const functionValue = (CorsetFunction) => {
      * @returns {any}
      */
     get(args, binding, props) {
-      return callValue.call(this.fn, args, binding, props);
+      return callValue.call(this.fn, args, props, binding);
     }
   }
 
@@ -194,7 +194,7 @@ export const functionValue = (CorsetFunction) => {
      * @param {Changeset} changeset
      */
     FunctionValue.prototype.check = function(args, binding, props, changeset) {
-      return checkValue.call(this.fn, args, binding, props, changeset);
+      return checkValue.call(this.fn, args, props, binding, changeset);
     };
   }
 
