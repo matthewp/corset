@@ -82,10 +82,11 @@ registerFunction.call(registry, 'get', class {
 registerFunction.call(registry, 'select', class {
   /**
    * 
-   * @param {[string]} param0 
+   * @param {[string]} param0
+   * @param {Map<string, any>} _props
    * @param {FunctionContext} ctx 
    */
-  call([selector], { rootElement }) {
+  call([selector], _props, { rootElement }) {
     return rootElement.querySelector(selector);
   }
 });
@@ -106,13 +107,13 @@ class ScopeLookupFunction {
   }
   /**
    * 
-   * @param {any[]} param0 
-   * @param {FunctionContext} param1
+   * @param {any[]} param0
    * @param {Map<string, any>} _props
+   * @param {FunctionContext} param1
    * @param {Changeset} changeset
    * @returns {boolean}
    */
-  check([], { element }, _props, changeset) {
+  check([], _props, { element }, changeset) {
     let check = false;
     if(changeset.selectors) check = true;
     if(check) {
@@ -186,9 +187,10 @@ registerFunction.call(registry, 'data', class {
   /**
    * 
    * @param {[string]} param0 
+   * @param {Map<string, any>} _props
    * @param {FunctionContext} param1
    */
-  call([prop], { element }) {
+  call([prop], _props, { element }) {
     if(!(element instanceof HTMLElement))
       throw new Error(`data() only works on HTMLElements.`);
     return /** @type {HTMLElement} */(element).dataset[prop];
@@ -211,12 +213,12 @@ registerFunction.call(registry, 'mount', class {
   /**
    *
    * @param {[MountedBehaviorType | string]} param0
-   * @param {FunctionContext} context
    * @param {Map<string, any>} _props
+   * @param {FunctionContext} context
    * @param {Changeset} changeset
    * @returns {boolean}
    */
-  check([Ctr], context, _props, changeset) {
+  check([Ctr], _props, context, changeset) {
     /** @type {MountedBehaviorType} */
     let Behavior = /** @type {MountedBehaviorType} */(Ctr);
     if(typeof Ctr === 'string') {
@@ -269,10 +271,10 @@ export function createLocalsScopeFunction(propName) {
     /**
      * 
      * @param {any[]} args 
-     * @param {FunctionContext} context 
      * @param {Map<typeof propName, any>} props
+     * @param {FunctionContext} context 
      */
-    call(args, context, props) {
+    call(args, props, context) {
       /** @type {((...args: any[]) => any) | undefined} */
       let fn = props.get(propName);
       if(typeof fn !== 'function') {

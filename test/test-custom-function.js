@@ -25,7 +25,7 @@ QUnit.test('Can register simple custom functions', assert => {
 QUnit.test('Can use inputProperties', assert => {
   registerCustomFunction('--add-two', class {
     static inputProperties = ['--start'];
-    call([a, b], _ctx, props) {
+    call([a, b], props) {
       return a + b + props.get('--start');
     }
   });
@@ -45,4 +45,4 @@ QUnit.test('Can use inputProperties', assert => {
   binding.update(root);
   let r = root.querySelector('.result');
   assert.equal(r.textContent, 6);
-})
+});
