@@ -1,5 +1,11 @@
 # corset
 
+## 0.8.1
+
+### Patch Changes
+
+- 2e1f297: Use the CDN's new semver URL
+
 ## 0.8.0
 
 ### Minor Changes
