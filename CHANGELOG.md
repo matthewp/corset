@@ -1,5 +1,11 @@
 # corset
 
+## 0.8.0
+
+### Minor Changes
+
+- 115a71f: Swaps the order of the context and props args in registerCustomFunction to match registerBehavior
+
 ## 0.7.0
 
 ### Minor Changes
