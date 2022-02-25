@@ -1,5 +1,11 @@
 # corset
 
+## 0.8.10
+
+### Patch Changes
+
+- 95e3c2e: Updated CI to deploy v0 redirect
+
 ## 0.8.9
 
 ### Patch Changes
