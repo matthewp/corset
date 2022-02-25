@@ -1,5 +1,11 @@
 # corset
 
+## 0.8.9
+
+### Patch Changes
+
+- b216c53: Final change for the CDN symlink feature
+
 ## 0.8.8
 
 ### Patch Changes
