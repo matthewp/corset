@@ -1,5 +1,12 @@
 # corset
 
+## 0.8.3
+
+### Patch Changes
+
+- 4e70b71: Support for multiple entrypoints
+- 040c860: Update for more robust semver CDN support
+
 ## 0.8.2
 
 ### Patch Changes
