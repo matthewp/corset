@@ -1,5 +1,11 @@
 # corset
 
+## 0.8.5
+
+### Patch Changes
+
+- 48da0e7: cdn-spooky-deploy-action@v3.10
+
 ## 0.8.4
 
 ### Patch Changes
