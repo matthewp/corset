@@ -193,5 +193,4 @@ jobs:
           source: 'lib'
           version: ${{ steps.extract_version.outputs.version }}
           symlink: true
-          entry1: main.js
-          entry2: main.wasm
+          entry: main.js
