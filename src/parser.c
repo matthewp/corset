@@ -169,8 +169,12 @@ static char identifierToken(char c) {
   }
 }
 
+static char numberToken(char c) {
+  return c >= 48 && c <= 57;
+}
+
 static char selectorToken(char c) {
-  if(identifierToken(c)) return true;
+  if(identifierToken(c) || numberToken(c)) return true;
   switch(c) {
     case '#':
     case '.':

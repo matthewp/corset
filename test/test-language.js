@@ -118,3 +118,15 @@ QUnit.test('Supports boolean identifiers (true/false)', assert => {
   assert.equal(app[falseProp], false);
   assert.equal(app[worksProp], true);
 });
+
+QUnit.test('Allows numbers in selectors', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div class="counter-1"></div><div class="counter-2"></div>`;
+  sheet`
+  .counter-1, .counter-2 {
+    text: "testing";
+  }
+  `.update(root);
+  assert.equal(root.firstElementChild.textContent, 'testing');
+  assert.equal(root.firstElementChild.nextElementSibling.textContent, 'testing');
+});
