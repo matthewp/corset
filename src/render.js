@@ -102,8 +102,11 @@ function render(element, bindings, root, changeset) {
 
   if(bflags & flags.text) {
     let binding = /** @type {Binding} */(bindings.text);
-    if(binding.dirty(changeset))
-      element.textContent = binding.update(changeset);
+    if(binding.dirty(changeset)) {
+      let values = binding.update(changeset);
+      if(Array.isArray(values)) values = values.join('');
+      element.textContent = values;
+    }
   }
 
   if(bflags & flags.prop) {
