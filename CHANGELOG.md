@@ -1,5 +1,11 @@
 # corset
 
+## 0.8.11
+
+### Patch Changes
+
+- 7ddfe4d: Fixes arrays being joined in the text property
+
 ## 0.8.10
 
 ### Patch Changes
