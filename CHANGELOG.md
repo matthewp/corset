@@ -1,5 +1,11 @@
 # corset
 
+## 0.8.12
+
+### Patch Changes
+
+- d3a2c5c: Fixes numbers in selectors
+
 ## 0.8.11
 
 ### Patch Changes
