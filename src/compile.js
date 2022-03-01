@@ -24,6 +24,7 @@ import {
   InsertionValue,
   PlaceholderValue,
   SpaceSeparatedListValue,
+  InitialValue
 } from './value.js';
 import {
   registry as fnRegistry,
@@ -112,6 +113,9 @@ function getValue(ptr) {
     }
     case 6: {
       return createValueTemplate(anyValue(Boolean(mem32[ptrv32])));
+    }
+    case 7: {
+      return createValueTemplate(InitialValue);
     }
     default: {
       throw new Error(`Unknown value type [${valueType}]`);

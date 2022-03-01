@@ -87,7 +87,7 @@ export class PlaceholderValue {
     else if(this.compute === NO_VALUE) check = true;
     else {
       this.compute.dirty(changeset);
-      let value = this.compute.check(changeset);
+      let value = this.compute.check(changeset, null);
       if(value !== this.value) {
         this.value = value;
         return true;
@@ -205,9 +205,17 @@ export class InitialValue {
   /**
    * 
    * @param {any[]} _args 
-   * @param {Binding} _binding 
+   * @param {Binding} binding 
+   * @param {any} _props
+   * @param {Changeset} _changeset
+   * @param {ComputedValue} parentCompute
    */
-  get(_args, _binding) {
-    throw new Error('InitialValue not implemented');
+  get(_args, binding, _props, _changeset, parentCompute) {
+    if(binding.initial instanceof Map) {
+      let key = parentCompute.args[parentCompute.args.length - 1];
+      let values = binding.initial.get(key);
+      return values[0];
+    }
+    return binding.initial; 
   }
 }

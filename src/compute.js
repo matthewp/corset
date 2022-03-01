@@ -7,7 +7,6 @@ import { PlaceholderValue, SpaceSeparatedListValue } from './value.js';
  * @typedef {import('./changeset').Changeset} Changeset
  * @typedef {import('./value').Value} Value
  * @typedef {import('./types').CheckedValue} CheckedValue
- * @typedef {import('./types').VersionedValue} VersionedValue
  * @typedef {import('./template').ValueTemplate} ValueTemplate
  * 
  * @typedef {(c: Changeset, v: number) => number} VersionCalculate
@@ -84,18 +83,20 @@ export class ComputedValue {
   /**
    * 
    * @param {Changeset} changeset 
+   * @param {ComputedValue | null} parentCompute
    */
-  compute(changeset) {
-    this.#value = call(this, changeset, this.raw.get);
+  compute(changeset, parentCompute) {
+    this.#value = call(this, changeset, this.raw.get, parentCompute);
   }
   /**
    * 
    * @param {Changeset} changeset 
+   * @param {ComputedValue | null} parentCompute
    * @returns {any}
    */
-  check(changeset) {
+  check(changeset, parentCompute) {
     if(this.dirty(changeset)) {
-      this.compute(changeset);
+      this.compute(changeset, parentCompute);
     }
     return this.#value;
   }
@@ -110,7 +111,7 @@ export class ComputedValue {
     }
     let dirty = false;
     if(this.#check) {
-      if(call(this, changeset, this.#check)) {
+      if(call(this, changeset, this.#check, null)) {
         dirty = true;
       }
     }
@@ -157,14 +158,15 @@ function hydrate(compute, template) {
 /**
  * @param {ComputedValue} compute 
  * @param {Changeset} changeset
- * @param {Value['get'] | VersionedValue['version']} method
+ * @param {Value['get'] | CheckedValue['check']} method
+ * @param {ComputedValue | null} parentCompute
  * @returns {any}
  */
-function call(compute, changeset, method) {
+function call(compute, changeset, method, parentCompute) {
   let {args, binding, raw: value, inputProps: props} = compute;
   if(compute.inputDeps) {
     for(let [propName, v] of compute.inputDeps) {
-      let value = v.check(changeset);
+      let value = v.check(changeset, compute);
       if((v.raw instanceof PlaceholderValue) && Array.isArray(value)) {
         value = value[0];
       }
@@ -174,11 +176,11 @@ function call(compute, changeset, method) {
   args.length = 0;
   for(let v of compute.argDeps) {
     if(v.raw instanceof PlaceholderValue) {
-      let values = v.check(changeset);
+      let values = v.check(changeset, null);
       if(values) args.push(...values);
     }
     else
-      args.push(v.check(changeset)); 
+      args.push(v.check(changeset, compute)); 
   }
-  return method.call(value, args, binding, props, changeset);
+  return method.call(value, args, binding, props, changeset, parentCompute);
 }

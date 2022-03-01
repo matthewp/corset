@@ -158,3 +158,24 @@ QUnit.test('Source order is preferred on change', assert => {
   assert.equal(app.classList.contains('three'), false);
   assert.equal(app.classList.contains('four'), true);
 });
+
+QUnit.only('initial restores the initial value', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div class="one"></div>`;
+  function go(show) {
+    return sheet`
+      div {
+        class-toggle[one]: false;
+        class-toggle[show]: ${show};
+      }
+      div.show {
+        --values: one initial;
+        class-toggle: var(--values);
+      }
+    `;
+  }
+  let div = root.firstElementChild;
+  go(false).update(root);
+  assert.equal(div.classList.contains('one'), false);
+  go(true).update(root);
+});

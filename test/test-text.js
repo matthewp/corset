@@ -34,4 +34,25 @@ QUnit.test("Providing multiple values results in them being joined", assert => {
   `.update(root);
   assert.equal(root.querySelector('#one').textContent, 'onetwo');
   assert.equal(root.querySelector('#two').textContent, 'threefour');
-})
+});
+
+QUnit.test('Using initial restores the original value', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app">test</div>`;
+  function go(add) {
+    return sheet`
+      #app {
+        class-toggle[add]: ${add};
+        text: "New value";
+      }
+      #app.add {
+        text: initial;
+      }
+    `;
+  }
+  let div = root.firstElementChild;
+  go(false).update(root);
+  assert.equal(div.textContent, 'New value');
+  go(true).update(root);
+  assert.equal(div.textContent, 'test');
+});

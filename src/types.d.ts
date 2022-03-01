@@ -1,5 +1,6 @@
 import type { Binding } from './bindings';
 import type { Changeset } from './changeset';
+import type { ComputedValue } from './compute';
 import type { BehaviorContext } from './mount';
 import type { SheetWithValues } from './sheet';
 
@@ -11,15 +12,11 @@ export interface ValueType {
 }
 
 interface BaseValue {
-  get(args: any[], binding: Binding, props: Map<string, any> | null, changeset: Changeset): any;
-}
-
-export interface VersionedValue extends BaseValue {
-  version: (args: any[], binding: Binding, props: Map<string, any> | null, changeset: Changeset) => number;
+  get(args: any[], binding: Binding, props: Map<string, any> | null, changeset: Changeset, parentCompute: ComputedValue | null): any;
 }
 
 export interface CheckedValue extends BaseValue {
-  check(args: any[], binding: Binding, props: Map<string, any> | null, changeset: Changeset): boolean;
+  check(args: any[], binding: Binding, props: Map<string, any> | null, changeset: Changeset, parentCompute: ComputedValue | null): boolean;
 }
 
 export interface Value extends BaseValue {
