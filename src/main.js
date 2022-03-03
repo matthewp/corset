@@ -6,6 +6,7 @@
  * @typedef {import('./sheet').SheetWithValues} SheetWithValues
  * @typedef {import('./types').MountedBehavior} MountedBehavior
  * @typedef {import('./fn').ICorsetFunction} ICorsetFunction
+ * @typedef {import('./fn').FunctionContext} FunctionContext
  */
 
 export { 
