@@ -10,6 +10,7 @@ import { NO_VALUE } from './value.js';
  * @typedef {import('./property').ShorthandPropertyDefinition} ShorthandPropertyDefinition
  * @typedef {import('./property').LonghandPropertyDefinition} LonghandPropertyDefinition
  * @typedef {import('./property').PropertyPropName} PropertyPropName
+ * @typedef {import('./types').RootElement} RootElement
  */
 
 /**
@@ -59,13 +60,13 @@ export class Binding {
   /**
    * 
    * @param {string} propertyName
-   * @param {Element} rootElement 
+   * @param {RootElement} rootElement 
    * @param {Element} element 
    */
   constructor(propertyName, rootElement, element) {
     /** @type {string} */
     this.propertyName = propertyName;
-    /** @type {Element} */
+    /** @type {RootElement} */
     this.rootElement = rootElement;
     /** @type {Element} */
     this.element = element;

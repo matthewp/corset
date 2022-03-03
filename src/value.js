@@ -142,17 +142,6 @@ export class PlaceholderValue {
   }
 }
 
-export class ShorthandItemValue {
-  /**
-   * 
-   * @param {[number, any[]]} param0 
-   * @returns 
-   */
-  get([index, items]) {
-    return items[index];
-  }
-}
-
 /**
  * 
  * @param {ICorsetFunctionClass} CorsetFunction 
@@ -199,15 +188,4 @@ export const functionValue = (CorsetFunction) => {
   }
 
   return FunctionValue;
-}
-
-export class InitialValue {
-  /**
-   * 
-   * @param {any[]} _args 
-   * @param {Binding} _binding 
-   */
-  get(_args, _binding) {
-    throw new Error('InitialValue not implemented');
-  }
 }

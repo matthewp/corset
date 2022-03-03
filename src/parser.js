@@ -1,9 +1,18 @@
 // @ts-check
 
 /**
- * @typedef {import('./types').WasmParser} WasmParser
- * @typedef {import('./types').RawStringTemplate} RawStringTemplate
- */
+ * 
+ * @typedef {object} WasmParserInterface
+ * @property {() => number} get_tag
+ * @property {(n: number) => 1 | 0} parse
+ * @property {(n: number) => number} reset
+ * @property {{ buffer: ArrayBuffer }} memory
+ * 
+ * @typedef {object} RawStringTemplate
+ * @property {readonly string[] | ArrayLike<string>} raw
+ * 
+ * @typedef {WebAssembly.Exports & WasmParserInterface} WasmParser
+*/
 
 const INSERTION = 'ins()';
 

@@ -8,8 +8,9 @@ import { registry as behaviorRegistry } from './mount.js';
 /**
  * @typedef {import('./binding').Binding} Binding
  * @typedef {import('./changeset').Changeset} Changeset
- * @typedef {import('./function').ICorsetFunctionClass} ICorsetFunctionClass
- * @typedef {import('./function').FunctionContext} FunctionContext
+ * @typedef {import('./fn').ICorsetFunction} ICorsetFunction
+ * @typedef {import('./fn').ICorsetFunctionClass} ICorsetFunctionClass
+ * @typedef {import('./fn').FunctionContext} FunctionContext
  * @typedef {import('./types').MountedBehaviorType} MountedBehaviorType
  */
 

@@ -7,7 +7,6 @@ import { PlaceholderValue, SpaceSeparatedListValue } from './value.js';
  * @typedef {import('./changeset').Changeset} Changeset
  * @typedef {import('./value').Value} Value
  * @typedef {import('./types').CheckedValue} CheckedValue
- * @typedef {import('./types').VersionedValue} VersionedValue
  * @typedef {import('./template').ValueTemplate} ValueTemplate
  * 
  * @typedef {(c: Changeset, v: number) => number} VersionCalculate
@@ -157,7 +156,7 @@ function hydrate(compute, template) {
 /**
  * @param {ComputedValue} compute 
  * @param {Changeset} changeset
- * @param {Value['get'] | VersionedValue['version']} method
+ * @param {Value['get'] | CheckedValue['check']} method
  * @returns {any}
  */
 function call(compute, changeset, method) {

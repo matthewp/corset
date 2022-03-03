@@ -5,6 +5,10 @@ import { Changeset } from './changeset.js';
 import { Mountpoint } from './mount.js';
 
 /**
+ * @typedef {import('./types').RootElement} RootElement
+ */
+
+/**
  * 
  * @param {Function} a 
  * @returns {Function}
@@ -17,13 +21,13 @@ const identity = (a) => a;
 
 export class Root {
   /**
-   * @param {HTMLElement | Mountpoint} rootElement 
+   * @param {RootElement | Mountpoint} rootElement 
    * @param {BindingSheet} sheet 
    */
   constructor(rootElement, sheet) {
     /** @type {Mountpoint | null} */
     this.mount = (rootElement instanceof Mountpoint) ? rootElement : null;
-    /** @type {HTMLElement} */
+    /** @type {RootElement} */
     this.rootElement = this.mount ? this.mount.rootElement :
       /** @type {HTMLElement} */(rootElement);
     /** @type {Rule[]} */
