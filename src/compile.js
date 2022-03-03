@@ -1,7 +1,7 @@
 // @ts-check
 
 /**
- * @typedef {import('./types').RawStringTemplate} RawStringTemplate
+ * @typedef {import('./parser').RawStringTemplate} RawStringTemplate
  */
 
  import {

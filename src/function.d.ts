@@ -1,7 +1,8 @@
 import type { Changeset } from './changeset';
+import type { RootElement } from './types';
 
 export interface FunctionContext {
-  rootElement: Element;
+  rootElement: RootElement;
   element: Element;
 }
 

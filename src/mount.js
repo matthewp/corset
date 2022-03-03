@@ -46,7 +46,7 @@ function scopedCallback(mp, fn, ...args) {
  * @param {Mountpoint} mp 
  */
 export function BehaviorContext(mp) {
-  /** @type {Element} */
+  /** @type {Element | Document} */
   this.element = mp.rootElement;
   /** @type {() => void} */
   this.rebind = mp.update.bind(mp);
@@ -55,12 +55,12 @@ export function BehaviorContext(mp) {
 export class Mountpoint {
   /**
    * 
-   * @param {HTMLElement} rootElement 
+   * @param {HTMLElement | Document} rootElement 
    * @param {MountedBehaviorType} Behavior 
    * @param {Map<string, any> | null} props
    */
   constructor(rootElement, Behavior, props) {
-    /** @type {HTMLElement} */
+    /** @type {HTMLElement | Document} */
     this.rootElement = rootElement;
     /** @type {Map<string, any> | null} */
     this.props = props;
@@ -101,7 +101,7 @@ export class Mountpoint {
 
 /**
  * 
- * @param {HTMLElement} element 
+ * @param {HTMLElement | Document} element 
  * @param {MountedBehaviorType} behavior 
  * @returns {void}
  */

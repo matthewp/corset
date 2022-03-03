@@ -1,3 +1,5 @@
+// @ts-check
+
 import { anyValue, PlaceholderValue } from './value.js';
 
 /**
@@ -19,6 +21,7 @@ import { anyValue, PlaceholderValue } from './value.js';
  * @returns {ValueTemplate}
  */
 export function createValueTemplate(Value, deps = []) {
+  /** @type {ValueTemplate} */
   let template = {
     Value,
     deps,

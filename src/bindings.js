@@ -14,17 +14,18 @@ import { flags, properties } from './property.js';
  * @typedef {import('./property').ShorthandPropertyDefinition} ShorthandPropertyDefinition
  * @typedef {import('./property').BehaviorMultiPropertyDefinition} BehaviorMultiPropertyDefinition
  * @typedef {import('./property').LonghandPropertyDefinition} LonghandPropertyDefinition
+ * @typedef {import('./types').RootElement} RootElement
  */
 
 
 export class Bindings {
   /**
    * Create bindings for a specific element.
-   * @param {Element} rootElement 
+   * @param {RootElement} rootElement 
    * @param {Element} element 
    */
   constructor(rootElement, element) {
-    /** @type {Element} */
+    /** @type {RootElement} */
     this.rootElement = rootElement;
     /** @type {Element} */
     this.element = element;
