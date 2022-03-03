@@ -46,3 +46,5 @@ export interface MountedBehaviorType {
 export interface MountedBehavior {
   bind(props: InputProperties | null, ctx: BehaviorContext): SheetWithValues;
 }
+
+export type RootElement = HTMLElement | Document;
