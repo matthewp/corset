@@ -1,5 +1,11 @@
 # corset
 
+## 0.8.14
+
+### Patch Changes
+
+- b939766: Fixes inputProperties types on the Map
+
 ## 0.8.13
 
 ### Patch Changes
