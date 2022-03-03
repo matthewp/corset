@@ -35,16 +35,14 @@ export interface WasmParser extends WebAssembly.Exports {
 
 export type RawStringTemplate = { raw: readonly string[] | ArrayLike<string>};
 
-
 type InputProperties = Map<string, string>;
 
-export interface MountedBehaviorType {
-  inputProperties?: DeclaredInputProperties;
-  new(props: InputProperties | null, ctx: BehaviorContext): MountedBehavior;
-}
-
-export interface MountedBehavior {
+export declare class MountedBehavior {
+  static inputProperties?: DeclaredInputProperties;
+  constructor(props: InputProperties | null, ctx: BehaviorContext);
   bind(props: InputProperties | null, ctx: BehaviorContext): SheetWithValues;
 }
+
+export type MountedBehaviorType = typeof MountedBehavior;
 
 export type RootElement = HTMLElement | Document;

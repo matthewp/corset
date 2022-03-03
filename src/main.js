@@ -2,6 +2,10 @@
 
 /**
  * @typedef {import('./mount').Mountpoint} Mountpoint
+ * @typedef {import('./mount').BehaviorContext} BehaviorContext
+ * @typedef {import('./sheet').SheetWithValues} SheetWithValues
+ * @typedef {import('./types').MountedBehavior} MountedBehavior
+ * @typedef {import('./fn').ICorsetFunction} ICorsetFunction
  */
 
 export { 
