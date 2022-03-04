@@ -2,7 +2,7 @@
 
 ## Getting Started
 
-Please follow the documentation at [corset.dev](https://corset.dev/learn/installation/) to learn how to use Corset.
+Please follow the documentation at [corset.dev](https://corset.dev/learn/installation/) to learn how to use the library.
 
 ## Supporting Corset
 
