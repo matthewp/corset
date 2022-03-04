@@ -36,16 +36,28 @@ export class Root {
     this.bindingMap = new Map();
     /** @type {(a: () => any) => any} */
     this.getCallback = this.mount ? this.mount.getCallback.bind(this.mount) : identity;
+    /** @type {number} */
+    this.queue = 0;
+    /** @type {any[] | null} */
+    this.values = null;
+
   }
   /**
    * @param {any[]} values
    */
   update(values) {
-    let invalid = true;
-    while(invalid) {
-      let changeset = new Changeset(values);
-      this.collect();
-      invalid = renderRoot(this.bindingMap, this, changeset);
+    this.values = values;
+    this.queue++;
+    if(this.queue > 1) return;
+    while(this.queue) {
+      let invalid = true;
+      while(invalid) {
+        let changeset = new Changeset(this.values);
+        this.collect();
+        invalid = renderRoot(this.bindingMap, this, changeset);
+      }
+      this.queue--;
+      if(this.queue) this.queue = 1;
     }
   }
   /**

@@ -168,41 +168,66 @@ registerFunction.call(registry, 'index', class extends ScopeLookupFunction {
 
 registerFunction.call(registry, 'store-get', class {
   constructor() {
-    this.mapValue = undefined;
-    this.keyValue = NO_VALUE;
+    /** @type {any} */
+    this.value = undefined;
   }
   /**
    * 
-   * @param {[string, string]} param0
+   * @param {[string, string]} _args
    * @param {Map<string, any>} _props
    * @param {FunctionContext} param1
    * @param {Changeset} changeset
    * @returns {boolean}
    */
   check([storeName, key], _props, { element }, changeset) {
-    let check = false, dirty = false;
-    if(changeset.selectors) check = true;
+    let check = changeset.selectors;
     if(check) {
       let dataName = storeDataName(storeName);
       /** @type {Map<string, any> | undefined} */
       let map = lookup(element, dataName, `[${dataName}]`, storePropName(storeName));
-      dirty = map !== this.mapValue;
-      if(dirty) {
-        this.mapValue = map;
-      }
-      if(this.keyValue !== this.mapValue?.get(key)) {
-        this.keyValue = this.mapValue?.get(key);
+      if(map?.get(key) !== this.value) {
+        this.value = map?.get(key);
         return true;
       }
     }
-    return dirty;
+    return false;
+  }
+  call() {
+    return this.value;
+  }
+});
+
+registerFunction.call(registry, 'store', class {
+  constructor() {
+    /** @type {Map<any, any> | undefined} */
+    this.map = undefined;
   }
   /**
    * 
-   * @returns {any}
+   * @param {[string]} _args
+   * @param {Map<string, any>} _props
+   * @param {FunctionContext} param1
+   * @param {Changeset} changeset
+   * @returns {boolean}
+   */
+   check([storeName], _props, { element }, changeset) {
+    let check = changeset.selectors;
+    if(check) {
+      let dataName = storeDataName(storeName);
+      /** @type {Map<any, any> | undefined} */
+      let map = lookup(element, dataName, `[${dataName}]`, storePropName(storeName));
+      if(map !== this.map) {
+        this.map = map;
+        return true;
+      }
+    }
+    return false;
+  }
+  /**
+   * @returns {Map<any, any> | undefined}
    */
   call() {
-    return this.keyValue;
+    return this.map;
   }
 });
 

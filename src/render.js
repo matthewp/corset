@@ -62,22 +62,33 @@ function render(element, bindings, root, changeset) {
 
     let binding = /** @type {Binding} */(bindings.storeRoot);
     if(binding.dirty(changeset)) {
+      let oldValue = binding.value;
       let storeName = binding.update(changeset);
-      element.dataset[storeDataPropName(storeName)] = '';
-      let map = new Store(root);
-      /** @type {any} */
-      (element)[Symbol.for(storePropName(storeName))] = map;
-      root.mount?.context?.stores.set(storeName, map);
+      if(storeName) {
+        element.dataset[storeDataPropName(storeName)] = '';
+        let map = new Store(root);
+        /** @type {any} */
+        (element)[Symbol.for(storePropName(storeName))] = map;
+        root.mount?.context?.stores.set(storeName, map);
+      } else {
+        delete element.dataset[storeDataPropName(oldValue)];
+        delete /** @type {any} */(element)[Symbol.for(storePropName(oldValue))];
+        root.mount?.context?.stores.delete(oldValue);
+        invalid = true;
+      }
     }
   }
 
   if(bflags & flags.storeSet) {
     let binding = /** @type {Binding} */(bindings.storeSet);
     if(binding.dirty(changeset)) {
-      let [storeName, key, value] = binding.update(changeset);
-      let dataName = storeDataName(storeName);
-      let map = lookup(element, dataName, `[${dataName}]`, storePropName(storeName));
-      map?.set(key, value);
+      let args = binding.update(changeset);
+      if(args) {
+        let [storeName, key, value] = args;
+        let dataName = storeDataName(storeName);
+        let map = lookup(element, dataName, `[${dataName}]`, storePropName(storeName));
+        map?.set(key, value);
+      }
       invalid = true;
     }
   }
