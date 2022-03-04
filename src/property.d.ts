@@ -79,7 +79,9 @@ export declare const flags: Record<
   'prop' |
   'attr' |
   'data' |
-  'attach'
+  'attach' |
+  'storeRoot' |
+  'storeSet'
 , number>;
 
 type featureNames = 'keyed' | 'multi' | 'oldValues' | 'longhand' | 'behavior';

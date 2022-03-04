@@ -99,7 +99,9 @@ class ScopeLookupFunction {
    * @param {string} propName
    */
    constructor(dataName, propName) {
+    /** @type {string} */
     this.dataPropName = 'data-corset-' + dataName;
+    /** @type {string} */
     this.dataSelector = '[' + this.dataPropName + ']';
     /** @type {string} */
     this.propName = propName;
@@ -159,6 +161,31 @@ registerFunction.call(registry, 'item', class extends ScopeLookupFunction {
 registerFunction.call(registry, 'index', class extends ScopeLookupFunction {
   constructor() {
     super('index', 'corsetIndex');
+  }
+});
+
+registerFunction.call(registry, 'store-get', class extends ScopeLookupFunction {
+  constructor() {
+    super('', '');
+    this.keyValue = NO_VALUE;
+  }
+  check(...args) {
+    const [storeName, key] = args[0];
+    /** @type {string} */
+    this.dataPropName = 'data-corset-store';
+    /** @type {string} */
+    this.dataSelector = '[' + this.dataPropName + '=' + storeName + ']';
+    /** @type {string} */
+    this.propName = `corset.store.${storeName}`;
+    let dirty = super.check(...args);
+    if(this.value && this.keyValue !== this.value.get(key)) {
+      this.keyValue = this.value.get(key);
+      return true;
+    }
+    return dirty;
+  }
+  call() {
+    return this.keyValue;
   }
 });
 

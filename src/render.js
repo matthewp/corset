@@ -4,7 +4,7 @@ import { flags } from './property.js';
 import { EachInstance } from './each.js';
 import { datasetPropKey } from './custom-prop.js';
 import { Mountpoint } from './mount.js';
-import { NO_VALUE } from './value.js';
+import { lookup } from './scope.js';
 
 /**
  * @typedef {import('./binding').Binding} Binding
@@ -51,6 +51,30 @@ function render(element, bindings, root, changeset) {
           compute: binding.compute
         };
       }
+    }
+  }
+
+  if(bflags & flags.storeRoot) {
+    if(!(element instanceof HTMLElement)) {
+      throw new Error('Stores cannot be used on non-HTML elements.');
+    }
+
+    let binding = /** @type {Binding} */(bindings.storeRoot);
+    if(binding.dirty(changeset)) {
+      let storeName = binding.update(changeset);
+      element.dataset['corsetStore'] = storeName;
+      /** @type {any} */
+      (element)[Symbol.for(`corset.store.${storeName}`)] = new Map();
+    }
+  }
+
+  if(bflags & flags.storeSet) {
+    let binding = /** @type {Binding} */(bindings.storeSet);
+    if(binding.dirty(changeset)) {
+      let [storeName, key, value] = binding.update(changeset);
+      let map = lookup(element, 'data-corset-store', `[data-corset-store='${storeName}']`, `corset.store.${storeName}`);
+      map?.set(key, value);
+      invalid = true;
     }
   }
 
