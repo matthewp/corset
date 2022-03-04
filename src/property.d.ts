@@ -10,7 +10,9 @@ type PropertyPropName = 'attr' |
   'each' |
   'event' |
   'prop' |
-  'text'
+  'text' |
+  'storeRoot' |
+  'storeSet'
 
 interface BasePropertyDefinition {
   flag: number;

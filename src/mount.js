@@ -50,6 +50,8 @@ export function BehaviorContext(mp) {
   this.element = mp.rootElement;
   /** @type {() => void} */
   this.rebind = mp.update.bind(mp);
+  /** @type {Map<string, Map<string, any>>} */
+  this.stores = new Map();
 }
 
 export class Mountpoint {

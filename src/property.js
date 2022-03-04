@@ -229,6 +229,7 @@ export const properties = {
     prop: 'storeRoot',
     read: () => null
   },
+  /** @type {SimplePropertyDefinition} */
   'store-set': {
     flag: flags.storeSet,
     feat: 0,

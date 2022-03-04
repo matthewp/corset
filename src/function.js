@@ -4,6 +4,8 @@ import { anyValue, NO_VALUE } from './value.js';
 import { createValueTemplate } from './template.js';
 import { ComputedValue } from './compute.js';
 import { registry as behaviorRegistry } from './mount.js';
+import { lookup } from './scope.js';
+import { storeDataName, storeDataPropName, storePropName } from './store.js';
 
 /**
  * @typedef {import('./binding').Binding} Binding
@@ -164,26 +166,41 @@ registerFunction.call(registry, 'index', class extends ScopeLookupFunction {
   }
 });
 
-registerFunction.call(registry, 'store-get', class extends ScopeLookupFunction {
+registerFunction.call(registry, 'store-get', class {
   constructor() {
-    super('', '');
+    this.mapValue = undefined;
     this.keyValue = NO_VALUE;
   }
-  check(...args) {
-    const [storeName, key] = args[0];
-    /** @type {string} */
-    this.dataPropName = 'data-corset-store';
-    /** @type {string} */
-    this.dataSelector = '[' + this.dataPropName + '=' + storeName + ']';
-    /** @type {string} */
-    this.propName = `corset.store.${storeName}`;
-    let dirty = super.check(...args);
-    if(this.value && this.keyValue !== this.value.get(key)) {
-      this.keyValue = this.value.get(key);
-      return true;
+  /**
+   * 
+   * @param {[string, string]} param0
+   * @param {Map<string, any>} _props
+   * @param {FunctionContext} param1
+   * @param {Changeset} changeset
+   * @returns {boolean}
+   */
+  check([storeName, key], _props, { element }, changeset) {
+    let check = false, dirty = false;
+    if(changeset.selectors) check = true;
+    if(check) {
+      let dataName = storeDataName(storeName);
+      /** @type {Map<string, any> | undefined} */
+      let map = lookup(element, dataName, `[${dataName}]`, storePropName(storeName));
+      dirty = map !== this.mapValue;
+      if(dirty) {
+        this.mapValue = map;
+      }
+      if(this.keyValue !== this.mapValue?.get(key)) {
+        this.keyValue = this.mapValue?.get(key);
+        return true;
+      }
     }
     return dirty;
   }
+  /**
+   * 
+   * @returns {any}
+   */
   call() {
     return this.keyValue;
   }
