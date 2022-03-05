@@ -1,4 +1,4 @@
-import sheet, { mount } from '../src/main.js';
+import sheet, { mount, registerBehavior } from '../src/main.js';
 
 QUnit.module('Property - store-root, store-set');
 
@@ -126,4 +126,18 @@ QUnit.test('A selector becoming unmatched removes the store', assert => {
   
   assert.equal(child.classList.contains('has-store'), false);
   assert.equal(child.dataset.value, 'none');
+});
+
+QUnit.test('Store is immediately available on the root', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="movies"></div>`;
+
+  sheet`
+    #movies {
+      store-root: one;
+      --foo: get(store(one), ${store => !!store});
+      data[foo]: var(--foo);
+    }
+  `.update(root);
+  assert.equal(root.firstElementChild.dataset.foo, 'true');
 });
