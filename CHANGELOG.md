@@ -1,5 +1,11 @@
 # corset
 
+## 0.9.1
+
+### Patch Changes
+
+- 68913f7: Ensure that setting a store causes invalidation
+
 ## 0.9.0
 
 ### Minor Changes
