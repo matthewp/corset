@@ -10,7 +10,9 @@ type PropertyPropName = 'attr' |
   'each' |
   'event' |
   'prop' |
-  'text'
+  'text' |
+  'storeRoot' |
+  'storeSet'
 
 interface BasePropertyDefinition {
   flag: number;
@@ -79,7 +81,9 @@ export declare const flags: Record<
   'prop' |
   'attr' |
   'data' |
-  'attach'
+  'attach' |
+  'storeRoot' |
+  'storeSet'
 , number>;
 
 type featureNames = 'keyed' | 'multi' | 'oldValues' | 'longhand' | 'behavior';

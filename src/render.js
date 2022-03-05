@@ -4,7 +4,8 @@ import { flags } from './property.js';
 import { EachInstance } from './each.js';
 import { datasetPropKey } from './custom-prop.js';
 import { Mountpoint } from './mount.js';
-import { NO_VALUE } from './value.js';
+import { lookup } from './scope.js';
+import { storePropName, storeDataName, storeDataPropName, Store } from './store.js';
 
 /**
  * @typedef {import('./binding').Binding} Binding
@@ -51,6 +52,44 @@ function render(element, bindings, root, changeset) {
           compute: binding.compute
         };
       }
+    }
+  }
+
+  if(bflags & flags.storeRoot) {
+    if(!(element instanceof HTMLElement)) {
+      throw new Error('Stores cannot be used on non-HTML elements.');
+    }
+
+    let binding = /** @type {Binding} */(bindings.storeRoot);
+    if(binding.dirty(changeset)) {
+      let oldValue = binding.value;
+      let storeName = binding.update(changeset);
+      if(storeName) {
+        element.dataset[storeDataPropName(storeName)] = '';
+        let map = new Store(root);
+        /** @type {any} */
+        (element)[Symbol.for(storePropName(storeName))] = map;
+        root.mount?.context?.stores.set(storeName, map);
+      } else {
+        delete element.dataset[storeDataPropName(oldValue)];
+        delete /** @type {any} */(element)[Symbol.for(storePropName(oldValue))];
+        root.mount?.context?.stores.delete(oldValue);
+        invalid = true;
+      }
+    }
+  }
+
+  if(bflags & flags.storeSet) {
+    let binding = /** @type {Binding} */(bindings.storeSet);
+    if(binding.dirty(changeset)) {
+      let args = binding.update(changeset);
+      if(args) {
+        let [storeName, key, value] = args;
+        let dataName = storeDataName(storeName);
+        let map = lookup(element, dataName, `[${dataName}]`, storePropName(storeName));
+        map?.set(key, value);
+      }
+      invalid = true;
     }
   }
 

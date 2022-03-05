@@ -52,6 +52,10 @@ export class Bindings {
     this.mount = null;
     /** @type {MultiBinding<string> | null} */
     this.prop = null;
+    /** @type {Binding | null} */
+    this.storeRoot = null;
+    /** @type {Binding | null} */
+    this.storeSet = null;
 
     /** @type {Map<string, Binding>} */
     this.custom = new Map();

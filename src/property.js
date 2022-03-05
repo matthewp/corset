@@ -10,7 +10,9 @@ export const flags = {
   attr: 1 << 6,
   data: 1 << 7,
   attach: 1 << 8,
-  behavior: 1 << 9
+  behavior: 1 << 9,
+  storeRoot: 1 << 10,
+  storeSet: 1 << 11
 };
 
 /**
@@ -220,4 +222,18 @@ export const properties = {
       return el.textContent;
     }
   },
+   /** @type {SimplePropertyDefinition} */
+  'store-root': {
+    flag: flags.storeRoot,
+    feat: 0,
+    prop: 'storeRoot',
+    read: () => null
+  },
+  /** @type {SimplePropertyDefinition} */
+  'store-set': {
+    flag: flags.storeSet,
+    feat: 0,
+    prop: 'storeSet',
+    read: () => null
+  }
 };

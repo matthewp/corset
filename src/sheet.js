@@ -36,6 +36,7 @@ export class Root {
     this.bindingMap = new Map();
     /** @type {(a: () => any) => any} */
     this.getCallback = this.mount ? this.mount.getCallback.bind(this.mount) : identity;
+
   }
   /**
    * @param {any[]} values

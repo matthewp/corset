@@ -4,6 +4,8 @@ import { anyValue, NO_VALUE } from './value.js';
 import { createValueTemplate } from './template.js';
 import { ComputedValue } from './compute.js';
 import { registry as behaviorRegistry } from './mount.js';
+import { lookup } from './scope.js';
+import { storeDataName, storePropName } from './store.js';
 
 /**
  * @typedef {import('./binding').Binding} Binding
@@ -99,7 +101,9 @@ class ScopeLookupFunction {
    * @param {string} propName
    */
    constructor(dataName, propName) {
+    /** @type {string} */
     this.dataPropName = 'data-corset-' + dataName;
+    /** @type {string} */
     this.dataSelector = '[' + this.dataPropName + ']';
     /** @type {string} */
     this.propName = propName;
@@ -118,7 +122,7 @@ class ScopeLookupFunction {
     let check = false;
     if(changeset.selectors) check = true;
     if(check) {
-      let value = this.#get(element);
+      let value = lookup(element, this.dataPropName, this.dataSelector, this.propName);
       if(value !== this.value) {
         this.value = value;
         return true;
@@ -133,21 +137,6 @@ class ScopeLookupFunction {
   call() {
     return this.value;
   }
-  /**
-   * 
-   * @param {Element} element 
-   * @returns 
-   */
-  #get(element) {
-    /** @type {Element | null} */
-    let el = element;
-    do {
-      if(el.hasAttribute(this.dataPropName)) {
-        return /** @type {any} */(el)[Symbol.for(this.propName)];
-      }
-      el = element.closest(this.dataSelector);
-    } while(el);
-  }
 }
 
 registerFunction.call(registry, 'item', class extends ScopeLookupFunction {
@@ -159,6 +148,71 @@ registerFunction.call(registry, 'item', class extends ScopeLookupFunction {
 registerFunction.call(registry, 'index', class extends ScopeLookupFunction {
   constructor() {
     super('index', 'corsetIndex');
+  }
+});
+
+registerFunction.call(registry, 'store-get', class {
+  constructor() {
+    /** @type {any} */
+    this.value = undefined;
+  }
+  /**
+   * 
+   * @param {[string, string]} _args
+   * @param {Map<string, any>} _props
+   * @param {FunctionContext} param1
+   * @param {Changeset} changeset
+   * @returns {boolean}
+   */
+  check([storeName, key], _props, { element }, changeset) {
+    let check = changeset.selectors;
+    if(check) {
+      let dataName = storeDataName(storeName);
+      /** @type {Map<string, any> | undefined} */
+      let map = lookup(element, dataName, `[${dataName}]`, storePropName(storeName));
+      if(map?.get(key) !== this.value) {
+        this.value = map?.get(key);
+        return true;
+      }
+    }
+    return false;
+  }
+  call() {
+    return this.value;
+  }
+});
+
+registerFunction.call(registry, 'store', class {
+  constructor() {
+    /** @type {Map<any, any> | undefined} */
+    this.map = undefined;
+  }
+  /**
+   * 
+   * @param {[string]} _args
+   * @param {Map<string, any>} _props
+   * @param {FunctionContext} param1
+   * @param {Changeset} changeset
+   * @returns {boolean}
+   */
+   check([storeName], _props, { element }, changeset) {
+    let check = changeset.selectors;
+    if(check) {
+      let dataName = storeDataName(storeName);
+      /** @type {Map<any, any> | undefined} */
+      let map = lookup(element, dataName, `[${dataName}]`, storePropName(storeName));
+      if(map !== this.map) {
+        this.map = map;
+        return true;
+      }
+    }
+    return false;
+  }
+  /**
+   * @returns {Map<any, any> | undefined}
+   */
+  call() {
+    return this.map;
   }
 });
 
