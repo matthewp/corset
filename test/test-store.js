@@ -141,3 +141,49 @@ QUnit.test('Store is immediately available on the root', assert => {
   `.update(root);
   assert.equal(root.firstElementChild.dataset.foo, 'true');
 });
+
+QUnit.test('Store is immediate available in child behavior', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="movies"></div>`;
+
+  let next;
+
+  class Fetch {
+    static inputProperties = ['--store'];
+    constructor(props) {
+      let store = props.get('--store');
+      store.set('state', 'pending');
+      next = () => store.set('state', 'resolved');
+    }
+    bind() { return sheet``; }
+  }
+
+  mount(root, class {
+    bind() {
+      return sheet`
+        #movies {
+          store-root: request;
+          --store: store(request);
+          behavior: mount(${Fetch});
+          --fetch-state: store-get(request, state);
+          class-toggle[--fetch-state]: true;
+        }
+
+        #movies.pending {
+          text: "Loading movies";
+        }
+
+        #movies.resolved {
+          text: "Resolved";
+        }
+      `;
+    }
+  });
+
+  let el = root.firstElementChild;
+  assert.equal(el.className, 'pending');
+  assert.equal(el.textContent, 'Loading movies');
+  next();
+  assert.equal(el.className, 'resolved');
+  assert.equal(el.textContent, 'Resolved');
+});
