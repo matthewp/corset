@@ -5,7 +5,7 @@ import { createValueTemplate } from './template.js';
 import { ComputedValue } from './compute.js';
 import { registry as behaviorRegistry } from './mount.js';
 import { lookup } from './scope.js';
-import { storeDataName, storeDataPropName, storePropName } from './store.js';
+import { storeDataName, storePropName } from './store.js';
 
 /**
  * @typedef {import('./binding').Binding} Binding
@@ -122,7 +122,7 @@ class ScopeLookupFunction {
     let check = false;
     if(changeset.selectors) check = true;
     if(check) {
-      let value = this.#get(element);
+      let value = lookup(element, this.dataPropName, this.dataSelector, this.propName);
       if(value !== this.value) {
         this.value = value;
         return true;
@@ -136,21 +136,6 @@ class ScopeLookupFunction {
    */
   call() {
     return this.value;
-  }
-  /**
-   * 
-   * @param {Element} element 
-   * @returns 
-   */
-  #get(element) {
-    /** @type {Element | null} */
-    let el = element;
-    do {
-      if(el.hasAttribute(this.dataPropName)) {
-        return /** @type {any} */(el)[Symbol.for(this.propName)];
-      }
-      el = element.closest(this.dataSelector);
-    } while(el);
   }
 }
 

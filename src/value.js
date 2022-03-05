@@ -1,4 +1,5 @@
 // @ts-check
+import { lookup } from './scope.js';
 
 /**
  * @typedef {import('./binding').Binding} Binding
@@ -127,15 +128,7 @@ export class PlaceholderValue {
     let dataName = 'prop-' + propName.substr(2);
     let dataPropName = 'data-corset-' + dataName;
     let dataSelector = '[' + dataPropName + ']';
-    /** @type {Element | null} */
-    let el = element;
-    do {
-      if(el.hasAttribute(dataPropName)) {
-        let scope = /** @type {any} */ (el)[Symbol.for(propName)];
-        return scope;
-      }
-      el = element.closest(dataSelector);
-    } while(el);
+    return lookup(element, dataPropName, dataSelector, propName);
   }
   get() {
     return this.value;
