@@ -125,7 +125,7 @@ export class PlaceholderValue {
    */
   #get(args, { element }) {
     let [propName] = args;
-    let dataName = 'prop-' + propName.substr(2);
+    let dataName = 'prop-' + propName.slice(2);
     let dataPropName = 'data-corset-' + dataName;
     let dataSelector = '[' + dataPropName + ']';
     return lookup(element, dataPropName, dataSelector, propName);
