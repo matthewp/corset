@@ -74,8 +74,8 @@ function render(element, bindings, root, changeset) {
         delete element.dataset[storeDataPropName(oldValue)];
         delete /** @type {any} */(element)[Symbol.for(storePropName(oldValue))];
         root.mount?.context?.stores.delete(oldValue);
-        invalid = true;
       }
+      invalid = true;
     }
   }
 
