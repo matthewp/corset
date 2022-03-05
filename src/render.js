@@ -36,25 +36,6 @@ function render(element, bindings, root, changeset) {
   let invalid = false;
   let bflags = bindings.flags;
 
-  if(bflags & flags.custom) {
-    if(!(element instanceof HTMLElement)) {
-      throw new Error('Custom properties cannot be used on non-HTML elements.');
-    }
-
-    for(let [propertyName, binding] of bindings.custom) {
-      if(binding.dirty(changeset)) {
-        binding.update(changeset);
-        let value = binding.getList();
-        element.dataset[datasetPropKey(propertyName)] = '';
-        /** @type {any} */
-        (element)[Symbol.for(propertyName)] = {
-          value,
-          compute: binding.compute
-        };
-      }
-    }
-  }
-
   if(bflags & flags.storeRoot) {
     if(!(element instanceof HTMLElement)) {
       throw new Error('Stores cannot be used on non-HTML elements.');
@@ -76,6 +57,25 @@ function render(element, bindings, root, changeset) {
         root.mount?.context?.stores.delete(oldValue);
       }
       invalid = true;
+    }
+  }
+
+  if(bflags & flags.custom) {
+    if(!(element instanceof HTMLElement)) {
+      throw new Error('Custom properties cannot be used on non-HTML elements.');
+    }
+
+    for(let [propertyName, binding] of bindings.custom) {
+      if(binding.dirty(changeset)) {
+        binding.update(changeset);
+        let value = binding.getList();
+        element.dataset[datasetPropKey(propertyName)] = '';
+        /** @type {any} */
+        (element)[Symbol.for(propertyName)] = {
+          value,
+          compute: binding.compute
+        };
+      }
     }
   }
 
