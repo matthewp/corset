@@ -1,5 +1,15 @@
 # corset
 
+## 0.9.3
+
+### Patch Changes
+
+- fb1a0cf: Adds `createStore` to the function context
+
+  This is a new function `creatStore(): Store`, provided to functions, that allow them to create new stores that are scoped to the sheet they are called within.
+
+  This is meant to allow custom functions to asynchronously change values and have that reflect in bindings.
+
 ## 0.9.2
 
 ### Patch Changes
