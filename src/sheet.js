@@ -36,18 +36,25 @@ export class Root {
     this.bindingMap = new Map();
     /** @type {(a: () => any) => any} */
     this.getCallback = this.mount ? this.mount.getCallback.bind(this.mount) : identity;
-
+    /** @type {any[]} */
+    this.values = /** @type {any[]} */(/** @type {unknown} */(null));
+    /** @type {number} */
+    this.queue = 0;
   }
   /**
    * @param {any[]} values
    */
-  update(values) {
+  update(values = this.values) {
+    this.values = values;
+    this.queue++;
+    if(this.queue > 1) return;
     let invalid = true;
     while(invalid) {
       let changeset = new Changeset(values);
       this.collect();
       invalid = renderRoot(this.bindingMap, this, changeset);
     }
+    this.queue = 0;
   }
   /**
    * Collect all of the bindings
@@ -61,7 +68,7 @@ export class Root {
         if(this.bindingMap.has(el)) {
           bindings = /** @type {Bindings} */(this.bindingMap.get(el));
         } else {
-          bindings = new Bindings(rootElement, el);
+          bindings = new Bindings(this, el);
           this.bindingMap.set(el, bindings);
         }
         for(let declaration of rule.declarations) {

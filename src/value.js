@@ -1,10 +1,12 @@
 // @ts-check
 import { lookup } from './scope.js';
+import { Store } from './store.js';
 
 /**
  * @typedef {import('./binding').Binding} Binding
  * @typedef {import('./changeset').Changeset} Changeset
  * @typedef {import('./compute').ComputedValue} ComputedValue
+ * @typedef {import('./function').FunctionContext} FunctionContext
  * @typedef {import('./types').Value} Value
  * @typedef {import('./types').ValueType} ValueType
  * @typedef {import('./function').ICorsetFunctionClass} ICorsetFunctionClass
@@ -150,19 +152,30 @@ export const functionValue = (CorsetFunction) => {
   class FunctionValue {
     static inputProperties = CorsetFunction.inputProperties;
 
-    constructor() {
+    /**
+     * @param {Binding} binding
+     */
+    constructor(binding) {
+      /** @type {FunctionContext} */
+      this.context = Object.create(binding, {
+        createStore: {
+          value() {
+            return new Store(binding.root, false);
+          }
+        }
+      });
       /** @type {ICorsetFunction} */
       this.fn = new CorsetFunction();
     }
     /**
      * 
      * @param {any[]} args 
-     * @param {Binding} binding 
+     * @param {Binding} _binding 
      * @param {Map<string, any> | null} props
      * @returns {any}
      */
-    get(args, binding, props) {
-      return callValue.call(this.fn, args, props, binding);
+    get(args, _binding, props) {
+      return callValue.call(this.fn, args, props, this.context);
     }
   }
 
@@ -171,12 +184,12 @@ export const functionValue = (CorsetFunction) => {
     /**
      * 
      * @param {any[]} args 
-     * @param {Binding} binding 
+     * @param {Binding} _binding 
      * @param {Map<string, any> | null} props
      * @param {Changeset} changeset
      */
-    FunctionValue.prototype.check = function(args, binding, props, changeset) {
-      return checkValue.call(this.fn, args, props, binding, changeset);
+    FunctionValue.prototype.check = function(args, _binding, props, changeset) {
+      return checkValue.call(this.fn, args, props, this.context, changeset);
     };
   }
 

@@ -1,22 +1,37 @@
 // @ts-check
 import { pascalCase } from './custom-prop.js';
 
+export const getKeySymbol = Symbol.for('corset.getKey');
+
 /**
  * @typedef {import('./sheet').Root} Root
  */
 
 export class Store extends Map {
+  /** @type {() => any} */
+  #update;
   /**
    * 
    * @param {Root} root 
    */
-  constructor(root) {
+  constructor(root, updateMount = true) {
     super();
     /** @type {Root} */
     this.root = root;
+    /** @type {() => any} */
+    this.#update = updateMount ?
+      this.root.mount ?
+      this.root.mount.update.bind(this.root.mount) :
+      /** @type {() => void} */(Function.prototype) :
+      this.root.update.bind(this.root)
   }
-  rebind() {
-    this.root.mount?.update();
+  /**
+   * 
+   * @param {any} key
+   * @returns {any}
+   */
+  [getKeySymbol](key) {
+    return this.get(key);
   }
   /**
    * 
@@ -26,7 +41,7 @@ export class Store extends Map {
    */
   set(k, v) {
     super.set(k, v);
-    this.rebind();
+    this.#update();
     return this;
   }
 }

@@ -6,7 +6,7 @@ import { properties } from './property.js';
 /**
  * @typedef {import('./property').PropertyDefinition} PropertyDefinition
  * @typedef {import('./property').SimplePropertyDefinition} SimplePropertyDefinition
- * @typedef {import('./types').RootElement} RootElement
+ * @typedef {import('./sheet').Root} Root
  */
 
 export class SimpleBinding extends Binding {
@@ -14,7 +14,7 @@ export class SimpleBinding extends Binding {
    * 
    * @param {SimplePropertyDefinition} defn
    * @param {string} propName 
-   * @param {[RootElement, Element]} args 
+   * @param {[Root, Element]} args 
    */
   constructor(defn, propName, ...args) {
     super(propName, ...args);
