@@ -138,7 +138,7 @@ export class ComputedValue {
  * @returns {Value}
  */
 function hydrate(compute, template) {
-  let value = new template.Value();
+  let value = new template.Value(compute.binding);
   for(let dep of template.deps) {
     compute.argDeps.push(new ComputedValue(dep, compute.binding));
   }

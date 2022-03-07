@@ -7,7 +7,7 @@ type DeclaredInputProperties = string[];
 
 export interface ValueType {
   inputProperties?: DeclaredInputProperties;
-  new(...args: Value[]): Value;
+  new(binding: Binding): Value;
 }
 
 interface BaseValue {

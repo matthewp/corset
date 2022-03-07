@@ -5,7 +5,7 @@ import { createValueTemplate } from './template.js';
 import { ComputedValue } from './compute.js';
 import { registry as behaviorRegistry } from './mount.js';
 import { lookup } from './scope.js';
-import { storeDataName, storePropName } from './store.js';
+import { storeDataName, storePropName, getKeySymbol } from './store.js';
 
 /**
  * @typedef {import('./binding').Binding} Binding
@@ -66,16 +66,35 @@ export function registerCustomFunction(name, ctr) {
 }
 
 registerFunction.call(registry, 'get', class {
+  constructor() {
+    this.value = NO_VALUE;
+  }
+  /**
+   *
+   * @param {[{[key: string | symbol]: any}, CallbackOrProp]} args
+   * @returns
+   */
+  check([value, callbackOrProp]) {
+    if(typeof value === 'object' && getKeySymbol in value &&
+      typeof callbackOrProp !== 'function' &&
+      value[getKeySymbol](callbackOrProp) !== this.value) {
+      this.value = value[getKeySymbol](callbackOrProp);
+      return true;
+    }
+    return false;
+  }
   /**
    * 
    * @typedef {((o: {}) => any) | string} CallbackOrProp
    * 
-   * @param {[{[key: string]: any}, CallbackOrProp]} args 
+   * @param {[{[key: string | symbol]: any}, CallbackOrProp]} args
    * @returns {any}
    */
   call([value, callbackOrProp]) {
     if(typeof callbackOrProp === 'function') {
       return callbackOrProp(value);
+    } else if(getKeySymbol in value) {
+      return value[getKeySymbol](callbackOrProp);
     } else {
       return value[callbackOrProp];
     }
@@ -290,9 +309,9 @@ registerFunction.call(registry, 'mount', class {
       this.Behavior = Behavior;
       this.compute = new ComputedValue(
         template,
-        // A FunctionContext is actually a Binding at runtime. If this ever changes,
-        // the following will be a wrong cast.
-        /** @type {Binding} */(context)
+        // A FunctionContext's prototype is actually a Binding at runtime.
+        // If this ever changes, the following will be a wrong cast.
+        /** @type {Binding} */(Object.getPrototypeOf(context))
       );
       this.compute.check(changeset);
       this.value = /** @type {MountValue} */

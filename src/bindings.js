@@ -14,6 +14,7 @@ import { flags, properties } from './property.js';
  * @typedef {import('./property').ShorthandPropertyDefinition} ShorthandPropertyDefinition
  * @typedef {import('./property').BehaviorMultiPropertyDefinition} BehaviorMultiPropertyDefinition
  * @typedef {import('./property').LonghandPropertyDefinition} LonghandPropertyDefinition
+ * @typedef {import('./sheet').Root} Root
  * @typedef {import('./types').RootElement} RootElement
  */
 
@@ -21,12 +22,11 @@ import { flags, properties } from './property.js';
 export class Bindings {
   /**
    * Create bindings for a specific element.
-   * @param {RootElement} rootElement 
-   * @param {Element} element 
+   * @param {Root} root
+   * @param {Element} element
    */
-  constructor(rootElement, element) {
-    /** @type {RootElement} */
-    this.rootElement = rootElement;
+  constructor(root, element) {
+    this.root = root;
     /** @type {Element} */
     this.element = element;
     /** @type {WeakSet<Declaration>} */
@@ -87,7 +87,7 @@ export class Bindings {
       if(multiDef) {
         if(!this[multiDef.prop]) {
           this[multiDef.prop] = /** @type {MultiBinding<string> & MultiBinding<any[]> & MultiBinding<MountedBehaviorType>} */
-          (new MultiBinding(multiDef, propName, this.rootElement, this.element));
+          (new MultiBinding(multiDef, propName, this.root, this.element));
         }
 
         let kb = /** @type {MultiBinding<any>} */(this[multiDef.prop]);
@@ -120,12 +120,12 @@ export class Bindings {
     let bindingProp = defn ? defn.prop : propertyName;
     if(!defn) {
       if(!this.custom.has(propertyName)) {
-        let binding = new Binding(propertyName, this.rootElement, this.element);
+        let binding = new Binding(propertyName, this.root, this.element);
         this.custom.set(propertyName, binding);
       }
       return /** @type {Binding} */(this.custom.get(propertyName));
     } else if(! /** @type {any} */(this)[bindingProp]) {
-      let binding = new SimpleBinding(defn, propertyName, this.rootElement, this.element);
+      let binding = new SimpleBinding(defn, propertyName, this.root, this.element);
       /** @type {any} */(this)[bindingProp] = binding;
     }
     return /** @type {any} */(this)[bindingProp];
