@@ -104,12 +104,14 @@ export class Mountpoint {
 /**
  * 
  * @param {HTMLElement | Document} element 
- * @param {MountedBehaviorType} behavior 
- * @returns {void}
+ * @param {MountedBehaviorType} behavior
+ * @param {Map<string, any>} props
+ * @returns {Mountpoint}
  */
-export function mount(element, behavior) {
-  let mp = new Mountpoint(element, behavior, null);
+export function mount(element, behavior, props) {
+  let mp = new Mountpoint(element, behavior, props);
   mp.update();
+  return mp;
 }
 
 /**
