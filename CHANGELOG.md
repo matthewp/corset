@@ -1,5 +1,15 @@
 # corset
 
+## 1.0.0
+
+### Major Changes
+
+- 35f6cea: 1.0 Release
+
+  The first major release of Corset establishes the current featureset as the stable APIs to build upon.
+
+  No new features in this release, just closing off what was build in 0.8 and 0.9.
+
 ## 0.9.3
 
 ### Patch Changes
