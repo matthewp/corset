@@ -1,5 +1,11 @@
 # corset
 
+## 1.0.1
+
+### Patch Changes
+
+- 37fa1ef: Fixes the package.json main
+
 ## 1.0.0
 
 ### Major Changes
