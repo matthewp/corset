@@ -1,9 +1,9 @@
 {
   "name": "corset",
   "version": "1.0.0",
-  "description": "",
+  "description": "Declarative DOM binding, without the complexity of JSX/templates.",
   "type": "module",
-  "main": "./lib/main.cjs",
+  "main": "./lib/main.js",
   "exports": {
     "default": "./lib/main.js"
   },
