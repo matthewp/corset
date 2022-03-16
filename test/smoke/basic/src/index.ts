@@ -8,4 +8,4 @@ mount(document, class {
             }
         `;
     }
-}, new Map);
+});

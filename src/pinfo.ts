@@ -1,6 +1,5 @@
-import { ValueTemplate } from './template';
 
-type PropertyPropName = 'attr' |
+export type PropertyPropName = 'attr' |
   'attrValue' |
   'attrToggle' |
   'attachTemplate' |
@@ -89,6 +88,3 @@ export declare const flags: Record<
 type featureNames = 'keyed' | 'multi' | 'oldValues' | 'longhand' | 'behavior';
 
 export declare const features: Record<featureNames, number>;
-
-export declare function hasFeatures(defn: PropertyDefinition | undefined,
-  ...feat: featureNames[]);

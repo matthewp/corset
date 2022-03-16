@@ -16,12 +16,12 @@ export const flags = {
 };
 
 /**
- * @typedef {import('./property').PropertyDefinition} PropertyDefinition
- * @typedef {import('./property').SimplePropertyDefinition} SimplePropertyDefinition
- * @typedef {import('./property').ShorthandPropertyDefinition} ShorthandPropertyDefinition
- * @typedef {import('./property').LonghandPropertyDefinition} LonghandPropertyDefinition
- * @typedef {import('./property').KeyedMultiPropertyDefinition} KeyedMultiPropertyDefinition
- * @typedef {import('./property').BehaviorMultiPropertyDefinition} BehaviorMultiPropertyDefinition
+ * @typedef {import('./pinfo').PropertyDefinition} PropertyDefinition
+ * @typedef {import('./pinfo').SimplePropertyDefinition} SimplePropertyDefinition
+ * @typedef {import('./pinfo').ShorthandPropertyDefinition} ShorthandPropertyDefinition
+ * @typedef {import('./pinfo').LonghandPropertyDefinition} LonghandPropertyDefinition
+ * @typedef {import('./pinfo').KeyedMultiPropertyDefinition} KeyedMultiPropertyDefinition
+ * @typedef {import('./pinfo').BehaviorMultiPropertyDefinition} BehaviorMultiPropertyDefinition
  */
 
  export const features = {
