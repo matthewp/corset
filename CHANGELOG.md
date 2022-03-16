@@ -1,5 +1,11 @@
 # corset
 
+## 1.0.2
+
+### Patch Changes
+
+- 3f62eae: Fixes typecheck errors
+
 ## 1.0.1
 
 ### Patch Changes
