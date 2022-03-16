@@ -128,10 +128,15 @@ jobs:
         run: |
           python3 -m http.server 7800 &
 
-      - name: Test
+      - name: Unit tests
         run: npm run test-qunit
         env:
           CI: true
+
+      - name: Smoke test tstsc
+        run: |
+          cd test/smoke/basic
+          npx tsc
 
   changelog:
     name: Changelog PR or Release
