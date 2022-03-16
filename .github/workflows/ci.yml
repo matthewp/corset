@@ -136,7 +136,7 @@ jobs:
       - name: Smoke test tstsc
         run: |
           cd test/smoke/basic
-          npx tsc
+          npx tsc -p test/smoke/basic/tsconfig.json
 
   changelog:
     name: Changelog PR or Release
