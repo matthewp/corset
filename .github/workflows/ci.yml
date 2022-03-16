@@ -133,9 +133,9 @@ jobs:
         env:
           CI: true
 
-      - name: Smoke test tstsc
+      - name: Smoke test tsc
         run: |
-          cd test/smoke/basic
+          ls lib
           npx tsc -p test/smoke/basic/tsconfig.json
 
   changelog:
