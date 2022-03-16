@@ -59,13 +59,13 @@ export class Mountpoint {
    * 
    * @param {HTMLElement | Document} rootElement 
    * @param {MountedBehaviorType} Behavior 
-   * @param {Map<string, any> | null} props
+   * @param {Map<string, any> | undefined} props
    */
   constructor(rootElement, Behavior, props) {
     /** @type {HTMLElement | Document} */
     this.rootElement = rootElement;
     /** @type {Map<string, any> | null} */
-    this.props = props;
+    this.props = props || null;
     /** @type {BehaviorContext} */
     this.context = new BehaviorContext(this);
     /** @type {MountedBehavior} */
@@ -105,7 +105,7 @@ export class Mountpoint {
  * 
  * @param {HTMLElement | Document} element 
  * @param {MountedBehaviorType} behavior
- * @param {Map<string, any>} props
+ * @param {Map<string, any>} [props]
  * @returns {Mountpoint}
  */
 export function mount(element, behavior, props) {

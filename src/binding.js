@@ -9,7 +9,7 @@ import { NO_VALUE } from './value.js';
  * @typedef {import('./property').PropertyDefinition} PropertyDefinition
  * @typedef {import('./property').ShorthandPropertyDefinition} ShorthandPropertyDefinition
  * @typedef {import('./property').LonghandPropertyDefinition} LonghandPropertyDefinition
- * @typedef {import('./property').PropertyPropName} PropertyPropName
+ * @typedef {import('./pinfo').PropertyPropName} PropertyPropName
  * @typedef {import('./sheet').Root} Root
  * @typedef {import('./types').RootElement} RootElement
  */
