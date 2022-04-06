@@ -248,3 +248,23 @@ QUnit.test('Options work in shorthand keyed syntax', assert => {
   assert.equal(count1, 1);
   assert.equal(count2, 1);
 });
+
+QUnit.only('Event can be labeled', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="one"></div>`;
+  let count = 0;
+  let cb = () => count++;
+  sheet`
+    #one {
+      event: [name] one ${cb};
+    }
+
+    #one {
+      event-once: [name] true;
+    }
+  `.update(root);
+  root.firstElementChild.dispatchEvent(new Event('one'));
+  assert.equal(count, 1);
+  root.firstElementChild.dispatchEvent(new Event('one'));
+  assert.equal(count, 1);
+});

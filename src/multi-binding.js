@@ -2,6 +2,7 @@
 import { Binding } from './binding.js';
 import { ComputedValue } from './compute.js';
 import { flags as declFlags } from './declaration.js';
+import { Label } from './label.js';
 import { properties, features } from './property.js';
 import { SparseArray } from './sparse-array.js';
 import { createValueTemplate } from './template.js';
@@ -31,7 +32,11 @@ import { SpaceSeparatedListValue } from './value.js';
 }
 
 /**
- * @template {string | Array<any> | MountedBehaviorType} K
+ * @typedef {string | Label | null | MountedBehaviorType} MultiBindingKey
+ */
+
+/**
+ * @template {string | Label | Array<any> | MountedBehaviorType} K
  */
 export class MultiBinding extends Binding {
   /**
@@ -51,11 +56,11 @@ export class MultiBinding extends Binding {
     /** @type {number} */
     this.numberOfValuesWithKey = this.numberOfValues + (defn.keyed ? 1 : 0);
 
-    /** @type {Set<string | null | MountedBehaviorType>} */
+    /** @type {Set<MultiBindingKey>} */
     this.active = new Set();
-    /** @type {Map<string | null | MountedBehaviorType, readonly any[]>} */
+    /** @type {Map<MultiBindingKey, readonly any[]>} */
     this.initial = new Map();
-    /** @type {Map<string | null | MountedBehaviorType, any[]> | null} */
+    /** @type {Map<MultiBindingKey, any[]> | null} */
     this.oldValues = /** @type {KeyedMultiPropertyDefinition} */(defn).oldValues
       ? new Map() : null;
   }
@@ -77,6 +82,10 @@ export class MultiBinding extends Binding {
       case declFlags.multi | declFlags.shorthand:
       // behavior: mount(Behavior)
       case declFlags.multi | declFlags.behavior:
+      // event: [label] type callback
+      case declFlags.multi | declFlags.shorthand | declFlags.label:
+      // event-once: [label] true
+      case declFlags.longhand | declFlags.label:
       // class-toggle: one "one", two "two"
       case declFlags.multi:
       // each: ${items} select(template)
@@ -116,10 +125,10 @@ export class MultiBinding extends Binding {
      * @typedef {SparseArray<K extends string ? K : null>} KeyedSparseArray
      */
 
-    /** @type {Map<string | null, KeyedSparseArray>} */
+    /** @type {Map<string | Label | null, KeyedSparseArray>} */
     let valueMap = new Map();
 
-    /** @type {Set<string | null>} */
+    /** @type {Set<string | Label | null>} */
     let dirtyKeys = new Set();
 
     let i = sorted.length;
@@ -140,12 +149,28 @@ export class MultiBinding extends Binding {
           // class-toggle: one "one", two "two"
           case declFlags.multi: {
             for(let values of /** @type {[K, ...any[]][]} */(computedValue)) {
-              let key = /** @type {string} */(values[0]);
+              let key = /** @type {string | Label} */(values[0]);
               this.#bookkeep(active, key);
               let allValues = this.#appendToValues(key, values);
               yield [allValues, dirty];
               if(this.oldValues)
                 this.oldValues.set(key, allValues.slice(1, this.numberOfValues + 1));
+            }
+            break loop;
+          }
+          // event: [label] type callback, [another-label] type callback
+          case declFlags.multi | declFlags.shorthand | declFlags.label: {
+            for(let values of /** @type {[K, ...any[]][]} */(computedValue)) {
+              let key = /** @type {string | Label} */(values[0]);
+              if(!Label.isLabel(key))
+                key = Label.for('corset.default.' + key);
+              else
+                values = /** @type {[K, ...any[]]} */(values.slice(1));
+              this.#bookkeep(active, key);
+              let allValues = this.#appendToValues(key, values);
+              yield [allValues, dirty];
+              if(this.oldValues)
+                this.oldValues.set(key, allValues.slice(0, this.numberOfValues + 1));
             }
             break loop;
           }
@@ -162,6 +187,7 @@ export class MultiBinding extends Binding {
           }
           // attr[type]: "text"
           case declFlags.multi | declFlags.shorthand | declFlags.keyed: {
+            console.warn('Keyed properties have been deprecated.');
             let key = computedValue[0];
             this.#bookkeep(active, key);
             let allValues = this.#appendToValues(key, computedValue);
@@ -172,15 +198,22 @@ export class MultiBinding extends Binding {
           
           // attr-value[type]: "text"
           case declFlags.longhand | declFlags.keyed:
+          case declFlags.longhand | declFlags.label:
           // each-items: ${items};
           case declFlags.longhand: {
+            if(declaration.flags === (declFlags.longhand | declFlags.keyed)) {
+              console.warn('Keyed properties have been deprecated.');
+            }
+
             let keyed = !!(declaration.flags & declFlags.keyed);
+            let label = !!(declaration.flags & declFlags.label);
+            let hasLabel = label && Label.isLabel(computedValue[0]);
             /** @type {number} */
             let numOfValues = this.numberOfValues;
-            /** @type {string | null} */
-            let key = keyed ? computedValue[0] : null;
+            /** @type {string | Label | null} */
+            let key = keyed ? computedValue[0] : label ? hasLabel ? computedValue[0] : Label.for('corset.default' + computedValue[0]) : null;
             /** @type {any} */
-            let propValue = keyed ? computedValue[1] : computedValue[0];
+            let propValue = keyed ? computedValue[1] : label ? hasLabel ? computedValue[1] : computedValue[0] : computedValue[0];
 
             this.#bookkeep(active, key);
             /** @type {KeyedSparseArray} */
@@ -215,6 +248,7 @@ export class MultiBinding extends Binding {
           }
           // class-toggle[disabled]: true
           case declFlags.keyed | declFlags.multi: {
+            console.warn('Keyed properties have been deprecated.');
             let key = computedValue[0];
             this.#bookkeep(active, key);
             let allValues = this.#appendToValues(key, computedValue);
@@ -295,7 +329,7 @@ export class MultiBinding extends Binding {
   }
   /**
    * 
-   * @param {string | MountedBehaviorType} key 
+   * @param {string | Label | MountedBehaviorType} key 
    */
   #setInitials(key) {
     if(!this.initial.has(key)) {
@@ -321,8 +355,8 @@ export class MultiBinding extends Binding {
   }
   /**
    * 
-   * @param {Set<string | null | MountedBehaviorType>} active 
-   * @param {string | null | MountedBehaviorType} key 
+   * @param {Set<MultiBindingKey>} active 
+   * @param {MultiBindingKey} key 
    */
   #bookkeep(active, key) {
     active.delete(key);
@@ -330,7 +364,7 @@ export class MultiBinding extends Binding {
     this.active.add(key);
   }
   /**
-   * @param {string | null | MountedBehaviorType} key
+   * @param {MultiBindingKey} key
    * @param {[K, ...any[]]} values 
    * @param {boolean} keyed
    * @returns {[K, ...any[]]}

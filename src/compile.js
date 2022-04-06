@@ -32,6 +32,7 @@ import {
 } from './function.js';
 import { properties, features } from './property.js';
 import { createValueTemplate } from './template.js';
+import { Label } from './label.js';
 
 /**
  * @typedef {import('./property').PropertyDefinition} PropertyDefinition
@@ -113,6 +114,9 @@ function getValue(ptr) {
     case 6: {
       return createValueTemplate(anyValue(Boolean(mem32[ptrv32])));
     }
+    case 7: {
+      return createValueTemplate(anyValue(Label.for(readString(mem32[ptrv32], mem32[ptrv32 + 1]))))
+    }
     default: {
       throw new Error(`Unknown value type [${valueType}]`);
     }
@@ -179,10 +183,12 @@ function compile(strings, values) {
           args.push(createValueTemplate(SpaceSeparatedListValue, _args));
         }
 
-        let declaration = new Declaration(/** @type {Rule} */(rule), propName, sourceOrder++);
+        //let declaration = new Declaration(/** @type {Rule} */(rule), propName, sourceOrder++);
+        /** @type {ValueTemplate} */
+        let template;
         switch(true) {
           case !!(defn?.feat & features.multi): {
-            declaration.template = createValueTemplate(CommaSeparatedListValue, args);
+            template = createValueTemplate(CommaSeparatedListValue, args);
             break;
           }
           case !!((defn?.feat & features.keyed) && (defn?.feat & features.longhand)) && !key: {
@@ -190,14 +196,16 @@ function compile(strings, values) {
           }
           case !!(defn?.feat & features.longhand) || num > 1: {
             let Value = commaSeparated ? CommaSeparatedListValue : SpaceSeparatedListValue;
-            declaration.template = createValueTemplate(Value, args);
+            template = createValueTemplate(Value, args);
             break;
           }
           default: {
-            declaration.template = args[0];
+            template = args[0];
             break;
           }
         }
+
+        let declaration = new Declaration(/** @type {Rule} */(rule), propName, sourceOrder++, template);
 
         if(key) {
           declaration.key = key;

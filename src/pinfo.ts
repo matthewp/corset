@@ -25,25 +25,31 @@ type ReadUnkeyedValue = (element: Element) => any;
 export interface KeyedMultiPropertyDefinition extends BasePropertyDefinition {
   keyed: true;
   multi: true;
+  labeled?: false;
   read: ReadKeyedValue;
   oldValues?: boolean;
   longhand?: never;
+  shorthand?: never;
   prop: 'classToggle' | 'data' | 'prop';
 }
 
 export interface BehaviorMultiPropertyDefinition extends BasePropertyDefinition {
   keyed: false;
   multi: true;
+  labeled?: false;
   oldValues: boolean;
   longhand?: never;
   prop: 'behavior';
   read?: never;
+  shorthand?: never;
 }
 
 export interface ShorthandPropertyDefinition extends BasePropertyDefinition {
+  shorthand?: never;
   longhand: string[];
   prop: 'each' | 'attr' | 'event';
   defaults: any[];
+  labeled?: boolean;
   keyed?: boolean;
   multi?: boolean;
   oldValues?: boolean;
@@ -53,13 +59,20 @@ export interface LonghandPropertyDefinition extends BasePropertyDefinition {
   shorthand: string;
   index: number;
   keyed?: boolean;
+  labeled?: boolean;
   default: any;
   read: ReadKeyedValue;
+  multi?: never;
+  longhand?: never;
 }
 
 export interface SimplePropertyDefinition extends BasePropertyDefinition {
+  labeled?: false;
   read: ReadUnkeyedValue;
   prop: PropertyPropName;
+  shorthand?: never;
+  longhand?: never;
+  multi?: never;
 }
 
 export type PropertyDefinition = SimplePropertyDefinition

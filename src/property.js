@@ -111,7 +111,8 @@ export const properties = {
     feat: 0,
     prop: 'each',
     longhand: ['each-items', 'each-template', 'each-key'],
-    defaults: [[], {}, null]
+    defaults: [[], {}, null],
+    labeled: true,
   },
   'each-items': {
     flag: flags.each,
@@ -144,6 +145,7 @@ export const properties = {
     prop: 'event',
     multi: true,
     keyed: true,
+    labeled: true,
     oldValues: true,
     longhand: ['event-listener', 'event-capture', 'event-once', 'event-passive', 'event-signal'],
     defaults: [null, false, false, false, undefined]
@@ -154,6 +156,7 @@ export const properties = {
     shorthand: 'event',
     index: 0,
     keyed: true,
+    labeled: true,
     default: null,
     read: () => null
   },
@@ -163,15 +166,17 @@ export const properties = {
     shorthand: 'event',
     index: 1,
     keyed: true,
+    labeled: true,
     default: false,
     read: () => false
   },
   'event-once': {
     flag: flags.event,
-    feat: features.keyed | features.longhand,
+    feat: features.longhand,
     shorthand: 'event',
     index: 2,
     keyed: true,
+    labeled: true,
     default: false,
     read: () => false
   },
@@ -181,6 +186,7 @@ export const properties = {
     shorthand: 'event',
     index: 3,
     keyed: true,
+    labeled: true,
     default: false,
     read: () => false
   },
@@ -190,6 +196,7 @@ export const properties = {
     shorthand: 'event',
     index: 4,
     keyed: true,
+    labeled: true,
     default: undefined,
     read: () => undefined
   },

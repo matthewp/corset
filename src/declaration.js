@@ -1,3 +1,4 @@
+// @ts-check
 import { properties, features } from './property.js';
 
 /** @typedef {import('./rule').Rule} Rule */
@@ -6,15 +7,14 @@ import { properties, features } from './property.js';
 /** @typedef {import('./template').ValueTemplate} ValueTemplate */
 
 export class Declaration {
-  /** @type {ValueTemplate} */
-  template;
   /**
    * 
    * @param {Rule} rule 
    * @param {string} propertyName 
    * @param {number} sourceOrder
+   * @param {ValueTemplate} template
    */
-  constructor(rule, propertyName, sourceOrder) {
+  constructor(rule, propertyName, sourceOrder, template) {
     /** @type {Rule} */
     this.rule = rule;
     /** @type {string} */
@@ -25,6 +25,8 @@ export class Declaration {
     this.keyTemplate = null;
     /** @type {number} */
     this.sourceOrder = sourceOrder;
+    /** @type {ValueTemplate} */
+    this.template = template;
     /** @type {number} */
     this.flags = 0;
   }
@@ -38,6 +40,9 @@ export class Declaration {
       }
       if(this.key !== null) {
         this.flags |= flags.keyed;
+      }
+      if(defn.labeled) {
+        this.flags |= flags.label;
       }
       if(defn.shorthand) {
         this.flags |= flags.longhand;
@@ -55,5 +60,6 @@ export const flags = {
   longhand: 1 << 1,
   keyed: 1 << 2,
   multi: 1 << 3,
-  behavior: 1 << 4
+  behavior: 1 << 4,
+  label: 1 << 5,
 };
