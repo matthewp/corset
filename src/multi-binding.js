@@ -51,7 +51,7 @@ export class MultiBinding extends Binding {
 
     /** @type {number} */
     this.numberOfValues =
-    /** @type {ShorthandPropertyDefinition} */(defn).longhand?.length || 0;
+    /** @type {ShorthandPropertyDefinition} */(defn).longhand?.length || 2;
 
     /** @type {number} */
     this.numberOfValuesWithKey = this.numberOfValues + (defn.keyed ? 1 : 0);
@@ -84,8 +84,6 @@ export class MultiBinding extends Binding {
       case declFlags.multi | declFlags.behavior:
       // event: [label] type callback
       case declFlags.multi | declFlags.shorthand | declFlags.label:
-      // event-once: [label] true
-      case declFlags.longhand | declFlags.label:
       // class-toggle: one "one", two "two"
       case declFlags.multi:
       // each: ${items} select(template)
@@ -102,7 +100,9 @@ export class MultiBinding extends Binding {
         return this.addTemplate(declaration, template);
       }
       // each-items: ${items}
-      case declFlags.longhand: {
+      case declFlags.longhand:
+      // event-once: [label] true
+      case declFlags.longhand | declFlags.label: {
         let defn = /** @type {LonghandPropertyDefinition} */(properties[propName]);
         return this.addTemplate(declaration, declaration.template, defn.index);
       }
@@ -127,6 +127,24 @@ export class MultiBinding extends Binding {
 
     /** @type {Map<string | Label | null, KeyedSparseArray>} */
     let valueMap = new Map();
+    let getValueList =
+    /**
+     * 
+     * @param {string | Label | null} key 
+     * @param {number} numOfValues 
+     * @return {KeyedSparseArray}
+     */
+    function(key, numOfValues) {
+      /** @type {KeyedSparseArray} */
+      let valueList;
+      if(valueMap.has(key))
+        valueList = /** @type {KeyedSparseArray} */(valueMap.get(key));
+      else {
+        valueList = new SparseArray(numOfValues);
+        valueMap.set(key, valueList);
+      }
+      return valueList;
+    };
 
     /** @type {Set<string | Label | null>} */
     let dirtyKeys = new Set();
@@ -151,28 +169,45 @@ export class MultiBinding extends Binding {
             for(let values of /** @type {[K, ...any[]][]} */(computedValue)) {
               let key = /** @type {string | Label} */(values[0]);
               this.#bookkeep(active, key);
-              let allValues = this.#appendToValues(key, values);
-              yield [allValues, dirty];
-              if(this.oldValues)
-                this.oldValues.set(key, allValues.slice(1, this.numberOfValues + 1));
+              let idx = Label.isLabel(key) ? 1 : 0;
+              let valueList = getValueList(key, this.numberOfValues);
+              for(let i = 0; idx < values.length; i++, idx++) {
+                if(valueList.empty(i))
+                  valueList.set(i, values[idx]);
+              }
+              if(dirty) dirtyKeys.add(key);
+              //let allValues = this.#appendToValues(key, values);
+              //yield [allValues, dirty];
+              //if(this.oldValues)
+              //  this.oldValues.set(key, allValues.slice(1, this.numberOfValues + 1));
             }
-            break loop;
+            //break loop;
+            break;
           }
           // event: [label] type callback, [another-label] type callback
           case declFlags.multi | declFlags.shorthand | declFlags.label: {
             for(let values of /** @type {[K, ...any[]][]} */(computedValue)) {
               let key = /** @type {string | Label} */(values[0]);
-              if(!Label.isLabel(key))
+              if(!Label.isLabel(key)) {
                 key = Label.for('corset.default.' + key);
+              }
               else
                 values = /** @type {[K, ...any[]]} */(values.slice(1));
+
               this.#bookkeep(active, key);
-              let allValues = this.#appendToValues(key, values);
+              let valueList = getValueList(key, this.numberOfValues);
+              for(let i = 0; i < values.length; i++) {
+                if(valueList.empty(i))
+                  valueList.set(i, values[i]);
+              }
+              if(dirty) dirtyKeys.add(key);
+              /*let allValues = this.#appendToValues(key, values);
               yield [allValues, dirty];
               if(this.oldValues)
-                this.oldValues.set(key, allValues.slice(0, this.numberOfValues + 1));
+                this.oldValues.set(key, allValues.slice(0, this.numberOfValues + 1));*/
             }
-            break loop;
+            //break loop;
+            break;
           }
           // behavior: mount(Behavior)
           case declFlags.multi | declFlags.behavior: {
@@ -195,9 +230,16 @@ export class MultiBinding extends Binding {
             if(this.oldValues) this.oldValues.set(key, allValues.slice(1, this.numberOfValues + 1));
             break;
           }
+
+          /*
+          case declFlags.longhand | declFlags.label: {
+            break
+          }
+          */
           
           // attr-value[type]: "text"
           case declFlags.longhand | declFlags.keyed:
+          // event-once: [name] true;
           case declFlags.longhand | declFlags.label:
           // each-items: ${items};
           case declFlags.longhand: {
@@ -211,33 +253,28 @@ export class MultiBinding extends Binding {
             /** @type {number} */
             let numOfValues = this.numberOfValues;
             /** @type {string | Label | null} */
-            let key = keyed ? computedValue[0] : label ? hasLabel ? computedValue[0] : Label.for('corset.default' + computedValue[0]) : null;
+            let key = keyed ? computedValue[0] : label ? hasLabel ? computedValue[0] : Label.for('corset.default.' + computedValue[0]) : null;
             /** @type {any} */
-            let propValue = keyed ? computedValue[1] : label ? hasLabel ? computedValue[1] : computedValue[0] : computedValue[0];
+            let propValue = keyed ? computedValue[0] : computedValue[1];
 
             this.#bookkeep(active, key);
-            /** @type {KeyedSparseArray} */
-            let valueList;
-            if(valueMap.has(key))
-              valueList = /** @type {KeyedSparseArray} */(valueMap.get(key));
-            else {
-              valueList = new SparseArray(numOfValues);
-              valueMap.set(key, valueList);
-            }
+            let valueList = getValueList(key, numOfValues);
+            if(!hasLabel && valueList.empty(0))
+              valueList.set(0, computedValue[0]);
             if(valueList.empty(compute.index)) {
               valueList.set(compute.index, propValue);
 
-              if(valueList.full()) {
-                if(this.oldValues) this.oldValues.set(key, Array.from(valueList));
-                if(key) valueList.unshift(key);
-                yield [
-                  /** @type {[K, ...any[]]} */(/** @type {unknown} */(valueList)),
-                  dirty || dirtyKeys.has(key)
-                ];
-                valueMap.delete(key);
-                dirtyKeys.delete(key);
-                break;
-              }
+              // if(valueList.full()) {
+              //   if(this.oldValues) this.oldValues.set(key, Array.from(valueList));
+              //   if(key) valueList.unshift(key);
+              //   yield [
+              //     /** @type {[K, ...any[]]} */(/** @type {unknown} */(valueList)),
+              //     dirty || dirtyKeys.has(key)
+              //   ];
+              //   valueMap.delete(key);
+              //   dirtyKeys.delete(key);
+              //   break;
+              // }
             }
 
             if(dirty) {
@@ -281,8 +318,19 @@ export class MultiBinding extends Binding {
         }
         i++;
       }
-      if(this.oldValues) this.oldValues.set(key, Array.from(values));
-      if(key) values.unshift(key);
+      if(this.oldValues) {
+        let current = this.oldValues.get(key);
+        this.oldValues.set(key, values.slice(1));
+        if(current) {
+          values.push(...current);
+        }
+      }
+      // if(key) {
+      //   if(Label.isLabel(key))
+      //     values.unshift(this.labelKey?.get(/* @type {Label} */(key)));
+      //   else if(values.empty(0))
+      //     values[0] = key;
+      // }
       yield [/** @type {[K, ...any[]]} */(/** @type {unknown} */(values)), true];
     }
 

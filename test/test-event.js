@@ -39,36 +39,6 @@ QUnit.test('Unbinds from previous callback when it changes', assert => {
   assert.equal(count, 2);
 });
 
-QUnit.test('Unbinds from previous callback when it changes (keyed syntax)', assert => {
-  let root = document.createElement('main');
-  root.innerHTML = `<div id="app"><button type="button"></button></div>`;
-  let count = 0;
-  let cb = () => count++;
-
-  function template() {
-    return sheet`
-      #app {
-        --inc: ${() => cb()};
-      }
-
-      button {
-        --cb: ${cb.bind(null)};
-        event[click]: var(--cb);
-      }
-    `;
-  }
-
-  let btn = root.querySelector('button');
-
-  template().update(root);
-  btn.dispatchEvent(new Event('click'));
-  assert.equal(count, 1);
-
-  template().update(root);
-  btn.dispatchEvent(new Event('click'));
-  assert.equal(count, 2);
-});
-
 QUnit.test('Can listen to multiple events on the same element', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<button type="button"></button>`;
@@ -83,7 +53,6 @@ QUnit.test('Can listen to multiple events on the same element', assert => {
         "custom-two" ${cb2};
     }
   `;
-
 
   bindings.update(root);
   root.firstElementChild.dispatchEvent(new Event('custom-one'));
@@ -106,12 +75,12 @@ QUnit.test('Supports longhand event-listener and event-capture', assert => {
 
   let bindings = sheet`
     #outer {
-      event-listener[one]: ${cb2};
-      event-capture[one]: true;
+      event-listener: one ${cb2};
+      event-capture: one true;
     }
 
     button {
-      event-listener[one]: ${cb1};
+      event-listener: one ${cb1};
     }
   `;
 
@@ -122,7 +91,7 @@ QUnit.test('Supports longhand event-listener and event-capture', assert => {
   assert.equal(count2, 1);
 });
 
-QUnit.test('Unbinds a capture listener correctly', assert => {
+QUnit.skip('Unbinds a capture listener correctly', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="outer"><button type="button"></button></div>`;
   let count1 = 0;
@@ -131,12 +100,12 @@ QUnit.test('Unbinds a capture listener correctly', assert => {
   function run(show) {
     return sheet`
       #outer {
-        class-toggle[dead]: ${show};
+        class-toggle: dead ${show};
       }
 
       #outer:not(.dead) {
-        event-listener[one]: ${cb1};
-        event-capture[one]: true;
+        event-listener: one ${cb1};
+        event-capture: one true;
       }
     `;
   }
@@ -158,8 +127,8 @@ QUnit.test('Supports longhand event-once', assert => {
 
   let bindings = sheet`
     button {
-      event-listener[one]: ${cb1};
-      event-once[one]: true;
+      event-listener: one ${cb1};
+      event-once: one true;
     }
   `;
 
@@ -182,8 +151,8 @@ QUnit.test('Supports longhand event-passive', assert => {
 
   let bindings = sheet`
     button {
-      event-listener[one]: ${cb1};
-      event-passive[one]: true;
+      event-listener: one ${cb1};
+      event-passive: one true;
     }
   `;
 
@@ -203,8 +172,8 @@ QUnit.test('Supports longhand event-signal', assert => {
 
   let bindings = sheet`
     button {
-      event-listener[one]: ${cb1};
-      event-signal[one]: ${controller.signal};
+      event-listener: one ${cb1};
+      event-signal: one ${controller.signal};
     }
   `;
 
@@ -219,7 +188,7 @@ QUnit.test('Supports longhand event-signal', assert => {
   assert.equal(count, 1);
 });
 
-QUnit.test('Options work in shorthand keyed syntax', assert => {
+QUnit.test('Options work in shorthand syntax', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="outer"><button type="button"></button></div>`;
   let count1 = 0, count2 = 0;
@@ -231,11 +200,11 @@ QUnit.test('Options work in shorthand keyed syntax', assert => {
 
   let bindings = sheet`
     #outer {
-      event[one]: ${cb2} true true;
+      event: one ${cb2} true true;
     }
 
     button {
-      event-listener[one]: ${cb1};
+      event-listener: one ${cb1};
     }
   `;
 
@@ -249,7 +218,7 @@ QUnit.test('Options work in shorthand keyed syntax', assert => {
   assert.equal(count2, 1);
 });
 
-QUnit.only('Event can be labeled', assert => {
+QUnit.test('Event can be labeled', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="one"></div>`;
   let count = 0;

@@ -147,10 +147,11 @@ export const properties = {
     keyed: true,
     labeled: true,
     oldValues: true,
-    longhand: ['event-listener', 'event-capture', 'event-once', 'event-passive', 'event-signal'],
-    defaults: [null, false, false, false, undefined]
+    longhand: ['event-type', 'event-listener', 'event-capture', 'event-once',
+      'event-passive', 'event-signal'],
+    defaults: ['', null, false, false, false, undefined]
   },
-  'event-listener': {
+  'event-type': {
     flag: flags.event,
     feat: features.keyed | features.longhand,
     shorthand: 'event',
@@ -160,17 +161,17 @@ export const properties = {
     default: null,
     read: () => null
   },
-  'event-capture': {
+  'event-listener': {
     flag: flags.event,
-    feat: features.keyed | features.longhand,
+    feat: features.longhand,
     shorthand: 'event',
     index: 1,
     keyed: true,
     labeled: true,
-    default: false,
-    read: () => false
+    default: null,
+    read: () => null
   },
-  'event-once': {
+  'event-capture': {
     flag: flags.event,
     feat: features.longhand,
     shorthand: 'event',
@@ -180,9 +181,9 @@ export const properties = {
     default: false,
     read: () => false
   },
-  'event-passive': {
+  'event-once': {
     flag: flags.event,
-    feat: features.keyed | features.longhand,
+    feat: features.longhand,
     shorthand: 'event',
     index: 3,
     keyed: true,
@@ -190,11 +191,21 @@ export const properties = {
     default: false,
     read: () => false
   },
-  'event-signal': {
+  'event-passive': {
     flag: flags.event,
-    feat: features.keyed | features.longhand,
+    feat: features.longhand,
     shorthand: 'event',
     index: 4,
+    keyed: true,
+    labeled: true,
+    default: false,
+    read: () => false
+  },
+  'event-signal': {
+    flag: flags.event,
+    feat: features.longhand,
+    shorthand: 'event',
+    index: 5,
     keyed: true,
     labeled: true,
     default: undefined,
