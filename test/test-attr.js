@@ -2,7 +2,7 @@ import sheet from '../src/main.js';
 
 QUnit.module('Property - attr');
 
-QUnit.test('Set an attribute value', assert => {
+QUnit.skip('Set an attribute value', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"></div>`;
 
@@ -16,7 +16,7 @@ QUnit.test('Set an attribute value', assert => {
   assert.equal(root.firstElementChild.getAttribute('name'), 'world');
 });
 
-QUnit.test('Can set multiple attributes', assert => {
+QUnit.skip('Can set multiple attributes', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"><table></table></div>`;
   let bindings = sheet`
@@ -32,7 +32,7 @@ QUnit.test('Can set multiple attributes', assert => {
   assert.equal(table.className, 'flat');
 });
 
-QUnit.test('Non-keyed shorthand', assert => {
+QUnit.skip('Non-keyed shorthand', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<input>`;
   let mp = () => sheet`
@@ -61,7 +61,7 @@ QUnit.test('Keyed attribute shorthand', assert => {
   assert.equal(input.hasAttribute('type'), false);
 });
 
-QUnit.test('Keyed attribute longhand', assert => {
+QUnit.skip('Keyed attribute longhand', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<input>`;
   function run(showDisabled) {
@@ -81,7 +81,7 @@ QUnit.test('Keyed attribute longhand', assert => {
   assert.equal(input.hasAttribute('disabled'), false);
 });
 
-QUnit.test('Non-keyed shorthand overrides other bindings', assert => {
+QUnit.skip('Non-keyed shorthand overrides other bindings', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<input>`;
   function run(enable) {
@@ -106,7 +106,7 @@ QUnit.test('Non-keyed shorthand overrides other bindings', assert => {
   assert.equal(input.hasAttribute('type'), false);
 });
 
-QUnit.test('Source order is preferred', assert => {
+QUnit.skip('Source order is preferred', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"></div>`;
   function run(toggle) {

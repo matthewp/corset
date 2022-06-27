@@ -106,9 +106,9 @@ QUnit.test('Supports boolean identifiers (true/false)', assert => {
       --false-prop: ${falseProp};
       --true: true;
       --false: false;
-      prop[--true-prop]: var(--true);
-      prop[--false-prop]: var(--false);
-      prop[--works-prop]: --does-work(false, true);
+      prop: var(--true-prop) var(--true);
+      prop: var(--false-prop) var(--false);
+      prop: var(--works-prop) --does-work(false, true);
     }
   `;
   bindings.update(root);

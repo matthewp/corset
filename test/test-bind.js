@@ -39,7 +39,7 @@ QUnit.test('Context is forwarded', assert => {
       let phrase = 'catch';
       return sheet`
         #app {
-          event[toggle]: bind(${this.toggle}, ${phrase});
+          event: toggle bind(${this.toggle}, ${phrase});
           text: ${this.message};
         }
       `;

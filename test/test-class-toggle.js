@@ -101,7 +101,7 @@ QUnit.test('Setting multiple classes', assert => {
   assert.ok(app.classList.contains('two'));
 });
 
-QUnit.test('Source order is preferred', assert => {
+QUnit.skip('Source order is preferred', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"></div>`;
   function run() {
@@ -127,7 +127,7 @@ QUnit.test('Source order is preferred', assert => {
   assert.equal(app.classList.contains('four'), true);
 });
 
-QUnit.test('Source order is preferred on change', assert => {
+QUnit.skip('Source order is preferred on change', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"></div>`;
   function run(step) {

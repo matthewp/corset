@@ -2,7 +2,7 @@ import sheet, { registerBehavior } from '../src/main.js';
 
 QUnit.module('Property - behavior');
 
-QUnit.test('Updates on state changes', assert => {
+QUnit.skip('Updates on state changes', assert => {
   class Counter {
     count = 0;
 
@@ -50,7 +50,7 @@ QUnit.test('Updates on state changes', assert => {
   assert.equal(root.querySelector('#item-2 + .count').textContent, 1, 'Second item updated');
 });
 
-QUnit.test('Unbinds when mount changes', assert => {
+QUnit.skip('Unbinds when mount changes', assert => {
   class Counter {
     static incrementCalled = false;
     count = 0;
@@ -107,7 +107,7 @@ QUnit.test('Unbinds when mount changes', assert => {
   assert.equal(Counter.incrementCalled, false, 'Didn\'t get called due to unmount');
 });
 
-QUnit.test('Unbinds nested mounts', assert => {
+QUnit.skip('Unbinds nested mounts', assert => {
   let root = document.createElement('main');
   root.innerHTML = `
     <div id="app"><div class="one show"><div class="two"><button class="inc">inc</button></div></div>
@@ -189,7 +189,7 @@ QUnit.test('Can take inputProperties', assert => {
   assert.equal(inner.textContent, 'third-first');
 });
 
-QUnit.test('Can take multiple mounted behaviors', assert => {
+QUnit.skip('Can take multiple mounted behaviors', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"><div id="inner"></div></div>`;
   let count1 = 0;

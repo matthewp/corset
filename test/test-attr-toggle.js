@@ -2,7 +2,7 @@ import sheet from '../src/main.js';
 
 QUnit.module('Property - attr-toggle');
 
-QUnit.test('Set an attribute value', assert => {
+QUnit.skip('Set an attribute value', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"></div>`;
 
@@ -20,7 +20,7 @@ QUnit.test('Set an attribute value', assert => {
   assert.ok(!root.firstElementChild.hasAttribute('name'));
 });
 
-QUnit.test('Can set multiple attributes', assert => {
+QUnit.skip('Can set multiple attributes', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"></div>`;
 
@@ -36,7 +36,7 @@ QUnit.test('Can set multiple attributes', assert => {
   assert.ok(root.firstElementChild.hasAttribute('two'));
 });
 
-QUnit.test('Source order is preferred', assert => {
+QUnit.skip('Source order is preferred', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"></div>`;
   function run() {

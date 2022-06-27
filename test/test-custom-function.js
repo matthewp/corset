@@ -47,7 +47,7 @@ QUnit.test('Can use inputProperties', assert => {
   assert.equal(r.textContent, 6);
 });
 
-QUnit.test('Custom functions can call `createStore` to create a mutable store', assert => {
+QUnit.skip('Custom functions can call `createStore` to create a mutable store', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"></div>`;
 

@@ -2,7 +2,7 @@ import sheet from '../src/main.js';
 
 QUnit.module('Property - each');
 
-QUnit.test('Shorthand each syntax', assert => {
+QUnit.skip('Shorthand each syntax', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<ul></ul><template id="todos-template"><li><span class="label"></span></li></template>`;
 
@@ -27,7 +27,7 @@ QUnit.test('Shorthand each syntax', assert => {
   assert.equal(ul.querySelector(':nth-child(2) span').textContent, 'clean the dishes');
 });
 
-QUnit.test('Longhand syntax', assert => {
+QUnit.skip('Longhand syntax', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<ul></ul><template id="todos-template"><li><span class="label"></span></li></template>`;
 
@@ -49,7 +49,7 @@ QUnit.test('Longhand syntax', assert => {
   assert.equal(ul.querySelector(':nth-child(2) span').textContent, 'clean the dishes');
 });
 
-QUnit.test('The index is available as index()', assert => {
+QUnit.skip('The index is available as index()', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<ul></ul><template id="todos-template"><li></li></template>`;
 
@@ -69,7 +69,7 @@ QUnit.test('The index is available as index()', assert => {
   assert.equal(Number(li.dataset.index), 0);
 });
 
-QUnit.test('Deleting an item in a keyed list updates sibling indices', assert => {
+QUnit.skip('Deleting an item in a keyed list updates sibling indices', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<ul></ul><template><li>index: <span id="index"></span></li></template>`;
   let items = [{id: 1}, {id: 2}, {id: 3}];
