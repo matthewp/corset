@@ -112,10 +112,11 @@ QUnit.skip('Source order is preferred', assert => {
 
       #app {
         class-toggle: one ${true}, two ${true};
+        class-toggle: three unset;
       }
 
       #app {
-        class-toggle[four]: ${true};
+        class-toggle: four ${true};
       }
     `
   }

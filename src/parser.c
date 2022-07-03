@@ -52,6 +52,9 @@ uintptr_t tag_pointer;
 #define VALUE_TYPE_ARRAY 5
 #define VALUE_TYPE_BOOLEAN 6
 #define VALUE_TYPE_LABEL 7
+#define VALUE_TYPE_KEYWORD 8
+
+#define KEYWORD_UNSET 1
 
 #define TOKEN_NOTCONSUMED 0
 #define TOKEN_CONSUMED 1
@@ -60,6 +63,7 @@ uintptr_t tag_pointer;
 #define INS_HASH 193495087
 #define TRUE_HASH 2090770405
 #define FALSE_HASH 258723568
+#define UNSET_HASH 276986740
 
 typedef struct parser_state_t {
   unsigned char mode;
@@ -128,6 +132,11 @@ typedef struct value_type_bool_t {
   char value;
 } value_type_bool_t;
 
+typedef struct value_type_keyword_t {
+  value_type_node_t type;
+  unsigned char keyword;
+} value_type_keyword_t;
+
 typedef struct tag_prop_t {
   unsigned char type;
   int prop_start;
@@ -147,7 +156,8 @@ typedef struct tag_error_t {
 } tag_error_t;
 #endif
 
-static long hash(int start, int end) {
+
+WASM_EXPORT("hash") long hash(int start, int end) {
   int idx = start;
   char c;
   long hash = 5381;
@@ -478,6 +488,15 @@ static void parse_value_end() {
           value_bool->value = hash_true ? 1 : 0;
 
           replace_node(value_node, value_bool_node);
+        } else if(h == UNSET_HASH) {
+          value_type_keyword_t* value_kw = malloc(sizeof(value_type_keyword_t));
+          value_type_node_t* value_kw_node = (value_type_node_t*)value_kw;
+          value_kw_node->type = VALUE_TYPE_KEYWORD;
+          value_kw_node->prev = 0;
+          value_kw_node->next = 0;
+          value_kw->keyword = KEYWORD_UNSET;
+
+          replace_node(value_node, value_kw_node);
         }
       }
 

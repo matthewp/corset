@@ -32,7 +32,7 @@ import {
 } from './function.js';
 import { properties, features } from './property.js';
 import { createValueTemplate } from './template.js';
-import { Label } from './label.js';
+import { Name } from './constants.js';
 
 /**
  * @typedef {import('./property').PropertyDefinition} PropertyDefinition
@@ -115,7 +115,10 @@ function getValue(ptr) {
       return createValueTemplate(anyValue(Boolean(mem32[ptrv32])));
     }
     case 7: {
-      return createValueTemplate(anyValue(Label.for(readString(mem32[ptrv32], mem32[ptrv32 + 1]))))
+      return createValueTemplate(anyValue(Name.for(readString(mem32[ptrv32], mem32[ptrv32 + 1]))))
+    }
+    case 8: {
+      return createValueTemplate(anyValue("unset"));
     }
     default: {
       throw new Error(`Unknown value type [${valueType}]`);
