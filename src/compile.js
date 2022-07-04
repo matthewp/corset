@@ -32,7 +32,7 @@ import {
 } from './function.js';
 import { properties, features } from './property.js';
 import { createValueTemplate } from './template.js';
-import { Name } from './constants.js';
+import { Name, KEYWORD_UNSET } from './constants.js';
 
 /**
  * @typedef {import('./property').PropertyDefinition} PropertyDefinition
@@ -118,7 +118,7 @@ function getValue(ptr) {
       return createValueTemplate(anyValue(Name.for(readString(mem32[ptrv32], mem32[ptrv32 + 1]))))
     }
     case 8: {
-      return createValueTemplate(anyValue("unset"));
+      return createValueTemplate(anyValue(KEYWORD_UNSET));
     }
     default: {
       throw new Error(`Unknown value type [${valueType}]`);
