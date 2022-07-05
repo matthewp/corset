@@ -208,13 +208,14 @@ export class MultiBinding extends Binding {
           case declFlags.multi | declFlags.shorthand | declFlags.label: {
             for(let values of /** @type {[K, ...any[]][]} */(computedValue)) {
               let key = /** @type {string | Name} */(values[0]);
-              if(!Name.is(key)) {
+              let isName = Name.is(key);
+              if(!isName) {
                 key = Name.for('corset.default.' + key);
               }
               else
                 values = /** @type {[K, ...any[]]} */(values.slice(1));
 
-              this.#bookkeep(active, key);
+              this.#bookkeep(active, key, isName ? values[1] : values[0]);
               let valueList = getValueList(key, this.numberOfValues);
               for(let i = 0; i < values.length; i++) {
                 if(valueList.empty(i))
@@ -291,7 +292,7 @@ export class MultiBinding extends Binding {
             /** @type {any} */
             let propValue = computedValue[1];
 
-            this.#bookkeep(active, key);
+            this.#bookkeep(active, key, computedValue[0]);
             let valueList = getValueList(key, this.numberOfValues);
             if(!hasLabel && valueList.empty(0))
               valueList.set(0, computedValue[0]);
@@ -356,7 +357,7 @@ export class MultiBinding extends Binding {
     // Yield out to reset to initial state.
     for(let key of active) {
       let initialValues = this.initial.get(key) || [];
-      let valuesWithKey = this.defn.keyed ? [key, ...initialValues] : Array.from(initialValues);
+      let valuesWithKey = this.defn.keyed && !Name.is(key) ? [key, ...initialValues] : Array.from(initialValues);
       let allValues = this.#appendToValues(key, /** @type {[K, ...any[]]} */(valuesWithKey));
       yield [allValues, true];
       this.active.delete(key);
@@ -397,8 +398,9 @@ export class MultiBinding extends Binding {
   /**
    * 
    * @param {string | Name | MountedBehaviorType} key 
+   * @param {string} type
    */
-  #setInitials(key) {
+  #setInitials(key, type) {
     if(!this.initial.has(key)) {
       /** @type {any[]} */
       let values = [];
@@ -412,6 +414,7 @@ export class MultiBinding extends Binding {
           );
           i++;
         }
+        if(type) values[0] = type;
       } else if(this.defn.feat & features.behavior) {
         values = [null, null];
       } else if(this.defn.read) {
@@ -424,10 +427,11 @@ export class MultiBinding extends Binding {
    * 
    * @param {Set<MultiBindingKey>} active 
    * @param {MultiBindingKey} key 
+   * @param {string} [type]
    */
-  #bookkeep(active, key) {
+  #bookkeep(active, key, type) {
     active.delete(key);
-    if(key !== null) this.#setInitials(key);
+    if(key !== null) this.#setInitials(key, type);
     this.active.add(key);
   }
   /**
@@ -441,10 +445,12 @@ export class MultiBinding extends Binding {
       return values;
     /** @type {any[]} */
     let append = [];
-    if(!Name.is(key)) append.push(key);
+    let keyIsName = Name.is(key);
+    if(!keyIsName) append.push(key);
     let i = append.length + values.length;
     let d = keyed ? 1 : 0;
-    while(i < this.numberOfValuesWithKey) {
+    let numOfValues = keyIsName ? this.numberOfValues : this.numberOfValuesWithKey;
+    while(i < numOfValues) {
       append.push(/** @type {ShorthandPropertyDefinition} */(this.defn).defaults[i - d]);
       i++;
     }

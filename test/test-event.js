@@ -91,7 +91,7 @@ QUnit.test('Supports longhand event-listener and event-capture', assert => {
   assert.equal(count2, 1);
 });
 
-QUnit.skip('Unbinds a capture listener correctly', assert => {
+QUnit.test('Unbinds a capture listener correctly', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="outer"><button type="button"></button></div>`;
   let count1 = 0;
