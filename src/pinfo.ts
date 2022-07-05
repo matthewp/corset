@@ -22,8 +22,8 @@ interface BasePropertyDefinition {
 type ReadKeyedValue = (element: Element, key: string) => any;
 type ReadUnkeyedValue = (element: Element) => any;
 
-export interface KeyedMultiPropertyDefinition extends BasePropertyDefinition {
-  keyed: true;
+export interface MultiPropertyDefinition extends BasePropertyDefinition {
+  keyed: boolean;
   multi: true;
   labeled?: false;
   read: ReadKeyedValue;
@@ -31,6 +31,11 @@ export interface KeyedMultiPropertyDefinition extends BasePropertyDefinition {
   longhand?: never;
   shorthand?: never;
   prop: 'classToggle' | 'data' | 'prop';
+}
+
+export interface KeyedMultiPropertyDefinition extends MultiPropertyDefinition {
+  keyed: true;
+  prop: 'data' | 'prop';
 }
 
 export interface BehaviorMultiPropertyDefinition extends BasePropertyDefinition {
@@ -78,6 +83,7 @@ export interface SimplePropertyDefinition extends BasePropertyDefinition {
 export type PropertyDefinition = SimplePropertyDefinition
   | ShorthandPropertyDefinition
   | LonghandPropertyDefinition
+  | MultiPropertyDefinition
   | KeyedMultiPropertyDefinition
   | BehaviorMultiPropertyDefinition;
 

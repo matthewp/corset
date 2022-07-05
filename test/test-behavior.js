@@ -152,7 +152,7 @@ QUnit.skip('Unbinds nested mounts', assert => {
   assert.equal(count, 1, 'did not increment');
 });
 
-QUnit.test('Can take inputProperties', assert => {
+QUnit.skip('Can take inputProperties', assert => {
   class Taker {
     static inputProperties = ['--one'];
     constructor(props) {
@@ -237,7 +237,7 @@ QUnit.skip('Can take multiple mounted behaviors', assert => {
   assert.equal(count1, 1);
 });
 
-QUnit.test('registerBehavior allows defining named behaviors', assert => {
+QUnit.skip('registerBehavior allows defining named behaviors', assert => {
   registerBehavior('one', class {
     bind() {
       return sheet`
@@ -258,7 +258,7 @@ QUnit.test('registerBehavior allows defining named behaviors', assert => {
   assert.equal(inner.textContent, 'works');
 });
 
-QUnit.test('`rebind` will rebind a function inside of the mountpoint', assert => {
+QUnit.skip('`rebind` will rebind a function inside of the mountpoint', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"><div id="inner"></div></div>`;
   let run;

@@ -20,6 +20,7 @@ export const flags = {
  * @typedef {import('./pinfo').SimplePropertyDefinition} SimplePropertyDefinition
  * @typedef {import('./pinfo').ShorthandPropertyDefinition} ShorthandPropertyDefinition
  * @typedef {import('./pinfo').LonghandPropertyDefinition} LonghandPropertyDefinition
+ * @typedef {import('./pinfo').MultiPropertyDefinition} MultiPropertyDefinition
  * @typedef {import('./pinfo').KeyedMultiPropertyDefinition} KeyedMultiPropertyDefinition
  * @typedef {import('./pinfo').BehaviorMultiPropertyDefinition} BehaviorMultiPropertyDefinition
  */
@@ -80,17 +81,16 @@ export const properties = {
       return el.hasAttribute(key);
     }
   },
-  /** @type {KeyedMultiPropertyDefinition} */
+  /** @type {MultiPropertyDefinition} */
   'class-toggle': {
     flag: flags.classToggle,
-    feat: features.multi | features.keyed,
+    feat: features.multi,
     multi: true,
     keyed: true,
     prop: 'classToggle',
     read(el, key) {
       return el.classList.contains(key);
     }
-
   },
   /** @type {KeyedMultiPropertyDefinition} */
   data: {

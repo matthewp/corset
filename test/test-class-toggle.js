@@ -62,7 +62,7 @@ QUnit.test('Triggers update on dependent properties', assert => {
   assert.equal(root.querySelector('#mode').textContent, 'dark');
 });
 
-QUnit.skip('Restores the original value (TODO use unset)', assert => {
+QUnit.test('Restores the original value', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"><span class="yes"></span></div>`;
 
@@ -128,7 +128,7 @@ QUnit.test('Source order is preferred', assert => {
   assert.equal(app.classList.contains('four'), true);
 });
 
-QUnit.skip('Source order is preferred on change', assert => {
+QUnit.test('Source order is preferred on change', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"></div>`;
   function run(step) {
@@ -138,12 +138,12 @@ QUnit.skip('Source order is preferred on change', assert => {
       }
 
       #app {
-        class-toggle: one ${true}, two ${true};
-        attr[two]: "two" ${step === 'two'};
+        class-toggle: one ${true}, two ${true}, three unset;
+        attr: two "two" ${step === 'two'};
       }
 
       #app {
-        class-toggle[four]: ${true};
+        class-toggle: four ${true};
       }
     `
   }

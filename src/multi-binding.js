@@ -15,6 +15,7 @@ import { KEYWORD_UNSET } from './constants.js';
  * @typedef {import('./declaration').Declaration} Declaration
  * @typedef {import('./template').ValueTemplate} ValueTemplate
  * @typedef {import('./property').PropertyDefinition} PropertyDefinition
+ * @typedef {import('./pinfo').MultiPropertyDefinition} MultiPropertyDefinition
  * @typedef {import('./property').KeyedMultiPropertyDefinition} KeyedMultiPropertyDefinition
  * @typedef {import('./property').ShorthandPropertyDefinition} ShorthandPropertyDefinition
  * @typedef {import('./property').LonghandPropertyDefinition} LonghandPropertyDefinition
@@ -41,13 +42,13 @@ import { KEYWORD_UNSET } from './constants.js';
  */
 export class MultiBinding extends Binding {
   /**
-   * @param {ShorthandPropertyDefinition | KeyedMultiPropertyDefinition | BehaviorMultiPropertyDefinition} defn
+   * @param {ShorthandPropertyDefinition | MultiPropertyDefinition | BehaviorMultiPropertyDefinition} defn
    * @param {ConstructorParameters<typeof Binding>} args
    */
   constructor(defn, ...args) {
     super(...args);
 
-    /** @type {ShorthandPropertyDefinition | KeyedMultiPropertyDefinition | BehaviorMultiPropertyDefinition} */
+    /** @type {ShorthandPropertyDefinition | MultiPropertyDefinition | BehaviorMultiPropertyDefinition} */
     this.defn = defn;
 
     /** @type {number} */
@@ -62,7 +63,7 @@ export class MultiBinding extends Binding {
     /** @type {Map<MultiBindingKey, readonly any[]>} */
     this.initial = new Map();
     /** @type {Map<MultiBindingKey, any[]> | null} */
-    this.oldValues = /** @type {KeyedMultiPropertyDefinition} */(defn).oldValues
+    this.oldValues = /** @type {MultiPropertyDefinition} */(defn).oldValues
       ? new Map() : null;
   }
   /**
@@ -439,7 +440,8 @@ export class MultiBinding extends Binding {
       return values;
     /** @type {any[]} */
     let append = [];
-    let i = values.length;
+    if(!Name.is(key)) append.push(key);
+    let i = append.length + values.length;
     let d = keyed ? 1 : 0;
     while(i < this.numberOfValuesWithKey) {
       append.push(/** @type {ShorthandPropertyDefinition} */(this.defn).defaults[i - d]);
