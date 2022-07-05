@@ -111,8 +111,7 @@ export const properties = {
     feat: 0,
     prop: 'each',
     longhand: ['each-items', 'each-template', 'each-key'],
-    defaults: [[], {}, null],
-    labeled: true,
+    defaults: [[], {}, null]
   },
   'each-items': {
     flag: flags.each,

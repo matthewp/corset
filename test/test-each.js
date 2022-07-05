@@ -2,7 +2,7 @@ import sheet from '../src/main.js';
 
 QUnit.module('Property - each');
 
-QUnit.skip('Shorthand each syntax', assert => {
+QUnit.test('Shorthand each syntax', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<ul></ul><template id="todos-template"><li><span class="label"></span></li></template>`;
 
@@ -27,7 +27,7 @@ QUnit.skip('Shorthand each syntax', assert => {
   assert.equal(ul.querySelector(':nth-child(2) span').textContent, 'clean the dishes');
 });
 
-QUnit.skip('Longhand syntax', assert => {
+QUnit.test('Longhand syntax', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<ul></ul><template id="todos-template"><li><span class="label"></span></li></template>`;
 
@@ -49,7 +49,7 @@ QUnit.skip('Longhand syntax', assert => {
   assert.equal(ul.querySelector(':nth-child(2) span').textContent, 'clean the dishes');
 });
 
-QUnit.skip('The index is available as index()', assert => {
+QUnit.test('The index is available as index()', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<ul></ul><template id="todos-template"><li></li></template>`;
 

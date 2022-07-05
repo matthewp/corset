@@ -269,12 +269,12 @@ export class MultiBinding extends Binding {
             /** @type {string | null} */
             let key = keyed ? computedValue[0] : null;
             /** @type {any} */
-            let propValue = computedValue[1];
+            let propValue = keyed ? computedValue[1] : computedValue[0];
             let idx = compute.index + (keyed ? 1 : 0);
 
             this.#bookkeep(active, key);
             let valueList = getValueList(key, this.numberOfValuesWithKey);
-            if(valueList.empty(0))
+            if(keyed && valueList.empty(0))
               valueList.set(0, computedValue[0]);
             if(valueList.empty(idx))
               valueList.set(idx, propValue);
