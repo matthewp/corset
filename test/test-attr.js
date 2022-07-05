@@ -2,7 +2,7 @@ import sheet from '../src/main.js';
 
 QUnit.module('Property - attr');
 
-QUnit.skip('Set an attribute value', assert => {
+QUnit.test('Set an attribute value', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"></div>`;
 
@@ -16,7 +16,7 @@ QUnit.skip('Set an attribute value', assert => {
   assert.equal(root.firstElementChild.getAttribute('name'), 'world');
 });
 
-QUnit.skip('Can set multiple attributes', assert => {
+QUnit.test('Can set multiple attributes', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"><table></table></div>`;
   let bindings = sheet`
@@ -32,7 +32,7 @@ QUnit.skip('Can set multiple attributes', assert => {
   assert.equal(table.className, 'flat');
 });
 
-QUnit.skip('Non-keyed shorthand', assert => {
+QUnit.test('Non-keyed shorthand', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<input>`;
   let mp = () => sheet`
@@ -67,8 +67,8 @@ QUnit.skip('Keyed attribute longhand', assert => {
   function run(showDisabled) {
     return sheet`
     input {
-      attr-value[type]: "text";
-      attr-toggle[disabled]: ${showDisabled};
+      attr-value: type "text";
+      attr-toggle: disabled ${showDisabled};
     }
   `;
   }

@@ -50,7 +50,7 @@ export const properties = {
   /** @type {ShorthandPropertyDefinition} */
   attr: {
     flag: flags.attr,
-    feat: features.multi | features.keyed,
+    feat: features.multi,
     prop: 'attr',
     keyed: true,
     multi: true,
@@ -60,7 +60,7 @@ export const properties = {
   /** @type {LonghandPropertyDefinition} */
   'attr-value': {
     flag: flags.attr,
-    feat: features.keyed | features.longhand,
+    feat: features.longhand,
     shorthand: 'attr',
     index: 0,
     keyed: true,
@@ -72,7 +72,7 @@ export const properties = {
   /** @type {LonghandPropertyDefinition} */
   'attr-toggle': {
     flag: flags.attr,
-    feat: features.keyed | features.longhand,
+    feat: features.longhand,
     shorthand: 'attr',
     index: 1,
     keyed: true,
