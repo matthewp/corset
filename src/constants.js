@@ -52,3 +52,4 @@ export const Name = createConstant();
 export const Keyword = createConstant();
 
 export const KEYWORD_UNSET = Keyword('unset');
+export const KEYWORD_ALL = Keyword('all');

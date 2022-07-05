@@ -55,6 +55,7 @@ uintptr_t tag_pointer;
 #define VALUE_TYPE_KEYWORD 8
 
 #define KEYWORD_UNSET 1
+#define KEYWORD_ALL 2
 
 #define TOKEN_NOTCONSUMED 0
 #define TOKEN_CONSUMED 1
@@ -64,6 +65,7 @@ uintptr_t tag_pointer;
 #define TRUE_HASH 2090770405
 #define FALSE_HASH 258723568
 #define UNSET_HASH 276986740
+#define ALL_HASH 193486302
 
 typedef struct parser_state_t {
   unsigned char mode;
@@ -478,25 +480,32 @@ static void parse_value_end() {
 
       if(value_node->type == VALUE_TYPE_IDENTIFIER) {
         long h = hash(value_id->start, value_id->end);
-        char hash_true = h == TRUE_HASH;
-        if(hash_true || h == FALSE_HASH) {
-          value_type_bool_t* value_bool = malloc(sizeof(value_type_bool_t));
-          value_type_node_t* value_bool_node = (value_type_node_t*)value_bool;
-          value_bool_node->type = VALUE_TYPE_BOOLEAN;
-          value_bool_node->prev = 0;
-          value_bool_node->next = 0;
-          value_bool->value = hash_true ? 1 : 0;
 
-          replace_node(value_node, value_bool_node);
-        } else if(h == UNSET_HASH) {
-          value_type_keyword_t* value_kw = malloc(sizeof(value_type_keyword_t));
-          value_type_node_t* value_kw_node = (value_type_node_t*)value_kw;
-          value_kw_node->type = VALUE_TYPE_KEYWORD;
-          value_kw_node->prev = 0;
-          value_kw_node->next = 0;
-          value_kw->keyword = KEYWORD_UNSET;
+        switch(h) {
+          case TRUE_HASH:
+          case FALSE_HASH: {
+            value_type_bool_t* value_bool = malloc(sizeof(value_type_bool_t));
+            value_type_node_t* value_bool_node = (value_type_node_t*)value_bool;
+            value_bool_node->type = VALUE_TYPE_BOOLEAN;
+            value_bool_node->prev = 0;
+            value_bool_node->next = 0;
+            value_bool->value = h == TRUE_HASH ? 1 : 0;
 
-          replace_node(value_node, value_kw_node);
+            replace_node(value_node, value_bool_node);
+            break;
+          }
+          case UNSET_HASH:
+          case ALL_HASH: {
+            value_type_keyword_t* value_kw = malloc(sizeof(value_type_keyword_t));
+            value_type_node_t* value_kw_node = (value_type_node_t*)value_kw;
+            value_kw_node->type = VALUE_TYPE_KEYWORD;
+            value_kw_node->prev = 0;
+            value_kw_node->next = 0;
+            value_kw->keyword = h == UNSET_HASH ? KEYWORD_UNSET : KEYWORD_ALL;
+
+            replace_node(value_node, value_kw_node);
+            break;
+          }
         }
       }
 

@@ -32,7 +32,7 @@ import {
 } from './function.js';
 import { properties, features } from './property.js';
 import { createValueTemplate } from './template.js';
-import { Name, KEYWORD_UNSET } from './constants.js';
+import { Name, KEYWORD_UNSET, KEYWORD_ALL } from './constants.js';
 
 /**
  * @typedef {import('./property').PropertyDefinition} PropertyDefinition
@@ -41,6 +41,11 @@ import { Name, KEYWORD_UNSET } from './constants.js';
  * @typedef {import('./template').ValueTemplate} ValueTemplate
  * @typedef {import('./function').ICorsetFunctionClass} ICorsetFunctionClass
  */
+
+let keywordMap = new Map([
+  [1, KEYWORD_UNSET],
+  [2, KEYWORD_ALL]
+]);
 
 /**
  * 
@@ -118,7 +123,7 @@ function getValue(ptr) {
       return createValueTemplate(anyValue(Name.for(readString(mem32[ptrv32], mem32[ptrv32 + 1]))))
     }
     case 8: {
-      return createValueTemplate(anyValue(KEYWORD_UNSET));
+      return createValueTemplate(anyValue(keywordMap.get(mem32[ptrv32])));
     }
     default: {
       throw new Error(`Unknown value type [${valueType}]`);

@@ -7,7 +7,7 @@ import { properties, features } from './property.js';
 import { SparseArray } from './sparse-array.js';
 import { createValueTemplate } from './template.js';
 import { SpaceSeparatedListValue } from './value.js';
-import { KEYWORD_UNSET } from './constants.js';
+import { KEYWORD_ALL, KEYWORD_UNSET } from './constants.js';
 
 /**
  * @typedef {import('./types').MountedBehaviorType} MountedBehaviorType
@@ -122,7 +122,7 @@ export class MultiBinding extends Binding {
     let { element } = this;
     let sorted = this.declarations;
     let active = new Set(this.active);
-    /** @type {Set<string | Name | null>} */
+    /** @type {Set<MultiBindingKey>} */
     let unset = new Set();
 
     /**
@@ -175,9 +175,11 @@ export class MultiBinding extends Binding {
 
               let idx = Name.is(key) ? 1 : 0;
               if(values[1] === KEYWORD_UNSET) {
-                if(key === '*') {
-                  active = new Set(this.active);
-                  break loop;
+                if(key === KEYWORD_ALL) {
+                  for(let val of this.active) {
+                    unset.add(val);
+                  }
+                  break;
                 }
                 else {
                   unset.add(key);
@@ -276,7 +278,6 @@ export class MultiBinding extends Binding {
               valueList.set(0, computedValue[0]);
             if(valueList.empty(idx))
               valueList.set(idx, propValue);
-
             if(dirty)
               dirtyKeys.add(key);
 

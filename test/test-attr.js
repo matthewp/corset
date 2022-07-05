@@ -81,17 +81,18 @@ QUnit.test('Attribute longhand', assert => {
   assert.equal(input.hasAttribute('disabled'), false);
 });
 
-QUnit.skip('Non-keyed shorthand overrides other bindings', assert => {
+QUnit.test('Unset on shorthand undoes previous bindings', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<input>`;
   function run(enable) {
     return sheet`
       input {
-        attr[type]: text;
-        class-toggle[form-element]: ${enable};
+        attr: type text;
+        class-toggle: form-element ${enable};
       }
 
       input.form-element {
+        attr: all unset;
         attr: placeholder "testing";
       }
     `;
@@ -106,26 +107,26 @@ QUnit.skip('Non-keyed shorthand overrides other bindings', assert => {
   assert.equal(input.hasAttribute('type'), false);
 });
 
-QUnit.skip('Source order is preferred', assert => {
+QUnit.test('Source order is preferred', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"></div>`;
   function run(toggle) {
     return sheet`
       #app {
         attr: one one, two two;
-        class-toggle[toggle]: ${toggle};
+        class-toggle: toggle ${toggle};
       }
 
       #app {
-        attr[three]: three;
+        attr: three three;
       }
 
       #app {
-        attr-value[four]: four;
+        attr-value: four four;
       }
 
       #app.toggle {
-        attr-toggle[four]: ${false};
+        attr-toggle: four ${false};
       }
     `;
   }
