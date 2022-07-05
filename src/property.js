@@ -149,7 +149,7 @@ export const properties = {
     oldValues: true,
     longhand: ['event-type', 'event-listener', 'event-capture', 'event-once',
       'event-passive', 'event-signal'],
-    defaults: ['', null, false, false, false, undefined]
+    defaults: [null, false, false, false, undefined]
   },
   'event-type': {
     flag: flags.event,

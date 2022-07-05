@@ -257,48 +257,47 @@ export class MultiBinding extends Binding {
           
           // attr-value[type]: "text"
           case declFlags.longhand | declFlags.keyed:
-          // event-once: [name] true;
-          case declFlags.longhand | declFlags.label:
           // each-items: ${items};
           case declFlags.longhand: {
             if(declaration.flags === (declFlags.longhand | declFlags.keyed)) {
               console.warn('Keyed properties have been deprecated.');
             }
 
-            let keyed = !!(declaration.flags & declFlags.keyed);
-            let label = !!(declaration.flags & declFlags.label);
-            let hasLabel = label && Name.is(computedValue[0]);
-            /** @type {number} */
-            let numOfValues = this.numberOfValues;
-            /** @type {string | Name | null} */
-            let key = keyed ? computedValue[0] : label ? hasLabel ? computedValue[0] : Name.for('corset.default.' + computedValue[0]) : null;
+            let keyed = this.defn.keyed;
+            /** @type {string | null} */
+            let key = keyed ? computedValue[0] : null;
             /** @type {any} */
-            let propValue = keyed ? computedValue[0] : computedValue[1];
+            let propValue = computedValue[1];
+            let idx = compute.index + (keyed ? 1 : 0);
 
             this.#bookkeep(active, key);
-            let valueList = getValueList(key, numOfValues);
+            let valueList = getValueList(key, this.numberOfValuesWithKey);
+            if(valueList.empty(0))
+              valueList.set(0, computedValue[0]);
+            if(valueList.empty(idx))
+              valueList.set(idx, propValue);
+
+            if(dirty)
+              dirtyKeys.add(key);
+
+            break;
+          }
+          // event-once: [name] true;
+          case declFlags.longhand | declFlags.label: {
+            let hasLabel = Name.is(computedValue[0]);
+            /** @type {Name} */
+            let key = hasLabel ? computedValue[0] : Name.for('corset.default.' + computedValue[0]);
+            /** @type {any} */
+            let propValue = computedValue[1];
+
+            this.#bookkeep(active, key);
+            let valueList = getValueList(key, this.numberOfValues);
             if(!hasLabel && valueList.empty(0))
               valueList.set(0, computedValue[0]);
-            if(valueList.empty(compute.index)) {
+            if(valueList.empty(compute.index))
               valueList.set(compute.index, propValue);
-
-              // if(valueList.full()) {
-              //   if(this.oldValues) this.oldValues.set(key, Array.from(valueList));
-              //   if(key) valueList.unshift(key);
-              //   yield [
-              //     /** @type {[K, ...any[]]} */(/** @type {unknown} */(valueList)),
-              //     dirty || dirtyKeys.has(key)
-              //   ];
-              //   valueMap.delete(key);
-              //   dirtyKeys.delete(key);
-              //   break;
-              // }
-            }
-
-            if(dirty) {
+            if(dirty)
               dirtyKeys.add(key);
-            }
-
             break;
           }
           // class-toggle[disabled]: true
@@ -329,10 +328,11 @@ export class MultiBinding extends Binding {
       if(!dirtyKeys.has(key)) continue;
       // valueMap is always appended from a longhand prop.
       let numOfValues = this.numberOfValues;
-      let i = 0;
+      let keyed = this.defn.keyed;
+      let i = keyed ? 1 : 0;
       while(i < numOfValues) {
         if(values.empty(i)) {
-          values[i] = /** @type {ShorthandPropertyDefinition} */(this.defn).defaults[i];
+          values[i] = /** @type {ShorthandPropertyDefinition} */(this.defn).defaults[i - (keyed ? 1 : 0)];
         }
         i++;
       }

@@ -46,12 +46,12 @@ QUnit.test('Non-keyed shorthand', assert => {
   assert.equal(input.getAttribute('placeholder'), 'testing');
 });
 
-QUnit.test('Keyed attribute shorthand', assert => {
+QUnit.test('Attribute shorthand', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<input>`;
   let mp = enabled => sheet`
     input {
-      attr[type]: text ${enabled};
+      attr: type text ${enabled};
     }
   `;
   mp(true).update(root);
@@ -61,7 +61,7 @@ QUnit.test('Keyed attribute shorthand', assert => {
   assert.equal(input.hasAttribute('type'), false);
 });
 
-QUnit.skip('Keyed attribute longhand', assert => {
+QUnit.test('Attribute longhand', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<input>`;
   function run(showDisabled) {
