@@ -51,7 +51,7 @@ QUnit.test('Are accessible with JS; setting values in JS updates the mountpoint'
   assert.equal(root.querySelector('.sibling').textContent, 'Anne');
 });
 
-QUnit.skip('Can be passed to child behaviors', assert => {
+QUnit.test('Can be passed to child behaviors', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"><div class="child"><div class="inner"></div></div><div class="sibling"></div></div>`;
 
@@ -61,7 +61,7 @@ QUnit.skip('Can be passed to child behaviors', assert => {
       let store = props.get('--store');
       return sheet`
         .inner {
-          event[custom]: ${ev => store.set('name', ev.detail)};
+          event: custom ${ev => store.set('name', ev.detail)};
         }
       `;
     }
@@ -92,7 +92,7 @@ QUnit.skip('Can be passed to child behaviors', assert => {
   assert.equal(sibling.textContent, 'Wilbur');
 });
 
-QUnit.skip('A selector becoming unmatched removes the store', assert => {
+QUnit.test('A selector becoming unmatched removes the store', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app" class="show"><div class="child"></div></div>`;
   mount(root, class {
@@ -100,8 +100,8 @@ QUnit.skip('A selector becoming unmatched removes the store', assert => {
     bind(props) {
       return sheet`
         #app {
-          class-toggle[show]: ${this.show};
-          event[no-show]: ${() => this.show = false};
+          class-toggle: show ${this.show};
+          event: no-show ${() => this.show = false};
         }
   
         #app.show {
@@ -111,8 +111,8 @@ QUnit.skip('A selector becoming unmatched removes the store', assert => {
   
         .child {
           --has-store: get(store(app), ${val => !!val});
-          class-toggle[has-store]: var(--has-store);
-          data[value]: get(store-get(app, foo), ${value => value || 'none'});
+          class-toggle: has-store var(--has-store);
+          data: value get(store-get(app, foo), ${value => value || 'none'});
         }
       `;
     }
@@ -128,7 +128,7 @@ QUnit.skip('A selector becoming unmatched removes the store', assert => {
   assert.equal(child.dataset.value, 'none');
 });
 
-QUnit.skip('Store is immediately available on the root', assert => {
+QUnit.test('Store is immediately available on the root', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="movies"></div>`;
 
@@ -136,7 +136,7 @@ QUnit.skip('Store is immediately available on the root', assert => {
     #movies {
       store-root: one;
       --foo: get(store(one), ${store => !!store});
-      data[foo]: var(--foo);
+      data: foo var(--foo);
     }
   `.update(root);
   assert.equal(root.firstElementChild.dataset.foo, 'true');
@@ -166,7 +166,7 @@ QUnit.skip('Store is immediate available in child behavior', assert => {
           --store: store(request);
           behavior: mount(${Fetch});
           --fetch-state: store-get(request, state);
-          class-toggle[--fetch-state]: true;
+          class-toggle: var(--fetch-state) true;
         }
 
         #movies.pending {
