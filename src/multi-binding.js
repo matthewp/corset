@@ -283,6 +283,17 @@ export class MultiBinding extends Binding {
             if(dirty)
               dirtyKeys.add(key);
 
+            if(valueList.full()) {
+              if(this.oldValues) this.oldValues.set(key, Array.from(valueList));
+              yield [
+                /** @type {[K, ...any[]]} */(/** @type {unknown} */(valueList)),
+                dirty || dirtyKeys.has(key)
+              ];
+              valueMap.delete(key);
+              dirtyKeys.delete(key);
+              break;
+            }
+
             break;
           }
           // event-once: [name] true;
