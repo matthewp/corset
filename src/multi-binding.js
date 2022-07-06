@@ -340,7 +340,7 @@ export class MultiBinding extends Binding {
       }
       if(this.oldValues) {
         let current = this.oldValues.get(key);
-        this.oldValues.set(key, values.slice(1));
+        this.oldValues.set(key, values.slice());
         if(current) {
           values.push(...current);
         }
@@ -446,7 +446,7 @@ export class MultiBinding extends Binding {
     /** @type {any[]} */
     let append = [];
     let keyIsName = Name.is(key);
-    if(!keyIsName) append.push(key);
+    if(typeof key === 'string') append.push(key);
     let i = append.length + values.length;
     let d = keyed ? 1 : 0;
     let numOfValues = keyIsName ? this.numberOfValues : this.numberOfValuesWithKey;

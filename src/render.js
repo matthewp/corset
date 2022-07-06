@@ -194,7 +194,7 @@ function render(element, bindings, root, changeset) {
   // Events last, does not affect the cascade.
   if(bflags & flags.event) {
     let binding = /** @type {KeyedMultiBinding} */(bindings.event);
-    for(let [eventName, listener, capture, once, passive, signal, oldListener, oldCapture] of binding.changes(changeset)) {
+    for(let [eventName, listener, capture, once, passive, signal, _oldEventName, oldListener, oldCapture] of binding.changes(changeset)) {
       if(oldListener !== undefined)
         element.removeEventListener(eventName, root.getCallback(oldListener), oldCapture);
       if(listener)
@@ -245,7 +245,7 @@ function unmount(element, bindings, root) {
 
   if(bflags & flags.event) {
     let eventBinding = /** @type {KeyedMultiBinding} */(bindings.event);
-    for(let [eventName, listener] of eventBinding.current()) {
+    for(let [_key, eventName, listener] of eventBinding.current()) {
       element.removeEventListener(eventName, root.getCallback(listener));
     }
   }

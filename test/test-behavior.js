@@ -2,7 +2,7 @@ import sheet, { registerBehavior } from '../src/main.js';
 
 QUnit.module('Property - behavior');
 
-QUnit.skip('Updates on state changes', assert => {
+QUnit.test('Updates on state changes', assert => {
   class Counter {
     count = 0;
 
@@ -15,8 +15,8 @@ QUnit.skip('Updates on state changes', assert => {
 
       return sheet`
         button {
-          attr[id]: get(item(), ${item => `item-${item.id}`});
-          event[click]: ${this.increment};
+          attr: id get(item(), ${item => `item-${item.id}`});
+          event: click ${this.increment};
         }
 
         .count {
@@ -50,7 +50,7 @@ QUnit.skip('Updates on state changes', assert => {
   assert.equal(root.querySelector('#item-2 + .count').textContent, 1, 'Second item updated');
 });
 
-QUnit.skip('Unbinds when mount changes', assert => {
+QUnit.test('Unbinds when mount changes', assert => {
   class Counter {
     static incrementCalled = false;
     count = 0;
@@ -85,7 +85,7 @@ QUnit.skip('Unbinds when mount changes', assert => {
   function update(isCounter) {
     sheet`
       #app > div {
-        class-toggle[counter]: ${isCounter};
+        class-toggle: counter ${isCounter};
       }
 
       .counter {
