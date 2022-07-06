@@ -21,7 +21,6 @@ export const flags = {
  * @typedef {import('./pinfo').ShorthandPropertyDefinition} ShorthandPropertyDefinition
  * @typedef {import('./pinfo').LonghandPropertyDefinition} LonghandPropertyDefinition
  * @typedef {import('./pinfo').MultiPropertyDefinition} MultiPropertyDefinition
- * @typedef {import('./pinfo').KeyedMultiPropertyDefinition} KeyedMultiPropertyDefinition
  * @typedef {import('./pinfo').BehaviorMultiPropertyDefinition} BehaviorMultiPropertyDefinition
  */
 
@@ -50,7 +49,7 @@ export const properties = {
   /** @type {ShorthandPropertyDefinition} */
   attr: {
     flag: flags.attr,
-    feat: features.multi,
+    feat: features.multi | features.shorthand,
     prop: 'attr',
     keyed: true,
     multi: true,
@@ -92,7 +91,7 @@ export const properties = {
       return el.classList.contains(key);
     }
   },
-  /** @type {KeyedMultiPropertyDefinition} */
+  /** @type {MultiPropertyDefinition} */
   data: {
     flag: flags.data,
     feat: features.multi | features.keyed,
@@ -108,7 +107,7 @@ export const properties = {
   /** @type {ShorthandPropertyDefinition} */
   each: {
     flag: flags.each,
-    feat: 0,
+    feat: features.shorthand,
     prop: 'each',
     longhand: ['each-items', 'each-template', 'each-key'],
     defaults: [[], {}, null]
@@ -140,7 +139,7 @@ export const properties = {
   /** @type {ShorthandPropertyDefinition} */
   event: {
     flag: flags.event,
-    feat: features.multi | features.keyed | features.oldValues,
+    feat: features.multi | features.keyed | features.oldValues | features.shorthand,
     prop: 'event',
     multi: true,
     keyed: true,
@@ -219,7 +218,7 @@ export const properties = {
     keyed: false, // TODO get rid of
     oldValues: true,
   },
-  /** @type {KeyedMultiPropertyDefinition} */
+  /** @type {MultiPropertyDefinition} */
   prop: {
     flag: flags.prop,
     feat: features.multi | features.keyed,

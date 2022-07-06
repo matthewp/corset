@@ -17,7 +17,6 @@ import { KEYWORD_ALL, KEYWORD_UNSET } from './constants.js';
  * @typedef {import('./template').ValueTemplate} ValueTemplate
  * @typedef {import('./property').PropertyDefinition} PropertyDefinition
  * @typedef {import('./pinfo').MultiPropertyDefinition} MultiPropertyDefinition
- * @typedef {import('./property').KeyedMultiPropertyDefinition} KeyedMultiPropertyDefinition
  * @typedef {import('./property').ShorthandPropertyDefinition} ShorthandPropertyDefinition
  * @typedef {import('./property').LonghandPropertyDefinition} LonghandPropertyDefinition
  * @typedef {import('./property').BehaviorMultiPropertyDefinition} BehaviorMultiPropertyDefinition

@@ -35,7 +35,7 @@ export class Declaration {
     /** @type {PropertyDefinition | undefined} */
     let defn = properties[this.propertyName];
     if(defn) {
-      if(defn.multi) {
+      if(defn.feat & features.multi) {
         this.flags |= flags.multi;
       }
       if(this.key !== null) {
@@ -44,9 +44,9 @@ export class Declaration {
       if(defn.labeled) {
         this.flags |= flags.label;
       }
-      if(defn.shorthand) {
+      if(defn.feat & features.longhand) {
         this.flags |= flags.longhand;
-      } else if(defn.longhand) {
+      } else if(defn.feat & features.shorthand) {
         this.flags |= flags.shorthand;
       } else if(defn.feat & features.behavior) {
         this.flags |= flags.behavior;

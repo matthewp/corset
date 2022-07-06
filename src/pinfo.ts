@@ -33,11 +33,6 @@ export interface MultiPropertyDefinition extends BasePropertyDefinition {
   prop: 'classToggle' | 'data' | 'prop';
 }
 
-export interface KeyedMultiPropertyDefinition extends MultiPropertyDefinition {
-  keyed: true;
-  prop: 'data' | 'prop';
-}
-
 export interface BehaviorMultiPropertyDefinition extends BasePropertyDefinition {
   keyed: false;
   multi: true;
@@ -67,24 +62,18 @@ export interface LonghandPropertyDefinition extends BasePropertyDefinition {
   labeled?: boolean;
   default: any;
   read: ReadKeyedValue;
-  multi?: never;
-  longhand?: never;
 }
 
 export interface SimplePropertyDefinition extends BasePropertyDefinition {
   labeled?: false;
   read: ReadUnkeyedValue;
   prop: PropertyPropName;
-  shorthand?: never;
-  longhand?: never;
-  multi?: never;
 }
 
 export type PropertyDefinition = SimplePropertyDefinition
   | ShorthandPropertyDefinition
   | LonghandPropertyDefinition
   | MultiPropertyDefinition
-  | KeyedMultiPropertyDefinition
   | BehaviorMultiPropertyDefinition;
 
 export declare const properties: Record<string, PropertyDefinition>;
