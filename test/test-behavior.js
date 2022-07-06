@@ -107,7 +107,7 @@ QUnit.test('Unbinds when mount changes', assert => {
   assert.equal(Counter.incrementCalled, false, 'Didn\'t get called due to unmount');
 });
 
-QUnit.skip('Unbinds nested mounts', assert => {
+QUnit.test('Unbinds nested mounts', assert => {
   let root = document.createElement('main');
   root.innerHTML = `
     <div id="app"><div class="one show"><div class="two"><button class="inc">inc</button></div></div>
@@ -127,7 +127,7 @@ QUnit.skip('Unbinds nested mounts', assert => {
     bind() {
       return sheet`
         .inc {
-          event[click]: ${inc};
+          event: click ${inc};
         }
       `;
     }
@@ -135,7 +135,7 @@ QUnit.skip('Unbinds nested mounts', assert => {
   function app(show) {
     return sheet`
       .one {
-        class-toggle[show]: ${show};
+        class-toggle: show ${show};
       }
       .one.show {
         behavior: mount(${One});
@@ -152,7 +152,7 @@ QUnit.skip('Unbinds nested mounts', assert => {
   assert.equal(count, 1, 'did not increment');
 });
 
-QUnit.skip('Can take inputProperties', assert => {
+QUnit.test('Can take inputProperties', assert => {
   class Taker {
     static inputProperties = ['--one'];
     constructor(props) {
@@ -189,7 +189,7 @@ QUnit.skip('Can take inputProperties', assert => {
   assert.equal(inner.textContent, 'third-first');
 });
 
-QUnit.skip('Can take multiple mounted behaviors', assert => {
+QUnit.test('Can take multiple mounted behaviors', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"><div id="inner"></div></div>`;
   let count1 = 0;
@@ -197,8 +197,8 @@ QUnit.skip('Can take multiple mounted behaviors', assert => {
     bind() {
       return sheet`
         #inner {
-          class-toggle[one]: true;
-          event[foo]: ${() => count1++};
+          class-toggle: one true;
+          event: foo ${() => count1++};
         }
       `;
     }
@@ -208,8 +208,8 @@ QUnit.skip('Can take multiple mounted behaviors', assert => {
     bind() {
       return sheet`
         #inner {
-          class-toggle[two]: true;
-          event[foo]: ${() => count2++};
+          class-toggle: two true;
+          event: foo ${() => count2++};
         }
       `;
     }
@@ -218,7 +218,7 @@ QUnit.skip('Can take multiple mounted behaviors', assert => {
     return sheet`
       #app {
         behavior: mount(${One}), mount(${Two});
-        class-toggle[solo]: ${solo};
+        class-toggle: solo ${solo};
       }
       #app.solo {
         behavior: mount(${One});
@@ -237,7 +237,7 @@ QUnit.skip('Can take multiple mounted behaviors', assert => {
   assert.equal(count1, 1);
 });
 
-QUnit.skip('registerBehavior allows defining named behaviors', assert => {
+QUnit.test('registerBehavior allows defining named behaviors', assert => {
   registerBehavior('one', class {
     bind() {
       return sheet`
@@ -258,7 +258,7 @@ QUnit.skip('registerBehavior allows defining named behaviors', assert => {
   assert.equal(inner.textContent, 'works');
 });
 
-QUnit.skip('`rebind` will rebind a function inside of the mountpoint', assert => {
+QUnit.test('`rebind` will rebind a function inside of the mountpoint', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app"><div id="inner"></div></div>`;
   let run;
