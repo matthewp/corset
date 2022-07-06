@@ -1,28 +1,28 @@
 // @ts-check
 
 /**
- * @typedef {{}} MappedValue
+ * @typedef {{}} Constant
  * 
- * @typedef {((value: string) => MappedValue) & { map: Map<string, MappedValue>; for: (s: string) => MappedValue; base: Object; is: (value: any) => boolean; }} Constant
+ * @typedef {((value: string) => Constant) & { map: Map<string, Constant>; for: (s: string) => Constant; base: Object; is: (value: any) => boolean; }} ConstantCreator
  */
 
 const ConstantMethods = {
   /**
   * 
   * @param {string} value 
-  * @returns {MappedValue}
-  * @this {Constant}
+  * @returns {Constant}
+  * @this {ConstantCreator}
   */
   for(value) {
-    let map = /** @type {Map<string, MappedValue>} */(/** @type {unknown} */(this.map));
-    return /** @type {MappedValue} */(map.get(value) ||
+    let map = /** @type {Map<string, Constant>} */(/** @type {unknown} */(this.map));
+    return /** @type {Constant} */(map.get(value) ||
       (map.set(value, this(value))) && map.get(value));
   },
 
   /**
    * @param {any} value
    * @returns {boolean}
-   * @this {Constant}
+   * @this {ConstantCreator}
    */
   is(value) {
     return Object.prototype.isPrototypeOf.call(this.base, value);
@@ -31,7 +31,7 @@ const ConstantMethods = {
 
 /**
  * 
- * @returns {Constant}
+ * @returns {ConstantCreator}
  */
 let createConstant = () => {
   /**
@@ -45,7 +45,7 @@ let createConstant = () => {
   ConstantBase.base = Object.create(null);
   ConstantBase.map = new Map();
   Object.assign(ConstantBase, ConstantMethods);
-  return /** @type {Constant} */(/** @type {unknown} */(ConstantBase));
+  return /** @type {ConstantCreator} */(/** @type {unknown} */(ConstantBase));
 };
 
 export const Name = createConstant();

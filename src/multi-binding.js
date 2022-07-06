@@ -12,6 +12,7 @@ import { KEYWORD_ALL, KEYWORD_UNSET } from './constants.js';
 /**
  * @typedef {import('./types').MountedBehaviorType} MountedBehaviorType
  * @typedef {import('./changeset').Changeset} Changeset
+ * @typedef {import('./constants').Constant} Constant
  * @typedef {import('./declaration').Declaration} Declaration
  * @typedef {import('./template').ValueTemplate} ValueTemplate
  * @typedef {import('./property').PropertyDefinition} PropertyDefinition
@@ -34,11 +35,11 @@ import { KEYWORD_ALL, KEYWORD_UNSET } from './constants.js';
 }
 
 /**
- * @typedef {string | Name | null | MountedBehaviorType} MultiBindingKey
+ * @typedef {string | Constant | null | MountedBehaviorType} MultiBindingKey
  */
 
 /**
- * @template {string | Name | Array<any> | MountedBehaviorType} K
+ * @template {string | Constant | Array<any> | MountedBehaviorType} K
  */
 export class MultiBinding extends Binding {
   /**
@@ -129,12 +130,12 @@ export class MultiBinding extends Binding {
      * @typedef {SparseArray<K extends string ? K : null>} KeyedSparseArray
      */
 
-    /** @type {Map<string | Name | null, KeyedSparseArray>} */
+    /** @type {Map<string | Constant | null, KeyedSparseArray>} */
     let valueMap = new Map();
     let getValueList =
     /**
      * 
-     * @param {string | Name | null} key 
+     * @param {string | Constant | null} key 
      * @param {number} numOfValues 
      * @return {KeyedSparseArray}
      */
@@ -150,7 +151,7 @@ export class MultiBinding extends Binding {
       return valueList;
     };
 
-    /** @type {Set<string | Name | null>} */
+    /** @type {Set<string | Constant | null>} */
     let dirtyKeys = new Set();
 
     let i = sorted.length;
@@ -207,7 +208,7 @@ export class MultiBinding extends Binding {
           // event: [label] type callback, [another-label] type callback
           case declFlags.multi | declFlags.shorthand | declFlags.label: {
             for(let values of /** @type {[K, ...any[]][]} */(computedValue)) {
-              let key = /** @type {string | Name} */(values[0]);
+              let key = /** @type {string | Constant} */(values[0]);
               let isName = Name.is(key);
               if(!isName) {
                 key = Name.for('corset.default.' + key);
@@ -397,8 +398,8 @@ export class MultiBinding extends Binding {
   }
   /**
    * 
-   * @param {string | Name | MountedBehaviorType} key 
-   * @param {string} type
+   * @param {string | Constant | MountedBehaviorType} key 
+   * @param {string} [type]
    */
   #setInitials(key, type) {
     if(!this.initial.has(key)) {
