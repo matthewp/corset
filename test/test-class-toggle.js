@@ -159,3 +159,23 @@ QUnit.test('Source order is preferred on change', assert => {
   assert.equal(app.classList.contains('three'), false);
   assert.equal(app.classList.contains('four'), true);
 });
+
+QUnit.test('var() can be used as a class name', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app"></div>`;
+  function template(name) {
+    return sheet`
+      #app {
+        --name: ${name};
+        class-toggle: var(--name) true;
+      }
+    `;
+  }
+  let app = root.firstElementChild;
+  template().update(root);
+  assert.equal(app.className, '', 'No className when undefined');
+  template('one').update(root);
+  assert.equal(app.className, 'one');
+  template('two').update(root);
+  assert.equal(app.className, 'two');
+});

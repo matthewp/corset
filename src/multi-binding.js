@@ -172,7 +172,7 @@ export class MultiBinding extends Binding {
           // class-toggle: one "one", two "two"
           case declFlags.multi: {
             for(let values of /** @type {[K, ...any[]][]} */(computedValue)) {
-              let key = /** @type {string | Name} */(values[0]);
+              let key = /** @type {string | Constant} */(values[0]);
 
               let idx = Name.is(key) ? 1 : 0;
               if(values[1] === KEYWORD_UNSET) {
@@ -186,7 +186,7 @@ export class MultiBinding extends Binding {
                   unset.add(key);
                   break;
                 }
-              } else if(unset.has(key)) {
+              } else if(unset.has(key) || typeof key === 'undefined') {
                 break;
               }
 

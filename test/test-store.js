@@ -142,7 +142,7 @@ QUnit.test('Store is immediately available on the root', assert => {
   assert.equal(root.firstElementChild.dataset.foo, 'true');
 });
 
-QUnit.skip('Store is immediate available in child behavior', assert => {
+QUnit.test('Store is immediate available in child behavior', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="movies"></div>`;
 
