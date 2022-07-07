@@ -45,4 +45,4 @@ export declare class MountedBehavior {
 
 export type MountedBehaviorType = typeof MountedBehavior;
 
-export type RootElement = HTMLElement | Document;
+export type RootElement = HTMLElement | Document | ShadowRoot;
