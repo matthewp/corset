@@ -15,8 +15,8 @@ QUnit.test('Updates on state changes', assert => {
 
       return sheet`
         button {
-          attr[id]: get(item(), ${item => `item-${item.id}`});
-          event[click]: ${this.increment};
+          attr: id get(item(), ${item => `item-${item.id}`});
+          event: click ${this.increment};
         }
 
         .count {
@@ -85,7 +85,7 @@ QUnit.test('Unbinds when mount changes', assert => {
   function update(isCounter) {
     sheet`
       #app > div {
-        class-toggle[counter]: ${isCounter};
+        class-toggle: counter ${isCounter};
       }
 
       .counter {
@@ -127,7 +127,7 @@ QUnit.test('Unbinds nested mounts', assert => {
     bind() {
       return sheet`
         .inc {
-          event[click]: ${inc};
+          event: click ${inc};
         }
       `;
     }
@@ -135,7 +135,7 @@ QUnit.test('Unbinds nested mounts', assert => {
   function app(show) {
     return sheet`
       .one {
-        class-toggle[show]: ${show};
+        class-toggle: show ${show};
       }
       .one.show {
         behavior: mount(${One});
@@ -197,8 +197,8 @@ QUnit.test('Can take multiple mounted behaviors', assert => {
     bind() {
       return sheet`
         #inner {
-          class-toggle[one]: true;
-          event[foo]: ${() => count1++};
+          class-toggle: one true;
+          event: foo ${() => count1++};
         }
       `;
     }
@@ -208,8 +208,8 @@ QUnit.test('Can take multiple mounted behaviors', assert => {
     bind() {
       return sheet`
         #inner {
-          class-toggle[two]: true;
-          event[foo]: ${() => count2++};
+          class-toggle: two true;
+          event: foo ${() => count2++};
         }
       `;
     }
@@ -218,7 +218,7 @@ QUnit.test('Can take multiple mounted behaviors', assert => {
     return sheet`
       #app {
         behavior: mount(${One}), mount(${Two});
-        class-toggle[solo]: ${solo};
+        class-toggle: solo ${solo};
       }
       #app.solo {
         behavior: mount(${One});

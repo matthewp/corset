@@ -46,12 +46,12 @@ QUnit.test('Non-keyed shorthand', assert => {
   assert.equal(input.getAttribute('placeholder'), 'testing');
 });
 
-QUnit.test('Keyed attribute shorthand', assert => {
+QUnit.test('Attribute shorthand', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<input>`;
   let mp = enabled => sheet`
     input {
-      attr[type]: text ${enabled};
+      attr: type text ${enabled};
     }
   `;
   mp(true).update(root);
@@ -61,14 +61,14 @@ QUnit.test('Keyed attribute shorthand', assert => {
   assert.equal(input.hasAttribute('type'), false);
 });
 
-QUnit.test('Keyed attribute longhand', assert => {
+QUnit.test('Attribute longhand', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<input>`;
   function run(showDisabled) {
     return sheet`
     input {
-      attr-value[type]: "text";
-      attr-toggle[disabled]: ${showDisabled};
+      attr-value: type "text";
+      attr-toggle: disabled ${showDisabled};
     }
   `;
   }
@@ -81,17 +81,18 @@ QUnit.test('Keyed attribute longhand', assert => {
   assert.equal(input.hasAttribute('disabled'), false);
 });
 
-QUnit.test('Non-keyed shorthand overrides other bindings', assert => {
+QUnit.test('revert-sheet on shorthand undoes previous bindings', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<input>`;
   function run(enable) {
     return sheet`
       input {
-        attr[type]: text;
-        class-toggle[form-element]: ${enable};
+        attr: type text;
+        class-toggle: form-element ${enable};
       }
 
       input.form-element {
+        attr: all revert-sheet;
         attr: placeholder "testing";
       }
     `;
@@ -113,19 +114,19 @@ QUnit.test('Source order is preferred', assert => {
     return sheet`
       #app {
         attr: one one, two two;
-        class-toggle[toggle]: ${toggle};
+        class-toggle: toggle ${toggle};
       }
 
       #app {
-        attr[three]: three;
+        attr: three three;
       }
 
       #app {
-        attr-value[four]: four;
+        attr-value: four four;
       }
 
       #app.toggle {
-        attr-toggle[four]: ${false};
+        attr-toggle: four ${false};
       }
     `;
   }

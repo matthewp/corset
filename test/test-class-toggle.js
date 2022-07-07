@@ -112,10 +112,11 @@ QUnit.test('Source order is preferred', assert => {
 
       #app {
         class-toggle: one ${true}, two ${true};
+        class-toggle: three revert-sheet;
       }
 
       #app {
-        class-toggle[four]: ${true};
+        class-toggle: four ${true};
       }
     `
   }
@@ -137,12 +138,12 @@ QUnit.test('Source order is preferred on change', assert => {
       }
 
       #app {
-        class-toggle: one ${true}, two ${true};
-        attr[two]: "two" ${step === 'two'};
+        class-toggle: one ${true}, two ${true}, three revert-sheet;
+        attr: two "two" ${step === 'two'};
       }
 
       #app {
-        class-toggle[four]: ${true};
+        class-toggle: four ${true};
       }
     `
   }
@@ -157,4 +158,24 @@ QUnit.test('Source order is preferred on change', assert => {
   assert.equal(app.classList.contains('two'), true);
   assert.equal(app.classList.contains('three'), false);
   assert.equal(app.classList.contains('four'), true);
+});
+
+QUnit.test('var() can be used as a class name', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app"></div>`;
+  function template(name) {
+    return sheet`
+      #app {
+        --name: ${name};
+        class-toggle: var(--name) true;
+      }
+    `;
+  }
+  let app = root.firstElementChild;
+  template().update(root);
+  assert.equal(app.className, '', 'No className when undefined');
+  template('one').update(root);
+  assert.equal(app.className, 'one');
+  template('two').update(root);
+  assert.equal(app.className, 'two');
 });

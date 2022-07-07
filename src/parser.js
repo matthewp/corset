@@ -54,6 +54,17 @@ const readFromBuffer = (buffer, start, end) => dec.decode(buffer.slice(start, en
 /** @type {number} - The length of the source */
 let len;
 
+/* HASH function
+const hash = (str) => {
+    let h = 5381;
+    for(let i = 0; i < str.length; i++) {
+        let c = str[i];
+      h = ((h << 5) + h) + c.charCodeAt(0);
+    }
+    return h
+};
+*/
+
 /**
  * Parses sources from a tagged template
  * @param {RawStringTemplate} source 

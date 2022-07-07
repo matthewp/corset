@@ -9,7 +9,7 @@ QUnit.test('Set an attribute value', assert => {
   function template(value) {
     return sheet`
       #app {
-        attr-toggle[name]: ${value};
+        attr-toggle: name ${value};
       }
     `;
   }
@@ -26,8 +26,8 @@ QUnit.test('Can set multiple attributes', assert => {
 
   let bindings =sheet`
     #app {
-      attr-toggle[one]: ${true};
-      attr-toggle[two]: ${true};
+      attr-toggle: one ${true};
+      attr-toggle: two ${true};
     }
   `;
 
@@ -42,12 +42,12 @@ QUnit.test('Source order is preferred', assert => {
   function run() {
     return sheet`
       #app {
-        attr-value[one]: one;
-        attr-toggle[one]: ${false};
+        attr-value: one one;
+        attr-toggle: one ${false};
       }
 
       #app {
-        attr-toggle[one]: ${true};
+        attr-toggle: one ${true};
       }
     `;
   }

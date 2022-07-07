@@ -74,7 +74,7 @@ QUnit.test('Custom functions can call `createStore` to create a mutable store', 
     #app {
       --value: --fn-that-updates("bar");
       --foo: get(var(--value), foo);
-      data[foo]: var(--foo);
+      data: foo var(--foo);
     }
   `.update(root);
 
