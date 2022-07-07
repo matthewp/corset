@@ -1,5 +1,15 @@
 # corset
 
+## 2.0.0-beta.2
+
+### Minor Changes
+
+- 06bd259: Allow the :root selector for targeting the root element
+
+### Patch Changes
+
+- 76b0c7a: Allow mount() to take a ShadowRoot
+
 ## 2.0.0-beta.1
 
 ### Patch Changes

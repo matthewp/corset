@@ -6,6 +6,8 @@
   },
   "changesets": [
     "hip-cycles-trade",
+    "nice-news-accept",
+    "spotty-pandas-draw",
     "witty-needles-deliver"
   ]
 }
