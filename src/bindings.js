@@ -23,11 +23,11 @@ export class Bindings {
   /**
    * Create bindings for a specific element.
    * @param {Root} root
-   * @param {Element} element
+   * @param {RootElement} element
    */
   constructor(root, element) {
     this.root = root;
-    /** @type {Element} */
+    /** @type {RootElement} */
     this.element = element;
     /** @type {WeakSet<Declaration>} */
     this.seen = new WeakSet();

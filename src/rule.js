@@ -2,7 +2,18 @@
 
 /**
  * @typedef {import('./declaration').Declaration} Declaration
+ * @typedef {import('./types').RootElement} RootElement
  */
+
+const rootSelect = (/** @type {RootElement} */ el) => [el];
+/**
+ * @param {RootElement} el
+ * @this {Rule}
+ * @returns {NodeListOf<Element>}
+ */
+function querySelect(el) {
+  return el.querySelectorAll(this.selector);
+}
 
 export class Rule {
   /**
@@ -15,6 +26,8 @@ export class Rule {
     this.declarations = [];
     /** @type {number} */
     this.specificity = 0;
+    /** @type {(el: RootElement) => Iterable<Element | ShadowRoot | Document>} */
+    this.querySelectorAll = selector === ':root' ? rootSelect : querySelect;
   }
 
   /** @param {Declaration} declaration */

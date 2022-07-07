@@ -41,7 +41,8 @@ export const properties = {
     feat: 0,
     prop: 'attachTemplate',
     read(el) {
-      let tmpl = el.ownerDocument.createElement('template');
+      let doc = el.ownerDocument || document;
+      let tmpl = doc.createElement('template');
       tmpl.content.append(...Array.from(el.childNodes));
       return tmpl;
     }
@@ -65,7 +66,7 @@ export const properties = {
     keyed: true,
     default: '',
     read(el, key) {
-      return el.getAttribute(key);
+      return ('getAttribute' in el) && el.getAttribute(key);
     }
   },
   /** @type {LonghandPropertyDefinition} */
@@ -77,7 +78,7 @@ export const properties = {
     keyed: true,
     default: true,
     read(el, key) {
-      return el.hasAttribute(key);
+      return ('hasAttribute' in el) && el.hasAttribute(key);
     }
   },
   /** @type {MultiPropertyDefinition} */
@@ -88,7 +89,7 @@ export const properties = {
     keyed: true,
     prop: 'classToggle',
     read(el, key) {
-      return el.classList.contains(key);
+      return ('classList' in el) && el.classList.contains(key);
     }
   },
   /** @type {MultiPropertyDefinition} */

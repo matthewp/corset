@@ -7,18 +7,19 @@ import { datasetKey } from './custom-prop.js';
  * @property {number} index
  * 
  * @typedef {DocumentFragment & { nodes: Array<ChildNode>; data: FragData }} EachFragment
+ * @typedef {import('./types').HostElement} HostElement
  */
 
 export class EachInstance {
   /** @type {Map<any, EachFragment>} */
   keyMap = new Map();
   /**
-   * @param {Element} host 
+   * @param {HostElement} host 
    * @param {HTMLTemplateElement} template
    * @param {string} key
    */
   constructor(host, template, key) {
-    /** @type {Element} */
+    /** @type {HostElement} */
     this.host = host;
     /** @type {HTMLTemplateElement} */
     this.template = template;
@@ -27,7 +28,7 @@ export class EachInstance {
     /** @type {(item: any, index: number) => any} */
     this.keyFn = this.key ? this.keyKeyed : this.keyNonKeyed;
 
-    let doc = this.host.ownerDocument;
+    let doc = this.host.ownerDocument ?? document;
 
     /** @type {Comment} */
     this.start = doc.createComment(`each(items)`)
@@ -79,8 +80,9 @@ export class EachInstance {
    * @returns 
    */
   render(index, value) {
+    let doc = this.host.ownerDocument || document;
     /** @type {EachFragment} */
-    let frag = /** @type {EachFragment} */(this.host.ownerDocument.importNode(this.template.content, true));
+    let frag = /** @type {EachFragment} */(doc.importNode(this.template.content, true));
     frag.nodes = Array.from(frag.childNodes);
     frag.data = { item: value, index };
     this.setData(frag, value, index);
