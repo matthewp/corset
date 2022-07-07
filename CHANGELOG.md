@@ -1,5 +1,11 @@
 # corset
 
+## 2.0.0-beta.0
+
+### Major Changes
+
+- 0e4c74b: Removes keyed properties and makes properties default additive
+
 ## 1.0.2
 
 ### Patch Changes
