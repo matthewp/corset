@@ -19,8 +19,8 @@ interface BasePropertyDefinition {
   prop?: PropertyPropName;
 }
 
-type ReadKeyedValue = (element: Element, key: string) => any;
-type ReadUnkeyedValue = (element: Element) => any;
+type ReadKeyedValue = (element: Element | Document | ShadowRoot, key: string) => any;
+type ReadUnkeyedValue = (element: Element | Document | ShadowRoot) => any;
 
 export interface MultiPropertyDefinition extends BasePropertyDefinition {
   keyed: boolean;

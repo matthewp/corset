@@ -62,7 +62,7 @@ export class Binding {
    * 
    * @param {string} propertyName
    * @param {Root} root
-   * @param {Element} element
+   * @param {Element | ShadowRoot | Document} element
    */
   constructor(propertyName, root, element) {
     this.root = root;
@@ -70,7 +70,7 @@ export class Binding {
     this.propertyName = propertyName;
     /** @type {RootElement} */
     this.rootElement = root.rootElement;
-    /** @type {Element} */
+    /** @type {Element | ShadowRoot | Document} */
     this.element = element;
     /** @type {Declaration[]} */
     this.declarations = [];
@@ -178,10 +178,23 @@ export class Binding {
     while(i > 0) {
       i--;
       declaration = sorted[i];
-      if(element.matches(declaration.rule.selector)) {
+      if(this.matches(declaration.rule.selector)) {
         yield declaration;
       }
     }
+  }
+  /**
+   * 
+   * @param {string} selector 
+   * @returns {boolean}
+   */
+  matches(selector) {
+    let element = this.element;
+    if(selector === ':root')
+      return true;
+    else if('matches' in element)
+      return element.matches(selector);
+    else return false;
   }
   /**
    * 

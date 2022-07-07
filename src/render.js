@@ -16,17 +16,18 @@ import { storePropName, storeDataName, storeDataPropName, Store } from './store.
  * @typedef {import('./multi-binding').MultiBinding<any[]>} ArrayMultiBinding
  * @typedef {import('./multi-binding').MultiBinding<MountedBehaviorType>} BehaviorMultiBinding
  * @typedef {import('./sheet').Root} Root
+ * @typedef {import('./types').HostElement} HostElement
  */
 
-/** @type {WeakMap<Element, EachInstance>} */
+/** @type {WeakMap<HostElement, EachInstance>} */
 const eachInstances = new WeakMap();
 
-/** @type {WeakMap<Element, Map<MountedBehaviorType, Mountpoint>>} */
+/** @type {WeakMap<HostElement, Map<MountedBehaviorType, Mountpoint>>} */
 const mountPoints = new WeakMap();
 
 /**
  * 
- * @param {Element} element 
+ * @param {HostElement} element 
  * @param {Bindings} bindings 
  * @param {Root} root
  * @param {Changeset} changeset
@@ -93,7 +94,7 @@ function render(element, bindings, root, changeset) {
     }
   }
 
-  if(bindings.flags & flags.classToggle) {
+  if(bindings.flags & flags.classToggle && 'classList' in element) {
     let binding = /** @type {KeyedMultiBinding} */(bindings.classToggle);
     for(let [className, toggle] of binding.changes(changeset)) {
       element.classList.toggle(className, toggle);
@@ -123,13 +124,14 @@ function render(element, bindings, root, changeset) {
     if(binding.dirty(changeset)) {
       /** @type {HTMLTemplateElement} */
       let result = binding.update(changeset);
-      let frag = element.ownerDocument.importNode(result.content, true);
+      let doc = element.ownerDocument || document;
+      let frag = doc.importNode(result.content, true);
       element.replaceChildren(frag);
       invalid = true;
     }
   }
 
-  if(bflags & flags.attr) {
+  if(bflags & flags.attr && element instanceof Element) {
     for(let [key, value, toggle] of /** @type {KeyedMultiBinding} */(bindings.attr).changes(changeset)) {
       if(toggle)
         element.setAttribute(key, value);
@@ -211,7 +213,7 @@ function render(element, bindings, root, changeset) {
 }
 
 /**
- * @param {Map<Element, Bindings>} allBindings
+ * @param {Map<Element | ShadowRoot | Document, Bindings>} allBindings
  * @param {Root} root
  * @param {Changeset} changeset
  * @returns {boolean}
@@ -227,7 +229,7 @@ export function renderRoot(allBindings, root, changeset) {
 
 /**
  * 
- * @param {Element} element 
+ * @param {HostElement} element 
  * @param {Bindings} bindings 
  * @param {Root} root
  */
@@ -252,7 +254,7 @@ function unmount(element, bindings, root) {
 }
 
 /**
- * @param {Map<Element, Bindings>} allBindings
+ * @param {Map<HostElement, Bindings>} allBindings
  * @param {Root} root
  */
 export function unmountRoot(allBindings, root) {

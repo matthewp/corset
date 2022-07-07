@@ -119,7 +119,6 @@ export class MultiBinding extends Binding {
   * @returns {Generator<[[K, ...any[]], boolean], void, unknown>}
   */
   * calculate(changeset) {
-    let { element } = this;
     let sorted = this.declarations;
     let active = new Set(this.active);
     /** @type {Set<MultiBindingKey>} */
@@ -159,7 +158,7 @@ export class MultiBinding extends Binding {
     loop: while(i > 0) {
       i--;
       declaration = sorted[i];
-      if(element.matches(declaration.rule.selector)) {
+      if(this.matches(declaration.rule.selector)) {
         let compute = /** @type {ComputedValue} */(this.computedValues.get(declaration));
 
         let dirty = compute.dirty(changeset);

@@ -14,7 +14,7 @@ export class SimpleBinding extends Binding {
    * 
    * @param {SimplePropertyDefinition} defn
    * @param {string} propName 
-   * @param {[Root, Element]} args 
+   * @param {[Root, Element | ShadowRoot | Document]} args 
    */
   constructor(defn, propName, ...args) {
     super(propName, ...args);

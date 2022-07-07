@@ -5,6 +5,7 @@ import { Changeset } from './changeset.js';
 import { Mountpoint } from './mount.js';
 
 /**
+ * @typedef {import('./types').HostElement} HostElement
  * @typedef {import('./types').RootElement} RootElement
  */
 
@@ -32,7 +33,7 @@ export class Root {
       /** @type {HTMLElement} */(rootElement);
     /** @type {Rule[]} */
     this.rules = sheet.rules;
-    /** @type {Map<Element, Bindings>} */
+    /** @type {Map<HostElement, Bindings>} */
     this.bindingMap = new Map();
     /** @type {(a: () => any) => any} */
     this.getCallback = this.mount ? this.mount.getCallback.bind(this.mount) : identity;
@@ -62,7 +63,7 @@ export class Root {
   collect() {
     let rootElement = this.rootElement;
     for(let rule of this.rules) {
-      for(let el of rootElement.querySelectorAll(rule.selector)) {
+      for(let el of rule.querySelectorAll(rootElement)) {
         /** @type {Bindings} */
         let bindings;
         if(this.bindingMap.has(el)) {
