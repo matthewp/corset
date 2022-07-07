@@ -5,6 +5,7 @@
     "corset": "1.0.2"
   },
   "changesets": [
+    "hip-cycles-trade",
     "witty-needles-deliver"
   ]
 }
