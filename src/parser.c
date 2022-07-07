@@ -55,7 +55,9 @@ uintptr_t tag_pointer;
 #define VALUE_TYPE_KEYWORD 8
 
 #define KEYWORD_UNSET 1
-#define KEYWORD_ALL 2
+#define KEYWORD_INITIAL 2
+#define KEYWORD_RESET_SHEET 3
+#define KEYWORD_ALL 4
 
 #define TOKEN_NOTCONSUMED 0
 #define TOKEN_CONSUMED 1
@@ -65,6 +67,8 @@ uintptr_t tag_pointer;
 #define TRUE_HASH 2090770405
 #define FALSE_HASH 258723568
 #define UNSET_HASH 276986740
+#define INITIAL_HASH -1633193425
+#define REVERT_SHEET_HASH 479564643
 #define ALL_HASH 193486302
 
 typedef struct parser_state_t {
@@ -494,14 +498,23 @@ static void parse_value_end() {
             replace_node(value_node, value_bool_node);
             break;
           }
-          case UNSET_HASH:
-          case ALL_HASH: {
+          case REVERT_SHEET_HASH:
+          case ALL_HASH:
+          case INITIAL_HASH:
+          case UNSET_HASH: {
             value_type_keyword_t* value_kw = malloc(sizeof(value_type_keyword_t));
             value_type_node_t* value_kw_node = (value_type_node_t*)value_kw;
             value_kw_node->type = VALUE_TYPE_KEYWORD;
             value_kw_node->prev = 0;
             value_kw_node->next = 0;
-            value_kw->keyword = h == UNSET_HASH ? KEYWORD_UNSET : KEYWORD_ALL;
+            int kw = 0;
+            switch(h) {
+              case REVERT_SHEET_HASH: kw = KEYWORD_RESET_SHEET; break;
+              case ALL_HASH: kw = KEYWORD_ALL; break;
+              case INITIAL_HASH: kw = KEYWORD_INITIAL; break;
+              case UNSET_HASH: kw = KEYWORD_UNSET; break;
+            }
+            value_kw->keyword = kw;
 
             replace_node(value_node, value_kw_node);
             break;

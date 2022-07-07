@@ -112,7 +112,7 @@ QUnit.test('Source order is preferred', assert => {
 
       #app {
         class-toggle: one ${true}, two ${true};
-        class-toggle: three unset;
+        class-toggle: three revert-sheet;
       }
 
       #app {
@@ -138,7 +138,7 @@ QUnit.test('Source order is preferred on change', assert => {
       }
 
       #app {
-        class-toggle: one ${true}, two ${true}, three unset;
+        class-toggle: one ${true}, two ${true}, three revert-sheet;
         attr: two "two" ${step === 'two'};
       }
 

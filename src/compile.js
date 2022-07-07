@@ -32,7 +32,7 @@ import {
 } from './function.js';
 import { properties, features } from './property.js';
 import { createValueTemplate } from './template.js';
-import { Name, KEYWORD_UNSET, KEYWORD_ALL } from './constants.js';
+import { Name, KEYWORD_REVERT_SHEET, KEYWORD_ALL } from './constants.js';
 
 /**
  * @typedef {import('./property').PropertyDefinition} PropertyDefinition
@@ -43,8 +43,8 @@ import { Name, KEYWORD_UNSET, KEYWORD_ALL } from './constants.js';
  */
 
 let keywordMap = new Map([
-  [1, KEYWORD_UNSET],
-  [2, KEYWORD_ALL]
+  [3, KEYWORD_REVERT_SHEET],
+  [4, KEYWORD_ALL]
 ]);
 
 /**

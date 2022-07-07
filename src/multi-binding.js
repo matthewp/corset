@@ -7,7 +7,7 @@ import { properties, features } from './property.js';
 import { SparseArray } from './sparse-array.js';
 import { createValueTemplate } from './template.js';
 import { SpaceSeparatedListValue } from './value.js';
-import { KEYWORD_ALL, KEYWORD_UNSET } from './constants.js';
+import { KEYWORD_ALL, KEYWORD_REVERT_SHEET } from './constants.js';
 
 /**
  * @typedef {import('./types').MountedBehaviorType} MountedBehaviorType
@@ -174,7 +174,7 @@ export class MultiBinding extends Binding {
               let key = /** @type {string | Constant} */(values[0]);
 
               let idx = Name.is(key) ? 1 : 0;
-              if(values[1] === KEYWORD_UNSET) {
+              if(values[1] === KEYWORD_REVERT_SHEET) {
                 if(key === KEYWORD_ALL) {
                   for(let val of this.active) {
                     unset.add(val);

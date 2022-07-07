@@ -81,7 +81,7 @@ QUnit.test('Attribute longhand', assert => {
   assert.equal(input.hasAttribute('disabled'), false);
 });
 
-QUnit.test('Unset on shorthand undoes previous bindings', assert => {
+QUnit.test('revert-sheet on shorthand undoes previous bindings', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<input>`;
   function run(enable) {
@@ -92,7 +92,7 @@ QUnit.test('Unset on shorthand undoes previous bindings', assert => {
       }
 
       input.form-element {
-        attr: all unset;
+        attr: all revert-sheet;
         attr: placeholder "testing";
       }
     `;

@@ -51,5 +51,5 @@ let createConstant = () => {
 export const Name = createConstant();
 export const Keyword = createConstant();
 
-export const KEYWORD_UNSET = Keyword('unset');
+export const KEYWORD_REVERT_SHEET = Keyword('revert-sheet');
 export const KEYWORD_ALL = Keyword('all');
