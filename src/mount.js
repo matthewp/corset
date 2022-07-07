@@ -31,19 +31,6 @@ function scopedCallback(mp, fn, ...args) {
 /**
  * 
  * @param {Mountpoint} mp 
- * @param {CallbackFunction} fn
- * @param {...any[]} args
- * @returns {Promise<any>}
- */
- async function scopedAsyncCallback(mp, fn, ...args) {
-  let res = await Promise.resolve(fn.call(mp.behavior, ...args));
-  mp.update();
-  return res;
-}
-
-/**
- * 
- * @param {Mountpoint} mp 
  */
 export function BehaviorContext(mp) {
   /** @type {Element | Document | ShadowRoot} */
@@ -103,7 +90,7 @@ export class Mountpoint {
 
 /**
  * 
- * @param {HTMLElement | Document} element 
+ * @param {HTMLElement | Document | ShadowRoot} element 
  * @param {MountedBehaviorType} behavior
  * @param {Map<string, any>} [props]
  * @returns {Mountpoint}
