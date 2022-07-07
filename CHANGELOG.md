@@ -1,5 +1,11 @@
 # corset
 
+## 2.0.0-beta.1
+
+### Patch Changes
+
+- 921c26e: Allows a ShadowRoot to be a root element of a sheet
+
 ## 2.0.0-beta.0
 
 ### Major Changes
