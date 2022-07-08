@@ -1,5 +1,11 @@
 # corset
 
+## 2.0.0-beta.4
+
+### Patch Changes
+
+- de0927e: Fix bug with attach-template and vars
+
 ## 2.0.0-beta.3
 
 ### Patch Changes
