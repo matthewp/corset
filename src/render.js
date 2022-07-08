@@ -141,6 +141,15 @@ function render(element, bindings, root, changeset) {
     }
   }
 
+  if(bflags & flags.data) {
+    let binding = /** @type {KeyedMultiBinding} */(bindings.data);
+    for(let [prop, value] of binding.changes(changeset)) {
+      /** @type {HTMLElement} */
+      (element).dataset[prop] = value;
+      invalid = true;
+    }
+  }
+
   if(bflags & flags.text) {
     let binding = /** @type {Binding} */(bindings.text);
     if(binding.dirty(changeset)) {
@@ -154,14 +163,6 @@ function render(element, bindings, root, changeset) {
     let binding = /** @type {KeyedMultiBinding} */(bindings.prop);
     for(let [key, value] of binding.changes(changeset)) {
       /** @type {any} */(element)[key] = value;
-    }
-  }
-
-  if(bflags & flags.data) {
-    let binding = /** @type {KeyedMultiBinding} */(bindings.data);
-    for(let [prop, value] of binding.changes(changeset)) {
-      /** @type {HTMLElement} */
-      (element).dataset[prop] = value;
     }
   }
 
