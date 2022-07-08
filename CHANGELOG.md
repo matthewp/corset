@@ -1,5 +1,11 @@
 # corset
 
+## 2.0.0-beta.3
+
+### Patch Changes
+
+- 80fd8bf: When a data prop changes, rebind the sheet
+
 ## 2.0.0-beta.2
 
 ### Minor Changes
