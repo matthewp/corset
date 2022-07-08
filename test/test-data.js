@@ -32,3 +32,20 @@ QUnit.test('Can set multiple properties', assert => {
   assert.equal(root.firstElementChild.dataset.firstOne, 'one');
   assert.equal(root.firstElementChild.dataset.secondOne, 'two');
 });
+
+QUnit.test('Changes cause selectors to update', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app"></div>`;
+
+  let bindings = sheet`
+    #app {
+      data: one "two";
+    }
+
+    [data-one=two] {
+      class-toggle: works true;
+    }
+  `;
+  bindings.update(root);
+  assert.equal(root.firstElementChild.classList.contains('works'), true);
+});
