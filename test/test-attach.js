@@ -46,3 +46,21 @@ QUnit.test('Restores the original value when there is no patch', assert => {
   template(false).update(root);
   assert.equal(app.firstChild.localName, 'strong');
 });
+
+QUnit.test('Can use a variable from another selector', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app"></div>`;
+  let template = document.createElement('template');
+  template.innerHTML = `<div>works</div>`;
+  let bindings = sheet`
+    #app {
+      --template: ${template};
+      class-toggle: attached true;
+    }
+    .attached {
+      attach-template: var(--template);
+    }
+  `;
+  bindings.update(root);
+  assert.equal(root.firstElementChild.firstElementChild.textContent, 'works');
+});

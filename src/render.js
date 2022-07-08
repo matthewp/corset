@@ -124,6 +124,7 @@ function render(element, bindings, root, changeset) {
     if(binding.dirty(changeset)) {
       /** @type {HTMLTemplateElement} */
       let result = binding.update(changeset);
+      if(Array.isArray(result)) result = result[0];
       let doc = element.ownerDocument || document;
       let frag = doc.importNode(result.content, true);
       element.replaceChildren(frag);
