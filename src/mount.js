@@ -61,6 +61,8 @@ export class Mountpoint {
     this.bindings = null;
     /** @type {WeakMap<CallbackFunction, CallbackFunction>} */
     this.callbacks = new WeakMap();
+    /** @type {Mountpoint | null} */
+    this.parent = null;
   }
   /**
    * 

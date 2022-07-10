@@ -189,6 +189,7 @@ function render(element, bindings, root, changeset) {
       }
       if(!sameBehavior && Behavior !== null) {
         let mountpoint = new Mountpoint(/** @type {HTMLElement} */(element), Behavior, props);
+        mountpoint.parent = root.mount;
         mountpoint.update();
         map.set(Behavior, mountpoint);
       }

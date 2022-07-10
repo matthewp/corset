@@ -54,6 +54,7 @@ export class Root {
       let changeset = new Changeset(values);
       this.collect();
       invalid = renderRoot(this.bindingMap, this, changeset);
+      if(invalid) this.mount?.parent?.update();
     }
     this.queue = 0;
   }

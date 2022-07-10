@@ -1,4 +1,4 @@
-import sheet, { registerBehavior } from '../src/main.js';
+import sheet, { mount, registerBehavior } from '../src/main.js';
 
 QUnit.module('Property - behavior');
 
@@ -288,4 +288,44 @@ QUnit.test('`rebind` will rebind a function inside of the mountpoint', assert =>
   let inner = root.firstElementChild.firstElementChild;
   run();
   assert.equal(inner.textContent, 'works');
+});
+
+QUnit.test('Updates in the child behavior causes the parent to rebind', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app"><div id="inner"></div></div>`;
+  let run;
+  class One {
+    constructor(_p, { rebind }) {
+      run = () => {
+        this.loaded = true;
+        rebind();
+      };
+    }
+
+    bind() {
+      return sheet`
+        :root {
+          class-toggle: loaded ${this.loaded};
+        }
+      `;
+    }
+  }
+  mount(root, class {
+    bind() {
+      return sheet`
+        #app {
+          behavior: mount(${One});
+        }
+    
+        .loaded {
+          class-toggle: works true;
+        }
+      `;
+    }
+  });
+  let app = root.firstElementChild;
+  assert.equal(app.classList.contains('works'), false);
+  run();
+  assert.equal(app.classList.contains('loaded'), true);
+  assert.equal(app.classList.contains('works'), true);
 });
