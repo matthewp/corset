@@ -1,5 +1,11 @@
 # corset
 
+## 2.0.0-beta.5
+
+### Minor Changes
+
+- 8abb1ee: Child behaviors now cause the parent to rebind
+
 ## 2.0.0-beta.4
 
 ### Patch Changes
