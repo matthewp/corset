@@ -129,6 +129,7 @@ function render(element, bindings, root, changeset) {
       let frag = doc.importNode(result.content, true);
       element.replaceChildren(frag);
       invalid = true;
+      changeset.flags |= flags.attach;
     }
   }
 
@@ -151,10 +152,11 @@ function render(element, bindings, root, changeset) {
     }
   }
 
-  if(bflags & flags.text) {
+  text: if(bflags & flags.text) {
     let binding = /** @type {Binding} */(bindings.text);
     if(binding.dirty(changeset)) {
       let values = binding.update(changeset);
+      if(changeset.flags & flags.attach) break text;
       if(Array.isArray(values)) values = values.join('');
       element.textContent = values;
     }
@@ -184,13 +186,15 @@ function render(element, bindings, root, changeset) {
 
       if(hasOldValue || sameBehavior) {
         let mp = /** @type {Mountpoint} */(map.get(OldBehavior));
-        if(sameBehavior) mp.update();
+        if(sameBehavior) {
+          if(mp.update()) invalid = true;
+        }
         else mp.unmount();
       }
       if(!sameBehavior && Behavior !== null) {
         let mountpoint = new Mountpoint(/** @type {HTMLElement} */(element), Behavior, props);
         mountpoint.parent = root.mount;
-        mountpoint.update();
+        if(mountpoint.update()) invalid = true;
         map.set(Behavior, mountpoint);
       }
     }

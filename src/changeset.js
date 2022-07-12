@@ -10,5 +10,7 @@ export class Changeset {
     this.values = values;
     /** @type {boolean} */
     this.selectors = true;
+    /** @type {number} */
+    this.flags = 0;
   }
 }

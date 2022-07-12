@@ -1,4 +1,4 @@
-import sheet from '../src/main.js';
+import sheet, { mount } from '../src/main.js';
 
 QUnit.module('Property - attach');
 
@@ -63,4 +63,50 @@ QUnit.test('Can use a variable from another selector', assert => {
   `;
   bindings.update(root);
   assert.equal(root.firstElementChild.firstElementChild.textContent, 'works');
+});
+
+QUnit.test('If text resets and an attach-template occurs, text does not get reset', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app"></div>`;
+  let template = document.createElement('template');
+  template.innerHTML = `<span>works</span>`;
+  class ClassBehavior {
+    static inputProperties = ['--cn'];
+    bind(props) {
+      let className = props.get('--cn');
+      return sheet`
+        :root {
+          class-toggle: ${className} ${className};
+        }
+      `;
+    }
+  }
+  let props = new Map();
+  props.set('--cn', 'one');
+  let mp = mount(root, class {
+    bind(props) {
+      return sheet`
+        #app {
+          --cn: ${props.get('--cn')};
+          behavior: mount(${ClassBehavior});
+        }
+
+        .one {
+          text: "one";
+        }
+
+        .two {
+          attach-template: ${template};
+        }
+      `;
+    }
+  }, props);
+  let app = root.firstElementChild;
+
+  assert.equal(app.textContent, 'one');
+  props.set('--cn', 'two');
+  mp.update();
+  assert.ok(app.firstElementChild, 'Has a change element');
+  assert.equal(app.firstElementChild.localName, 'span');
+  assert.equal(app.firstElementChild.textContent, 'works');
 });

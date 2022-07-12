@@ -295,6 +295,7 @@ QUnit.test('Updates in the child behavior causes the parent to rebind', assert =
   root.innerHTML = `<div id="app"><div id="inner"></div></div>`;
   let run;
   class One {
+    loaded = false;
     constructor(_p, { rebind }) {
       run = () => {
         this.loaded = true;

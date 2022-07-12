@@ -77,11 +77,11 @@ export class Mountpoint {
     return listener;
   }
   /**
-   * 
+   * @returns {boolean}
    */
   update() {
     this.bindings = this.behavior.bind(this.props, this.context);
-    this.bindings.update(this);
+    return this.bindings.update(this);
   }
 
   unmount() {
