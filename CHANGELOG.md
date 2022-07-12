@@ -1,5 +1,11 @@
 # corset
 
+## 2.0.0-beta.6
+
+### Patch Changes
+
+- b76dfa5: On conflict between attach-template and text, former wins
+
 ## 2.0.0-beta.5
 
 ### Minor Changes
