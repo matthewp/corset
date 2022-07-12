@@ -44,19 +44,25 @@ export class Root {
   }
   /**
    * @param {any[]} values
+   * @returns {boolean}
    */
   update(values = this.values) {
     this.values = values;
     this.queue++;
-    if(this.queue > 1) return;
+    if(this.queue > 1) return false;
     let invalid = true;
+    let changed = false;
     while(invalid) {
       let changeset = new Changeset(values);
       this.collect();
       invalid = renderRoot(this.bindingMap, this, changeset);
-      if(invalid) this.mount?.parent?.update();
+      if(invalid) changed = true;
+    }
+    if(changed) {
+      this.mount?.parent?.update();
     }
     this.queue = 0;
+    return changed;
   }
   /**
    * Collect all of the bindings
@@ -112,6 +118,7 @@ export class SheetWithValues {
 
   /**
    * @param {HTMLElement | Mountpoint} rootElement
+   * @returns {boolean}
    */
   update(rootElement) {
     /** @type {Root} */
