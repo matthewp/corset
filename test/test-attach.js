@@ -24,7 +24,7 @@ QUnit.test('Attaches a template when matching selector', assert => {
   assert.equal(app.firstChild.textContent, 'works');
 });
 
-QUnit.test('Restores the original value when there is no patch', assert => {
+QUnit.test('Restores the original value when there is no match', assert => {
   let root = document.createElement('main');
   root.innerHTML = `<div id="app" class="enabled"><strong>orig</strong></div><template><span>works</span></template>`;
   function template(value) {
@@ -109,4 +109,30 @@ QUnit.test('If text resets and an attach-template occurs, text does not get rese
   assert.ok(app.firstElementChild, 'Has a change element');
   assert.equal(app.firstElementChild.localName, 'span');
   assert.equal(app.firstElementChild.textContent, 'works');
+});
+
+QUnit.test('Selector bound by another binding can be toggled on and off', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app"></div>`;
+  let template = document.createElement('template');
+  template.innerHTML = `<span>worked</span>`;
+  function run(value) {
+    return sheet`
+      #app {
+        class-toggle: one ${value};
+      }
+
+      .one {
+        --value: ${template};
+        attach-template: var(--value);
+      }
+    `;
+  }
+  let app = root.firstElementChild;
+  run(true).update(root);
+  assert.equal(app.firstElementChild.localName, 'span');
+  run(false).update(root);
+  assert.equal(app.firstElementChild, null);
+  run(true).update(root);
+  assert.equal(app.firstElementChild.localName, 'span');
 });

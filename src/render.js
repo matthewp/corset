@@ -119,12 +119,13 @@ function render(element, bindings, root, changeset) {
     }
   }
 
-  if(bflags & flags.attach) {
+  attach: if(bflags & flags.attach) {
     let binding = /** @type {Binding} */(bindings.attachTemplate);
     if(binding.dirty(changeset)) {
       /** @type {HTMLTemplateElement} */
       let result = binding.update(changeset);
       if(Array.isArray(result)) result = result[0];
+      if(result === undefined) break attach;
       let doc = element.ownerDocument || document;
       let frag = doc.importNode(result.content, true);
       element.replaceChildren(frag);
@@ -146,8 +147,13 @@ function render(element, bindings, root, changeset) {
   if(bflags & flags.data) {
     let binding = /** @type {KeyedMultiBinding} */(bindings.data);
     for(let [prop, value] of binding.changes(changeset)) {
-      /** @type {HTMLElement} */
-      (element).dataset[prop] = value;
+      if(value === undefined)
+        delete /** @type {HTMLElement} */
+        (element).dataset[prop];
+      else
+        /** @type {HTMLElement} */
+        (element).dataset[prop] = value;
+
       invalid = true;
     }
   }

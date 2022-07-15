@@ -188,6 +188,7 @@ export class MultiBinding extends Binding {
                 break;
               }
 
+              if(values.length === 1) break;
               this.#bookkeep(active, key);
               if(dirty) dirtyKeys.add(key);
               let valueList = getValueList(key, this.numberOfValuesWithKey);
