@@ -1,5 +1,11 @@
 # corset
 
+## 2.0.0-beta.7
+
+### Patch Changes
+
+- 5d3b461: Fixes bugs based on vars not being resolvable
+
 ## 2.0.0-beta.6
 
 ### Patch Changes
