@@ -109,19 +109,13 @@ export const readString = (start, end) => {
 export const readProperty = () => readFromBuffer(data8, heap32[1], heap32[2]);
 
 /**
- * Reads the property key.
- * @returns {string}
- */
- export const readKey = () => readFromBuffer(data8, heap32[3], heap32[4]);
-
-/**
  * Reads the number of values in the property value.
  * @returns {number}
  */
-export const readNumberOfValues = () => heap32[5];
+export const readNumberOfValues = () => heap32[3];
 
 /**
  * Gets the first value pointer in the property.
  * @returns {number}
  */
-export const readFirstValuePointer = () => heap32[6];
+export const readFirstValuePointer = () => heap32[4];

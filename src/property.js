@@ -1,5 +1,14 @@
 // @ts-check
 
+/**
+ * @typedef {import('./pinfo').PropertyDefinition} PropertyDefinition
+ * @typedef {import('./pinfo').SimplePropertyDefinition} SimplePropertyDefinition
+ * @typedef {import('./pinfo').ShorthandPropertyDefinition} ShorthandPropertyDefinition
+ * @typedef {import('./pinfo').LonghandPropertyDefinition} LonghandPropertyDefinition
+ * @typedef {import('./pinfo').MultiPropertyDefinition} MultiPropertyDefinition
+ * @typedef {import('./pinfo').BehaviorMultiPropertyDefinition} BehaviorMultiPropertyDefinition
+ */
+
 export const flags = {
   text: 1 << 0,
   classToggle: 1 << 1,
@@ -15,22 +24,14 @@ export const flags = {
   storeSet: 1 << 11
 };
 
-/**
- * @typedef {import('./pinfo').PropertyDefinition} PropertyDefinition
- * @typedef {import('./pinfo').SimplePropertyDefinition} SimplePropertyDefinition
- * @typedef {import('./pinfo').ShorthandPropertyDefinition} ShorthandPropertyDefinition
- * @typedef {import('./pinfo').LonghandPropertyDefinition} LonghandPropertyDefinition
- * @typedef {import('./pinfo').MultiPropertyDefinition} MultiPropertyDefinition
- * @typedef {import('./pinfo').BehaviorMultiPropertyDefinition} BehaviorMultiPropertyDefinition
- */
-
  export const features = {
   shorthand: 1 << 0,
   longhand: 1 << 1,
-  keyed: 1 << 2,
+  keyed: 1 << 2, // Legacy, needed for sure reason
   multi: 1 << 3,
   oldValues: 1 << 4,
-  behavior: 1 << 5
+  behavior: 1 << 5,
+  labeled: 1 << 6
 };
 
 /** @type {Record<string, PropertyDefinition>} */
@@ -50,10 +51,8 @@ export const properties = {
   /** @type {ShorthandPropertyDefinition} */
   attr: {
     flag: flags.attr,
-    feat: features.multi | features.shorthand,
+    feat: features.multi | features.shorthand | features.keyed,
     prop: 'attr',
-    keyed: true,
-    multi: true,
     longhand: ['attr-value', 'attr-toggle'],
     defaults: ['', true]
   },
@@ -63,7 +62,6 @@ export const properties = {
     feat: features.longhand,
     shorthand: 'attr',
     index: 0,
-    keyed: true,
     default: '',
     read(el, key) {
       return ('getAttribute' in el) && el.getAttribute(key);
@@ -75,7 +73,6 @@ export const properties = {
     feat: features.longhand,
     shorthand: 'attr',
     index: 1,
-    keyed: true,
     default: true,
     read(el, key) {
       return ('hasAttribute' in el) && el.hasAttribute(key);
@@ -84,9 +81,7 @@ export const properties = {
   /** @type {MultiPropertyDefinition} */
   'class-toggle': {
     flag: flags.classToggle,
-    feat: features.multi,
-    multi: true,
-    keyed: true,
+    feat: features.multi | features.keyed,
     prop: 'classToggle',
     read(el, key) {
       return ('classList' in el) && el.classList.contains(key);
@@ -97,8 +92,6 @@ export const properties = {
     flag: flags.data,
     feat: features.multi | features.keyed,
     prop: 'data',
-    multi: true,
-    keyed: true,
     read(el, key) {
       if(!('dataset' in el))
         throw new Error(`data can only be used on HTMLElements`);
@@ -140,92 +133,71 @@ export const properties = {
   /** @type {ShorthandPropertyDefinition} */
   event: {
     flag: flags.event,
-    feat: features.multi | features.keyed | features.oldValues | features.shorthand,
+    feat: features.multi | features.keyed | features.oldValues | features.shorthand | features.labeled,
     prop: 'event',
-    multi: true,
-    keyed: true,
-    labeled: true,
-    oldValues: true,
     longhand: ['event-type', 'event-listener', 'event-capture', 'event-once',
       'event-passive', 'event-signal'],
     defaults: [null, false, false, false, undefined]
   },
   'event-type': {
     flag: flags.event,
-    feat: features.keyed | features.longhand,
+    feat: features.keyed | features.longhand | features.labeled,
     shorthand: 'event',
     index: 0,
-    keyed: true,
-    labeled: true,
     default: null,
     read: () => null
   },
   'event-listener': {
     flag: flags.event,
-    feat: features.longhand,
+    feat: features.longhand | features.labeled,
     shorthand: 'event',
     index: 1,
-    keyed: true,
-    labeled: true,
     default: null,
     read: () => null
   },
   'event-capture': {
     flag: flags.event,
-    feat: features.longhand,
+    feat: features.longhand | features.labeled,
     shorthand: 'event',
     index: 2,
-    keyed: true,
-    labeled: true,
     default: false,
     read: () => false
   },
   'event-once': {
     flag: flags.event,
-    feat: features.longhand,
+    feat: features.longhand | features.labeled,
     shorthand: 'event',
     index: 3,
-    keyed: true,
-    labeled: true,
     default: false,
     read: () => false
   },
   'event-passive': {
     flag: flags.event,
-    feat: features.longhand,
+    feat: features.longhand | features.labeled,
     shorthand: 'event',
     index: 4,
-    keyed: true,
-    labeled: true,
     default: false,
     read: () => false
   },
   'event-signal': {
     flag: flags.event,
-    feat: features.longhand,
+    feat: features.longhand | features.labeled,
     shorthand: 'event',
     index: 5,
-    keyed: true,
-    labeled: true,
     default: undefined,
     read: () => undefined
   },
   /** @type {BehaviorMultiPropertyDefinition} */
   behavior: {
     flag: flags.behavior,
-    feat: features.multi | features.behavior,
-    prop: 'behavior',
-    multi: true,
-    keyed: false, // TODO get rid of
-    oldValues: true,
+    feat: features.multi | features.behavior | features.oldValues,
+    prop: 'behavior'
   },
   /** @type {MultiPropertyDefinition} */
   prop: {
     flag: flags.prop,
     feat: features.multi | features.keyed,
     prop: 'prop',
-    multi: true,
-    keyed: true,
     read(el, key) {
       return /** @type {any} */(el)[key];
     }

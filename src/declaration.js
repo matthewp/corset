@@ -19,8 +19,6 @@ export class Declaration {
     this.rule = rule;
     /** @type {string} */
     this.propertyName = propertyName;
-    /** @type {string | null} */
-    this.key = null;
     /** @type {ValueTemplate | null} */
     this.keyTemplate = null;
     /** @type {number} */
@@ -38,10 +36,7 @@ export class Declaration {
       if(defn.feat & features.multi) {
         this.flags |= flags.multi;
       }
-      if(this.key !== null) {
-        this.flags |= flags.keyed;
-      }
-      if(defn.labeled) {
+      if(defn.feat & features.labeled) {
         this.flags |= flags.label;
       }
       if(defn.feat & features.longhand) {
@@ -58,8 +53,7 @@ export class Declaration {
 export const flags = {
   shorthand: 1 << 0,
   longhand: 1 << 1,
-  keyed: 1 << 2,
-  multi: 1 << 3,
-  behavior: 1 << 4,
-  label: 1 << 5,
+  multi: 1 << 2,
+  behavior: 1 << 3,
+  label: 1 << 4,
 };
