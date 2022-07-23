@@ -3,7 +3,7 @@
 import { Binding } from './binding.js';
 import { MultiBinding } from './multi-binding.js';
 import { SimpleBinding } from './simple-binding.js';
-import { flags, properties } from './property.js';
+import { flags, properties, features } from './property.js';
 
 /**
  * @typedef {import('./types').MountedBehaviorType} MountedBehaviorType
@@ -81,9 +81,11 @@ export class Bindings {
 
       /** @type {MultiPropertyDefinition | ShorthandPropertyDefinition | BehaviorMultiPropertyDefinition | undefined} */
       let multiDef = undefined;
-      if('multi' in defn || 'longhand' in defn) multiDef = defn;
+      if(defn.feat & features.multi || 'longhand' in defn) {
+        multiDef = /** @type {MultiPropertyDefinition} */(defn);
+      }
       else if('shorthand' in defn)
-        multiDef = /** @type {ShorthandPropertyDefinition} */(properties[defn.shorthand]);
+        multiDef = /** @type {ShorthandPropertyDefinition} */(properties[/** @type {LonghandPropertyDefinition} */(defn).shorthand]);
       if(multiDef) {
         if(!this[multiDef.prop]) {
           this[multiDef.prop] = /** @type {MultiBinding<string> & MultiBinding<any[]> & MultiBinding<MountedBehaviorType>} */

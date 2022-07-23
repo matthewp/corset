@@ -147,8 +147,6 @@ typedef struct tag_prop_t {
   unsigned char type;
   int prop_start;
   int prop_end;
-  int mod_start;
-  int mod_end;
   int num_of_values;
   value_type_node_t* first_value;
   value_type_node_t* last_value;
@@ -389,8 +387,6 @@ static unsigned char parse_rule_reset_mode() {
     prop->type = TAG_PROPERTY;
     prop->prop_start = parser_state->index;
     prop->prop_end = 0;
-    prop->mod_start = 0;
-    prop->mod_end = 0;
     prop->num_of_values = 0;
     prop->first_value = 0;
     prop->last_value = 0;
@@ -409,13 +405,8 @@ static unsigned char parse_rule_reset_mode() {
 static unsigned char parse_prop_start_mode() {
   char c = read_char();
   tag_prop_t* prop = get_prop_tag();
-  if(identifierToken(c) && prop->mod_end == 0) {
+  if(identifierToken(c)) {
     parser_state->last_non_whitespace = parser_state->index;
-  } else if(c == '[') {
-    prop->prop_end = parser_state->last_non_whitespace + 1;
-    prop->mod_start = parser_state->index + 1;
-  } else if(c == ']') {
-    prop->mod_end = parser_state->last_non_whitespace + 1;
   } else if(c == ':') {
     if(prop->prop_end == 0)
       prop->prop_end = parser_state->last_non_whitespace + 1;

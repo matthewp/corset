@@ -23,21 +23,13 @@ type ReadKeyedValue = (element: Element | Document | ShadowRoot, key: string) =>
 type ReadUnkeyedValue = (element: Element | Document | ShadowRoot) => any;
 
 export interface MultiPropertyDefinition extends BasePropertyDefinition {
-  keyed: boolean;
-  multi: true;
-  labeled?: false;
   read: ReadKeyedValue;
-  oldValues?: boolean;
   longhand?: never;
   shorthand?: never;
   prop: 'classToggle' | 'data' | 'prop';
 }
 
 export interface BehaviorMultiPropertyDefinition extends BasePropertyDefinition {
-  keyed: false;
-  multi: true;
-  labeled?: false;
-  oldValues: boolean;
   longhand?: never;
   prop: 'behavior';
   read?: never;
@@ -49,23 +41,16 @@ export interface ShorthandPropertyDefinition extends BasePropertyDefinition {
   longhand: string[];
   prop: 'each' | 'attr' | 'event';
   defaults: any[];
-  labeled?: boolean;
-  keyed?: boolean;
-  multi?: boolean;
-  oldValues?: boolean;
 }
 
 export interface LonghandPropertyDefinition extends BasePropertyDefinition {
   shorthand: string;
   index: number;
-  keyed?: boolean;
-  labeled?: boolean;
   default: any;
   read: ReadKeyedValue;
 }
 
 export interface SimplePropertyDefinition extends BasePropertyDefinition {
-  labeled?: false;
   read: ReadUnkeyedValue;
   prop: PropertyPropName;
 }
@@ -93,6 +78,6 @@ export declare const flags: Record<
   'storeSet'
 , number>;
 
-type featureNames = 'keyed' | 'multi' | 'oldValues' | 'longhand' | 'behavior';
+type featureNames = 'multi' | 'oldValues' | 'longhand' | 'behavior';
 
 export declare const features: Record<featureNames, number>;

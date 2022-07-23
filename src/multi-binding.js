@@ -56,15 +56,14 @@ export class MultiBinding extends Binding {
       /** @type {ShorthandPropertyDefinition} */(defn).longhand?.length || 2;
 
     /** @type {number} */
-    this.numberOfValuesWithKey = this.numberOfValues + (defn.keyed ? 1 : 0);
+    this.numberOfValuesWithKey = this.numberOfValues + (defn.feat & features.keyed ? 1 : 0);
 
     /** @type {Set<MultiBindingKey>} */
     this.active = new Set();
     /** @type {Map<MultiBindingKey, readonly any[]>} */
     this.initial = new Map();
     /** @type {Map<MultiBindingKey, any[]> | null} */
-    this.oldValues = /** @type {MultiPropertyDefinition} */(defn).oldValues
-      ? new Map() : null;
+    this.oldValues = defn.feat & features.oldValues ? new Map() : null;
   }
   /**
   * 
@@ -75,11 +74,6 @@ export class MultiBinding extends Binding {
 
     let propName = declaration.propertyName;
     switch(declaration.flags) {
-      // attr[type]: "text"
-      case declFlags.multi | declFlags.shorthand | declFlags.keyed: {
-        let template = createPrependedKeyedTemplate(declaration);
-        return this.addTemplate(declaration, template);
-      }
       // Unkeyed multi
       case declFlags.multi | declFlags.shorthand:
       // behavior: mount(Behavior)
@@ -91,15 +85,6 @@ export class MultiBinding extends Binding {
       // each: ${items} select(template)
       case declFlags.shorthand: {
         return this.addTemplate(declaration, declaration.template);
-      }
-      case declFlags.longhand | declFlags.keyed: {
-        let defn = /** @type {LonghandPropertyDefinition} */(properties[propName]);        
-        return this.addTemplate(declaration, createPrependedKeyedTemplate(declaration), defn.index);
-      }
-      // class-toggle[disabled]: true
-      case declFlags.keyed | declFlags.multi: {
-        let template = createPrependedKeyedTemplate(declaration);
-        return this.addTemplate(declaration, template);
       }
       // each-items: ${items}
       case declFlags.longhand:
@@ -196,12 +181,7 @@ export class MultiBinding extends Binding {
                 if(valueList.empty(i))
                   valueList.set(i, values[idx]);
               }
-              //let allValues = this.#appendToValues(key, values);
-              //yield [allValues, dirty];
-              //if(this.oldValues)
-              //  this.oldValues.set(key, allValues.slice(1, this.numberOfValues + 1));
             }
-            //break loop;
             break;
           }
           // event: [label] type callback, [another-label] type callback
@@ -222,12 +202,7 @@ export class MultiBinding extends Binding {
                   valueList.set(i, values[i]);
               }
               if(dirty) dirtyKeys.add(key);
-              /*let allValues = this.#appendToValues(key, values);
-              yield [allValues, dirty];
-              if(this.oldValues)
-                this.oldValues.set(key, allValues.slice(0, this.numberOfValues + 1));*/
             }
-            //break loop;
             break;
           }
           // behavior: mount(Behavior)
@@ -241,32 +216,9 @@ export class MultiBinding extends Binding {
             }
             break loop;
           }
-          // attr[type]: "text"
-          case declFlags.multi | declFlags.shorthand | declFlags.keyed: {
-            console.warn('Keyed properties have been deprecated.');
-            let key = computedValue[0];
-            this.#bookkeep(active, key);
-            let allValues = this.#appendToValues(key, computedValue);
-            yield [allValues, dirty];
-            if(this.oldValues) this.oldValues.set(key, allValues.slice(1, this.numberOfValues + 1));
-            break;
-          }
-
-          /*
-          case declFlags.longhand | declFlags.label: {
-            break
-          }
-          */
-          
-          // attr-value[type]: "text"
-          case declFlags.longhand | declFlags.keyed:
           // each-items: ${items};
           case declFlags.longhand: {
-            if(declaration.flags === (declFlags.longhand | declFlags.keyed)) {
-              console.warn('Keyed properties have been deprecated.');
-            }
-
-            let keyed = this.defn.keyed;
+            let keyed = this.defn.feat & features.keyed;
             /** @type {string | null} */
             let key = keyed ? computedValue[0] : null;
             /** @type {any} */
@@ -313,16 +265,6 @@ export class MultiBinding extends Binding {
               dirtyKeys.add(key);
             break;
           }
-          // class-toggle[disabled]: true
-          case declFlags.keyed | declFlags.multi: {
-            console.warn('Keyed properties have been deprecated.');
-            let key = computedValue[0];
-            this.#bookkeep(active, key);
-            let allValues = this.#appendToValues(key, computedValue);
-            if(dirty && this.oldValues) this.oldValues.set(key, computedValue.slice(1));
-            yield [allValues, dirty];
-            break;
-          }
           // each: ${items} select(template)
           case declFlags.shorthand: {
             this.#bookkeep(active, null);
@@ -341,7 +283,7 @@ export class MultiBinding extends Binding {
       if(!dirtyKeys.has(key)) continue;
       // valueMap is always appended from a longhand prop.
       let numOfValues = this.numberOfValues;
-      let keyed = this.defn.keyed;
+      let keyed = this.defn.feat & features.keyed;
       let i = keyed ? 1 : 0;
       while(i < numOfValues) {
         if(values.empty(i)) {
@@ -356,19 +298,13 @@ export class MultiBinding extends Binding {
           values.push(...current);
         }
       }
-      // if(key) {
-      //   if(Label.isLabel(key))
-      //     values.unshift(this.labelKey?.get(/* @type {Label} */(key)));
-      //   else if(values.empty(0))
-      //     values[0] = key;
-      // }
       yield [/** @type {[K, ...any[]]} */(/** @type {unknown} */(values)), true];
     }
 
     // Yield out to reset to initial state.
     for(let key of active) {
       let initialValues = this.initial.get(key) || [];
-      let valuesWithKey = this.defn.keyed && !Name.is(key) ? [key, ...initialValues] : Array.from(initialValues);
+      let valuesWithKey = this.defn.feat & features.keyed && !Name.is(key) ? [key, ...initialValues] : Array.from(initialValues);
       let allValues = this.#appendToValues(key, /** @type {[K, ...any[]]} */(valuesWithKey));
       yield [allValues, true];
       this.active.delete(key);

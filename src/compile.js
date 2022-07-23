@@ -10,7 +10,6 @@
   parse, next,
   readNumberOfValues,
   readFirstValuePointer,
-  readKey,
   readProperty,
   readString
 } from './parser.js';
@@ -46,20 +45,6 @@ let keywordMap = new Map([
   [3, KEYWORD_REVERT_SHEET],
   [4, KEYWORD_ALL]
 ]);
-
-/**
- * 
- * @param {string} key
- * @returns {ValueTemplate}
- */
-function getKeyValue(key) {
-  let template = key.startsWith('--') ?
-    createValueTemplate(PlaceholderValue, [
-      createValueTemplate(anyValue(key))
-    ]) :
-    createValueTemplate(anyValue(key));
-  return template;
-}
 
 /**
  * Gets the value at the pointer location.
@@ -155,9 +140,6 @@ function compile(strings, values) {
         let ptr = readFirstValuePointer();
         let num = readNumberOfValues();
 
-        // TODO only if this property is keyed
-        let key = readKey();
-
         /** @type {PropertyDefinition} */
         let defn = properties[propName];
 
@@ -184,10 +166,10 @@ function compile(strings, values) {
         let commaSeparated = args !== _args;
         // Multis are coerced to comma separated even if they had no commas.
         // Ideally this would happen in the parser.
-        if(defn?.feat & features.multi && !commaSeparated && !key) {
+        if(defn?.feat & features.multi && !commaSeparated) {
           args = [];
         }
-        if(commaSeparated || ((defn?.feat & features.multi) && !key)) {
+        if(commaSeparated || ((defn?.feat & features.multi))) {
           args.push(createValueTemplate(SpaceSeparatedListValue, _args));
         }
 
@@ -198,9 +180,6 @@ function compile(strings, values) {
           case !!(defn?.feat & features.multi): {
             template = createValueTemplate(CommaSeparatedListValue, args);
             break;
-          }
-          case !!((defn?.feat & features.keyed) && (defn?.feat & features.longhand)) && !key: {
-            throw new Error(`[${propName}] requires a key.`);
           }
           case !!(defn?.feat & features.longhand) || num > 1: {
             let Value = commaSeparated ? CommaSeparatedListValue : SpaceSeparatedListValue;
@@ -214,11 +193,6 @@ function compile(strings, values) {
         }
 
         let declaration = new Declaration(/** @type {Rule} */(rule), propName, sourceOrder++, template);
-
-        if(key) {
-          declaration.key = key;
-          declaration.keyTemplate = getKeyValue(key);
-        }
 
         declaration.init();
         /** @type {Rule} */(rule).addDeclaration(declaration);
