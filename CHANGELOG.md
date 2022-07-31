@@ -1,5 +1,11 @@
 # corset
 
+## 2.0.1
+
+### Patch Changes
+
+- 23b5605: Fix to allow each to be used with attr
+
 ## 2.0.0
 
 ### Major Changes
