@@ -115,7 +115,7 @@ function render(element, bindings, root, changeset) {
         inst = new EachInstance(element, template, key);
         eachInstances.set(element, inst);
       }
-      return inst.set(items);
+      if(inst.set(items)) invalid = true;
     }
   }
 
