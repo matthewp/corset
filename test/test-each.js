@@ -94,3 +94,24 @@ QUnit.test('Deleting an item in a keyed list updates sibling indices', assert =>
   assert.equal(root.querySelector('#item-1 #index').textContent, 0);
   assert.equal(root.querySelector('#item-3 #index').textContent, 1);
 });
+
+QUnit.test('Can be used with attr', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div class="selector" aria-label="color-theme"></div><template><span></span></template>`;
+  sheet`
+    .selector {
+      attr: role "group";
+      attr: tabindex 0;
+      each-items: ${[{id:1}, {id:2}]};
+      each-template: select(template);
+      each-key: id;
+
+    }
+  `.update(root);
+
+  let s = root.firstElementChild;
+  assert.equal(s.getAttribute('tabindex'), '0');
+  assert.equal(s.getAttribute('role'), 'group');
+
+  assert.equal(s.children.length, 2);
+});
