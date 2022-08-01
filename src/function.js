@@ -75,11 +75,16 @@ registerFunction.call(registry, 'get', class {
    * @returns
    */
   check([value, callbackOrProp]) {
-    if(typeof value === 'object' && getKeySymbol in value &&
-      typeof callbackOrProp !== 'function' &&
-      value[getKeySymbol](callbackOrProp) !== this.value) {
-      this.value = value[getKeySymbol](callbackOrProp);
-      return true;
+    if(typeof value === 'object') {
+      if(typeof callbackOrProp !== 'function') {
+        let newValue = getKeySymbol in value ?
+          value[getKeySymbol](callbackOrProp) :
+          value[callbackOrProp];
+        if(newValue !== this.value) {
+          this.value = newValue;
+          return true;
+        }
+      }
     }
     return false;
   }

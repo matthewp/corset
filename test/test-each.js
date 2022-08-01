@@ -105,7 +105,6 @@ QUnit.test('Can be used with attr', assert => {
       each-items: ${[{id:1}, {id:2}]};
       each-template: select(template);
       each-key: id;
-
     }
   `.update(root);
 
@@ -114,4 +113,31 @@ QUnit.test('Can be used with attr', assert => {
   assert.equal(s.getAttribute('role'), 'group');
 
   assert.equal(s.children.length, 2);
+});
+
+QUnit.test('Changes to items result in updates', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<ul></ul><template><li></li></template>`;
+  let items = [{id: 1, label: 'one'}, {id: 2, label: 'two'}];
+  function bind() {
+    return sheet`
+      ul {
+        each: ${items} select(template) id;
+      }
+
+      li {
+        text: get(item(), label);
+      }
+    `;
+  }
+  let ul = root.firstElementChild;
+  bind().update(root);
+  
+  assert.equal(ul.firstElementChild.textContent, 'one');
+  assert.equal(ul.firstElementChild.nextElementSibling.textContent, 'two');
+
+  items[1].label = 'two !!';
+  bind().update(root);
+  assert.equal(ul.firstElementChild.textContent, 'one');
+  assert.equal(ul.firstElementChild.nextElementSibling.textContent, 'two !!');
 });
