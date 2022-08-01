@@ -1,6 +1,6 @@
 {
   "name": "corset",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Declarative DOM binding, without the complexity of JSX/templates.",
   "type": "module",
   "main": "./lib/main.js",
