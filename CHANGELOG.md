@@ -1,5 +1,11 @@
 # corset
 
+## 2.0.2
+
+### Patch Changes
+
+- cf4ca7a: Ensure changes in list update
+
 ## 2.0.1
 
 ### Patch Changes
