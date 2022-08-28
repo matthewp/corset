@@ -5,7 +5,7 @@ import { createValueTemplate } from './template.js';
 import { ComputedValue } from './compute.js';
 import { registry as behaviorRegistry } from './mount.js';
 import { lookup } from './scope.js';
-import { storeDataName, storePropName, getKeySymbol } from './store.js';
+import { storeDataSelector, storePropName, getKeySymbol } from './store.js';
 
 /**
  * @typedef {import('./binding').Binding} Binding
@@ -126,9 +126,7 @@ class ScopeLookupFunction {
    */
    constructor(dataName, propName) {
     /** @type {string} */
-    this.dataPropName = 'data-corset-' + dataName;
-    /** @type {string} */
-    this.dataSelector = '[' + this.dataPropName + ']';
+    this.dataSelector = `[data-corset-scope~=${dataName}]`;
     /** @type {string} */
     this.propName = propName;
     /** @type {any} */
@@ -146,7 +144,7 @@ class ScopeLookupFunction {
     let check = false;
     if(changeset.selectors) check = true;
     if(check) {
-      let value = lookup(element, this.dataPropName, this.dataSelector, this.propName);
+      let value = lookup(element, this.dataSelector, this.propName);
       if(value !== this.value) {
         this.value = value;
         return true;
@@ -165,13 +163,13 @@ class ScopeLookupFunction {
 
 registerFunction.call(registry, 'item', class extends ScopeLookupFunction {
   constructor() {
-    super('item', 'corsetItem');
+    super('item', 'corset.item');
   }
 });
 
 registerFunction.call(registry, 'index', class extends ScopeLookupFunction {
   constructor() {
-    super('index', 'corsetIndex');
+    super('index', 'corset.index');
   }
 });
 
@@ -191,9 +189,8 @@ registerFunction.call(registry, 'store-get', class {
   check([storeName, key], _props, { element }, changeset) {
     let check = changeset.selectors;
     if(check) {
-      let dataName = storeDataName(storeName);
       /** @type {Map<string, any> | undefined} */
-      let map = lookup(element, dataName, `[${dataName}]`, storePropName(storeName));
+      let map = lookup(element, storeDataSelector(storeName), storePropName(storeName));
       if(map?.get(key) !== this.value) {
         this.value = map?.get(key);
         return true;
@@ -222,9 +219,8 @@ registerFunction.call(registry, 'store', class {
    check([storeName], _props, { element }, changeset) {
     let check = changeset.selectors;
     if(check) {
-      let dataName = storeDataName(storeName);
       /** @type {Map<any, any> | undefined} */
-      let map = lookup(element, dataName, `[${dataName}]`, storePropName(storeName));
+      let map = lookup(element, storeDataSelector(storeName), storePropName(storeName));
       if(map !== this.map) {
         this.map = map;
         return true;

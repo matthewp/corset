@@ -1,5 +1,8 @@
 // @ts-check
-import { datasetKey } from './custom-prop.js';
+import { addItemToScope } from './scope.js';
+const eachSymbol = Symbol.for('corset.each');
+const itemSymbol = Symbol.for('corset.item');
+const indexSymbol = Symbol.for('corset.index');
 
 /**
  * @typedef {object} FragData
@@ -57,18 +60,20 @@ export class EachInstance {
    * @param {*} index 
    */
   setData(frag, value, index) {
-    let itemProp = datasetKey('Item');
-    let indexProp = datasetKey('Index');
     for(let element of frag.nodes) {
       if('dataset' in element) {
-        /** @type {HTMLElement} */
-        (element).dataset[itemProp] = '';
-        /** @type {any} */
-        (element)[Symbol.for(itemProp)] = value;
-         /** @type {HTMLElement} */
-        (element).dataset[indexProp] = '';
-        /** @type {any} */
-        (element)[Symbol.for(indexProp)] = index;
+        let e = /** @type {HTMLElement} */(element);
+        addItemToScope(e, eachSymbol, 'item', itemSymbol, 'corsetScope', value);
+        addItemToScope(e, eachSymbol, 'index', indexSymbol, 'corsetScope', index);
+
+        // /** @type {HTMLElement} */
+        // (element).dataset[itemProp] = '';
+        // /** @type {any} */
+        // (element)[Symbol.for(itemProp)] = value;
+        //  /** @type {HTMLElement} */
+        // (element).dataset[indexProp] = '';
+        // /** @type {any} */
+        // (element)[Symbol.for(indexProp)] = index;
       }
 
     }

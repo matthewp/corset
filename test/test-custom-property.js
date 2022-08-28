@@ -81,3 +81,25 @@ QUnit.test('Can be used as a function', assert => {
   bindings.update(root);
   assert.equal(root.firstElementChild.textContent, 'one two');
 });
+
+QUnit.test('Are removed when the selector no longer matches', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app"></div>`;
+  function run(showOne) {
+    return sheet`
+      #app {
+        class-toggle: one ${showOne};
+        attr: data-one var(--v, none);
+      }
+      .one {
+        --v: two;
+        --another: three;
+      }
+    `;
+  }
+  let app = root.firstElementChild;
+  run(true).update(root);
+  assert.equal(app.getAttribute('data-one'), 'two');
+  run(false).update(root);
+  assert.equal(app.getAttribute('data-one'), 'none');
+});
