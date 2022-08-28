@@ -1,6 +1,4 @@
 // @ts-check
-import { pascalCase } from './custom-prop.js';
-
 export const getKeySymbol = Symbol.for('corset.getKey');
 
 /**
@@ -57,10 +55,4 @@ export const storePropName = storeName => `corset.store.${storeName}`;
  * @param {string} storeName 
  * @returns {string}
  */
-export const storeDataName = storeName => `data-corset-store-${storeName}`;
-/**
- * 
- * @param {string} storeName 
- * @returns {string}
- */
-export const storeDataPropName = storeName => 'corsetStore' + pascalCase('-' + storeName);
+export const storeDataSelector = storeName => `[data-corset-stores~=${storeName}]`;

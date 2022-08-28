@@ -2,10 +2,9 @@
 
 import { flags } from './property.js';
 import { EachInstance } from './each.js';
-import { datasetPropKey } from './custom-prop.js';
 import { Mountpoint } from './mount.js';
-import { lookup } from './scope.js';
-import { storePropName, storeDataName, storeDataPropName, Store } from './store.js';
+import { lookup, addItemToScope, removeItemFromScope } from './scope.js';
+import { storePropName, storeDataSelector, Store } from './store.js';
 
 /**
  * @typedef {import('./binding').Binding} Binding
@@ -24,6 +23,9 @@ const eachInstances = new WeakMap();
 
 /** @type {WeakMap<HostElement, Map<MountedBehaviorType, Mountpoint>>} */
 const mountPoints = new WeakMap();
+
+const propsSymbol = Symbol.for('corset.props');
+const storesSymbol = Symbol.for('corset.stores');
 
 /**
  * 
@@ -47,14 +49,14 @@ function render(element, bindings, root, changeset) {
       let oldValue = binding.value;
       let storeName = binding.update(changeset);
       if(storeName) {
-        element.dataset[storeDataPropName(storeName)] = '';
         let map = new Store(root);
-        /** @type {any} */
-        (element)[Symbol.for(storePropName(storeName))] = map;
+        addItemToScope(element, storesSymbol, storeName, Symbol.for(storePropName(storeName)),
+          'corsetStores', map)
+
         root.mount?.context?.stores.set(storeName, map);
       } else {
-        delete element.dataset[storeDataPropName(oldValue)];
-        delete /** @type {any} */(element)[Symbol.for(storePropName(oldValue))];
+        removeItemFromScope(element, storesSymbol, oldValue, Symbol.for(storePropName(oldValue)),
+          'corsetStores');
         root.mount?.context?.stores.delete(oldValue);
       }
       invalid = true;
@@ -70,12 +72,14 @@ function render(element, bindings, root, changeset) {
       if(binding.dirty(changeset)) {
         binding.update(changeset);
         let value = binding.getList();
-        element.dataset[datasetPropKey(propertyName)] = '';
-        /** @type {any} */
-        (element)[Symbol.for(propertyName)] = {
-          value,
-          compute: binding.compute
-        };
+        if(value.length) {
+          addItemToScope(element, propsSymbol, propertyName, Symbol.for(propertyName), 'corsetProps', {
+            value,
+            compute: binding.compute
+          });
+        } else {
+          removeItemFromScope(element, propsSymbol, propertyName, Symbol.for(propertyName), 'corsetProps');
+        }
       }
     }
   }
@@ -86,8 +90,7 @@ function render(element, bindings, root, changeset) {
       let args = binding.update(changeset);
       if(args) {
         let [storeName, key, value] = args;
-        let dataName = storeDataName(storeName);
-        let map = lookup(element, dataName, `[${dataName}]`, storePropName(storeName));
+        let map = lookup(element, storeDataSelector(storeName), storePropName(storeName));
         map?.set(key, value);
       }
       invalid = true;
