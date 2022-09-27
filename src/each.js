@@ -1,5 +1,6 @@
 // @ts-check
 import { addItemToScope } from './scope.js';
+import { createCloneElement } from './element.js';
 const eachSymbol = Symbol.for('corset.each');
 const itemSymbol = Symbol.for('corset.item');
 const indexSymbol = Symbol.for('corset.index');
@@ -18,14 +19,16 @@ export class EachInstance {
   keyMap = new Map();
   /**
    * @param {HostElement} host 
-   * @param {HTMLTemplateElement} template
+   * @param {HTMLTemplateElement | SVGElement} template
    * @param {string} key
    */
   constructor(host, template, key) {
     /** @type {HostElement} */
     this.host = host;
-    /** @type {HTMLTemplateElement} */
+    /** @type {HTMLTemplateElement | SVGElement} */
     this.template = template;
+    /** @type {() => DocumentFragment} */
+    this.clone = createCloneElement(template).bind(null, host, template);
     /** @type {string} */
     this.key = key;
     /** @type {(item: any, index: number) => any} */
@@ -85,9 +88,8 @@ export class EachInstance {
    * @returns 
    */
   render(index, value) {
-    let doc = this.host.ownerDocument || document;
     /** @type {EachFragment} */
-    let frag = /** @type {EachFragment} */(doc.importNode(this.template.content, true));
+    let frag = /** @type {EachFragment} */(this.clone());
     frag.nodes = Array.from(frag.childNodes);
     frag.data = { item: value, index };
     this.setData(frag, value, index);

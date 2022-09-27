@@ -2,6 +2,7 @@
 
 import { flags } from './property.js';
 import { EachInstance } from './each.js';
+import { cloneElement } from './element.js';
 import { Mountpoint } from './mount.js';
 import { lookup, addItemToScope, removeItemFromScope } from './scope.js';
 import { storePropName, storeDataSelector, Store } from './store.js';
@@ -64,7 +65,7 @@ function render(element, bindings, root, changeset) {
   }
 
   if(bflags & flags.custom) {
-    if(!(element instanceof HTMLElement)) {
+    if(!((element instanceof HTMLElement) || (element instanceof SVGElement))) {
       throw new Error('Custom properties cannot be used on non-HTML elements.');
     }
 
@@ -129,8 +130,7 @@ function render(element, bindings, root, changeset) {
       let result = binding.update(changeset);
       if(Array.isArray(result)) result = result[0];
       if(result === undefined) break attach;
-      let doc = element.ownerDocument || document;
-      let frag = doc.importNode(result.content, true);
+      let frag = cloneElement(element, result);
       element.replaceChildren(frag);
       invalid = true;
       changeset.flags |= flags.attach;
