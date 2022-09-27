@@ -21,7 +21,7 @@ export function lookup(element, dataSelector, propName) {
 
 /**
  * 
- * @param {HTMLElement} element
+ * @param {HTMLElement | SVGElement} element
  * @param {symbol} listSym
  * @param {string} key
  * @param {symbol} keySym
@@ -45,7 +45,7 @@ export function lookup(element, dataSelector, propName) {
 
 /**
  * 
- * @param {HTMLElement} element 
+ * @param {HTMLElement | SVGElement} element 
  * @param {symbol} listSym
  * @param {string} key
  * @param {symbol} keySym

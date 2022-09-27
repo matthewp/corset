@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<meta name="description" content="Clock Example">
+<meta charset="utf-8">
+<title>Clock</title>
+<link rel="stylesheet" href="./styles.css">
+<script type="module" src="./app.js"></script>
+
+<div class="clock">
+  <svg viewBox="0 0 200 200" width="95vh">
+    <g transform="translate(100, 100)">
+      {/* static */}
+      <circle class="text-neutral-900" r="99" fill="white" stroke="currentColor" />
+      <g class="hours lines"></g>
+      <g class="subseconds lines"></g>
+      {/* dynamic */}
+      <g class="hour hand dyn"></g>
+      <g class="minute hand dyn"></g>
+      <g class="second hand dyn"></g>
+      <g class="subsecond hand dyn"></g>
+    </g>
+  </svg>
+</div>
+
+<svg id="hand-tmpl">
+  <defs>
+    <g>
+      <line
+        stroke="currentColor"
+        stroke-linecap="round" />
+    </g>
+  </defs>
+</svg>
