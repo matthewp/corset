@@ -1,5 +1,11 @@
 # corset
 
+## 2.2.1
+
+### Patch Changes
+
+- 3efbd6a: Update when pushing to an empty array using longhand each
+
 ## 2.2.0
 
 ### Minor Changes
