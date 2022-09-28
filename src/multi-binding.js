@@ -280,7 +280,7 @@ export class MultiBinding extends Binding {
 
     // Fill in the defaults by looking at the valueMap for holes.
     for(let [key, values] of valueMap) {
-      if(!dirtyKeys.has(key)) continue;
+      let isDirty = dirtyKeys.has(key);
       // valueMap is always appended from a longhand prop.
       let numOfValues = this.numberOfValues;
       let keyed = this.defn.feat & features.keyed;
@@ -298,7 +298,7 @@ export class MultiBinding extends Binding {
           values.push(...current);
         }
       }
-      yield [/** @type {[K, ...any[]]} */(/** @type {unknown} */(values)), true];
+      yield [/** @type {[K, ...any[]]} */(/** @type {unknown} */(values)), isDirty];
     }
 
     // Yield out to reset to initial state.
