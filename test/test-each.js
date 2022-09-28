@@ -141,3 +141,28 @@ QUnit.test('Changes to items result in updates', assert => {
   assert.equal(ul.firstElementChild.textContent, 'one');
   assert.equal(ul.firstElementChild.nextElementSibling.textContent, 'two !!');
 });
+
+QUnit.test('Pushing to an empty list (longhand)', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<ul></ul><template><li></li></template>`;
+  let items = [];
+  function bind() {
+    return sheet`
+      ul {
+        each-items: ${items};
+        each-template: select(template);
+      }
+
+      li {
+        text: get(item(), label);
+      }
+    `;
+  }
+  let ul = root.firstElementChild;
+  bind().update(root);
+
+  items.push({ label: 'works' });
+  bind().update(root);
+  assert.equal(ul.children.length, 1);
+  assert.equal(ul.firstElementChild.textContent, 'works');
+});
