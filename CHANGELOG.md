@@ -1,5 +1,11 @@
 # corset
 
+## 2.2.2
+
+### Patch Changes
+
+- 5d68c7e: Prevent unnecessary function calls when a var is undefined
+
 ## 2.2.1
 
 ### Patch Changes
