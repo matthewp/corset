@@ -71,3 +71,24 @@ QUnit.test('if one arg, use item() as the context', assert => {
   bindings.update(root);
   assert.equal(root.firstElementChild.textContent, 'Hello Wilbur');
 });
+
+QUnit.test('Getting an undefined var restores initial value', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app">initial</div>`;
+  function bind(show) {
+    return sheet`
+      #app {
+        class-toggle: show ${show};
+        text: "new text";
+      }
+      .show {
+        text: get(var(--not-exists), prop);
+      }
+    `;
+  }
+  let app = root.firstElementChild;
+  bind(false).update(root);
+  assert.equal(app.textContent, 'new text');
+  bind(true).update(root);
+  assert.equal(app.textContent, 'initial');
+});

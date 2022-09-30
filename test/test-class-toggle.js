@@ -179,3 +179,14 @@ QUnit.test('var() can be used as a class name', assert => {
   template('two').update(root);
   assert.equal(app.className, 'two');
 });
+
+QUnit.test('Uses initial value when a var is undefined', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app"></div>`;
+  sheet`
+    #app {
+      class-toggle: foo get(var(--some-var), prop);
+    }
+  `.update(root);
+  assert.equal(root.firstElementChild.classList.contains('foo'), false);
+});

@@ -147,6 +147,7 @@ export class MultiBinding extends Binding {
         let compute = /** @type {ComputedValue} */(this.computedValues.get(declaration));
 
         let dirty = compute.dirty(changeset);
+        let valid = compute.valid;
         let computedValue = compute.check(changeset);
 
         switch(declaration.flags) {
@@ -156,6 +157,8 @@ export class MultiBinding extends Binding {
           case declFlags.multi: {
             for(let values of /** @type {[K, ...any[]][]} */(computedValue)) {
               let key = /** @type {string | Constant} */(values[0]);
+
+              if(!valid) unset.add(key);
 
               let idx = Name.is(key) ? 1 : 0;
               if(values[1] === KEYWORD_REVERT_SHEET) {
@@ -207,12 +210,14 @@ export class MultiBinding extends Binding {
           }
           // behavior: mount(Behavior)
           case declFlags.multi | declFlags.behavior: {
-            for(let [values] of computedValue) {
-              let Behavior = values[0];
-              this.#bookkeep(active, Behavior);
-              let allValues = this.#appendToValues(Behavior, values);
-              yield [allValues, dirty];
-              this.oldValues?.set(Behavior, values);
+            if(valid) {
+              for(let [values] of computedValue) {
+                let Behavior = values[0];
+                this.#bookkeep(active, Behavior);
+                let allValues = this.#appendToValues(Behavior, values);
+                yield [allValues, dirty];
+                this.oldValues?.set(Behavior, values);
+              }
             }
             break loop;
           }
@@ -221,6 +226,7 @@ export class MultiBinding extends Binding {
             let keyed = this.defn.feat & features.keyed;
             /** @type {string | null} */
             let key = keyed ? computedValue[0] : null;
+            if(!valid) break;
             /** @type {any} */
             let propValue = keyed ? computedValue[1] : computedValue[0];
             let idx = compute.index + (keyed ? 1 : 0);
@@ -252,8 +258,11 @@ export class MultiBinding extends Binding {
             let hasLabel = Name.is(computedValue[0]);
             /** @type {Name} */
             let key = hasLabel ? computedValue[0] : Name.for('corset.default.' + computedValue[0]);
+            if(!valid) unset.add(key);
+            if(unset.has(key)) break;
             /** @type {any} */
             let propValue = computedValue[1];
+            if(!valid) break;
 
             this.#bookkeep(active, key, computedValue[0]);
             let valueList = getValueList(key, this.numberOfValues);
@@ -267,6 +276,7 @@ export class MultiBinding extends Binding {
           }
           // each: ${items} select(template)
           case declFlags.shorthand: {
+            if(!valid) break;
             this.#bookkeep(active, null);
             yield [this.#appendToValues(null, computedValue, false), dirty];
             break;

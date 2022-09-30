@@ -74,7 +74,7 @@ export class PlaceholderValue {
     /** @type {NO_VALUE | ComputedValue} */
     this.compute = NO_VALUE;
     /** @type {any} */
-    this.value = null;
+    this.value = NO_VALUE;
   }
   /**
    * 
