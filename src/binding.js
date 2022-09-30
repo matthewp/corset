@@ -137,7 +137,8 @@ export class Binding {
     if(this.compute === null) {
       this.value = this.initial;
     } else {
-      this.value = this.compute.check(changeset);
+      let value = this.compute.check(changeset);
+      this.value = this.compute.valid ? value : this.initial;
     }
     return this.value;
   }

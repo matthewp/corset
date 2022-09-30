@@ -1,6 +1,6 @@
 // @ts-check
 
-import { PlaceholderValue, SpaceSeparatedListValue } from './value.js';
+import { PlaceholderValue, SpaceSeparatedListValue, NO_VALUE } from './value.js';
 
 /**
  * @typedef {import('./binding').Binding} Binding
@@ -46,6 +46,8 @@ export class ComputedValue {
     this.listValue = this.raw instanceof SpaceSeparatedListValue ?
       () => this.#value :
       () => [this.#value];
+    /** @type {boolean} */
+    this.valid = true;
 
     // Private
     this.#value = null;
@@ -85,7 +87,8 @@ export class ComputedValue {
    * @param {Changeset} changeset 
    */
   compute(changeset) {
-    this.#value = call(this, changeset, this.raw.get);
+    let { value } = call(this, changeset, this.raw.get);
+    this.#value = value;
   }
   /**
    * 
@@ -101,27 +104,38 @@ export class ComputedValue {
   /**
    * 
    * @param {Changeset} changeset 
-   * @returns {boolean}
+   * @returns {{ valid: boolean; dirty: boolean; }}
    */
   calculate(changeset) {
-    if(this.#dirty.has(changeset)) {
-      return /** @type {boolean} */(this.#dirty.get(changeset));
-    }
     let dirty = false;
+    let valid = this.valid;
+    if(this.#dirty.has(changeset)) {
+      dirty = /** @type {boolean} */(this.#dirty.get(changeset));
+      return { dirty, valid };
+    }
     if(this.#check) {
-      if(call(this, changeset, this.#check)) {
+      let { value, valid: callValid } = call(this, changeset, this.#check);
+      if(!callValid) {
+        dirty = callValid !== valid;
+        valid = false;
+      } else if(value) {
         dirty = true;
       }
     }
 
     for(let dep of this.#allDeps()) {
-      if(dep.calculate(changeset)) {
+      let { dirty: depDirty, valid: depValid} = dep.calculate(changeset);
+      if(depDirty) {
         dirty = true;
+      }
+      if(!depValid) {
+        valid = false;
       }
     }
 
     this.#dirty.set(changeset, dirty);
-    return dirty;
+    this.valid = valid;
+    return {dirty, valid};
   }
   * #allDeps() {
     yield * this.argDeps;
@@ -157,7 +171,7 @@ function hydrate(compute, template) {
  * @param {ComputedValue} compute 
  * @param {Changeset} changeset
  * @param {Value['get'] | CheckedValue['check']} method
- * @returns {any}
+ * @returns {{ value: any, valid: boolean }}
  */
 function call(compute, changeset, method) {
   let {args, binding, raw: value, inputProps: props} = compute;
@@ -174,10 +188,19 @@ function call(compute, changeset, method) {
   for(let v of compute.argDeps) {
     if(v.raw instanceof PlaceholderValue) {
       let values = v.check(changeset);
+      if(values === NO_VALUE) {
+        return {
+          value: undefined,
+          valid: false
+        };
+      }
       if(values) args.push(...values);
     }
     else
       args.push(v.check(changeset)); 
   }
-  return method.call(value, args, binding, props, changeset);
+  return {
+    value: method.call(value, args, binding, props, changeset),
+    valid: true
+  };
 }
