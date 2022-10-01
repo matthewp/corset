@@ -32,3 +32,17 @@ QUnit.test('Can pass multiple values to a property', assert => {
     i++;
   }
 });
+
+QUnit.test('Can pass multiple values to text', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app"></div>`;
+  sheet`
+    #app {
+      --first: "Wilbur";
+      --last: "Phillips";
+      --full-name: var(--first) " " var(--last);
+      text: var(--full-name);
+    }
+  `.update(root);
+  assert.equal(root.firstElementChild.textContent, 'Wilbur Phillips');
+});

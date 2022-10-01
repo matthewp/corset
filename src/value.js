@@ -104,8 +104,10 @@ export class PlaceholderValue {
           this.compute = scope.compute;
           this.value = scope.value;
           return true;
+        } else if(this.compute !== NO_VALUE) {
+          return this.compute.dirty(changeset);
         } else {
-          // Nothing has changed.
+          // Nothing has changed
           return false;
         }
       } else if(args.length > 1) {

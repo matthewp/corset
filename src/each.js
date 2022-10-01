@@ -68,17 +68,7 @@ export class EachInstance {
         let e = /** @type {HTMLElement} */(element);
         addItemToScope(e, eachSymbol, 'item', itemSymbol, 'corsetScope', value);
         addItemToScope(e, eachSymbol, 'index', indexSymbol, 'corsetScope', index);
-
-        // /** @type {HTMLElement} */
-        // (element).dataset[itemProp] = '';
-        // /** @type {any} */
-        // (element)[Symbol.for(itemProp)] = value;
-        //  /** @type {HTMLElement} */
-        // (element).dataset[indexProp] = '';
-        // /** @type {any} */
-        // (element)[Symbol.for(indexProp)] = index;
       }
-
     }
   }
   /**
