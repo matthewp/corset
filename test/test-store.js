@@ -187,3 +187,18 @@ QUnit.test('Store is immediate available in child behavior', assert => {
   assert.equal(el.className, 'resolved');
   assert.equal(el.textContent, 'Resolved');
 });
+
+QUnit.test('Can be used to set vars', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app"></div>`;
+  sheet`
+    #app {
+      store-root: app;
+      store-set: app first "Wilbur";
+
+      --full-name: store-get(app, first) " " "Phillips";
+      text: var(--full-name);
+    }
+  `.update(root);
+  assert.equal(root.firstElementChild.textContent, 'Wilbur Phillips');
+});
