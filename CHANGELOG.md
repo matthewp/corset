@@ -1,5 +1,11 @@
 # corset
 
+## 2.2.3
+
+### Patch Changes
+
+- 8750545: var should recompute when child compute is dirty
+
 ## 2.2.2
 
 ### Patch Changes
