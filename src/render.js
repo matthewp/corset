@@ -45,10 +45,8 @@ function render(element, bindings, root, changeset) {
       throw new Error('Stores cannot be used on non-HTML elements.');
     }
 
-    let binding = /** @type {Binding} */(bindings.storeRoot);
-    if(binding.dirty(changeset)) {
-      let oldValue = binding.value;
-      let storeName = binding.update(changeset);
+    let binding = /** @type {KeyedMultiBinding} */(bindings.storeRoot);
+    for(const [storeName, oldValue] of binding.changes(changeset)) {
       if(storeName) {
         let map = new Store(root);
         addItemToScope(element, storesSymbol, storeName, Symbol.for(storePropName(storeName)),
