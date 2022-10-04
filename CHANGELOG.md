@@ -1,5 +1,11 @@
 # corset
 
+## 2.4.0
+
+### Minor Changes
+
+- 9730a91: Target the root element via :scope
+
 ## 2.3.0
 
 ### Minor Changes
