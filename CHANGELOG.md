@@ -1,5 +1,33 @@
 # corset
 
+## 2.3.0
+
+### Minor Changes
+
+- c3aaec0: Allow multiple store-set within a rule
+
+  ```css
+  #app {
+    store-root: app;
+    store-set: app first "Wilbur";
+    store-set: app last "Phillips";
+    --full-name: store-get(app, first) " " store-get(app, last);
+    text: var(--full-name);
+  }
+  ```
+
+- 8573803: Allow multiple store-root on an element
+
+  You can now set multiple stores on an element:
+
+  ```css
+  #app {
+    store-root: one, two;
+    store-set: one name "Matthew";
+    store-set: two name "Wilbur";
+  }
+  ```
+
 ## 2.2.3
 
 ### Patch Changes
