@@ -27,7 +27,7 @@ export class Rule {
     /** @type {number} */
     this.specificity = 0;
     /** @type {(el: RootElement) => Iterable<Element | ShadowRoot | Document>} */
-    this.querySelectorAll = selector === ':root' ? rootSelect : querySelect;
+    this.querySelectorAll = selector === ':root' || selector === ':scope' ? rootSelect : querySelect;
   }
 
   /** @param {Declaration} declaration */
