@@ -3,10 +3,8 @@ import { Binding } from './binding.js';
 import { ComputedValue } from './compute.js';
 import { flags as declFlags } from './declaration.js';
 import { Name } from './constants.js';
-import { properties, features } from './property.js';
+import { properties, features, keySimple } from './property.js';
 import { SparseArray } from './sparse-array.js';
-import { createValueTemplate } from './template.js';
-import { SpaceSeparatedListValue } from './value.js';
 import { KEYWORD_ALL, KEYWORD_REVERT_SHEET } from './constants.js';
 
 /**
@@ -20,20 +18,7 @@ import { KEYWORD_ALL, KEYWORD_REVERT_SHEET } from './constants.js';
  * @typedef {import('./property').ShorthandPropertyDefinition} ShorthandPropertyDefinition
  * @typedef {import('./property').LonghandPropertyDefinition} LonghandPropertyDefinition
  * @typedef {import('./property').BehaviorMultiPropertyDefinition} BehaviorMultiPropertyDefinition
- */
-
-/**
- * 
- * @param {Declaration} declaration 
- * @returns {ValueTemplate}
- */
- function createPrependedKeyedTemplate(declaration) {
-  return createValueTemplate(SpaceSeparatedListValue, [
-    /** @type {ValueTemplate} */(declaration.keyTemplate)
-  ].concat(declaration.template.deps))
-}
-
-/**
+ * @typedef {import('./property').KeyReader} KeyReader
  * @typedef {string | Constant | null | MountedBehaviorType} MultiBindingKey
  */
 
@@ -57,6 +42,9 @@ export class MultiBinding extends Binding {
 
     /** @type {number} */
     this.numberOfValuesWithKey = this.numberOfValues + (defn.feat & features.keyed ? 1 : 0);
+
+    /** @type {KeyReader} */
+    this.readKey = /** @type {MultiPropertyDefinition} */(this.defn).key || keySimple;
 
     /** @type {Set<MultiBindingKey>} */
     this.active = new Set();
@@ -156,8 +144,7 @@ export class MultiBinding extends Binding {
           // class-toggle: one "one", two "two"
           case declFlags.multi: {
             for(let values of /** @type {[K, ...any[]][]} */(computedValue)) {
-              let key = /** @type {string | Constant} */(values[0]);
-
+              let key = this.readKey(values);
               if(!valid) unset.add(key);
 
               let idx = Name.is(key) ? 1 : 0;
@@ -190,7 +177,7 @@ export class MultiBinding extends Binding {
           // event: [label] type callback, [another-label] type callback
           case declFlags.multi | declFlags.shorthand | declFlags.label: {
             for(let values of /** @type {[K, ...any[]][]} */(computedValue)) {
-              let key = /** @type {string | Constant} */(values[0]);
+              let key = this.readKey(values);
               let isName = Name.is(key);
               if(!isName) {
                 key = Name.for('corset.default.' + key);
@@ -224,8 +211,8 @@ export class MultiBinding extends Binding {
           // each-items: ${items};
           case declFlags.longhand: {
             let keyed = this.defn.feat & features.keyed;
-            /** @type {string | null} */
-            let key = keyed ? computedValue[0] : null;
+            /** @type {string | Constant | null} */
+            let key = keyed ? this.readKey(computedValue) : null;
             if(!valid) break;
             /** @type {any} */
             let propValue = keyed ? computedValue[1] : computedValue[0];

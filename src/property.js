@@ -1,13 +1,21 @@
 // @ts-check
 
 /**
+ * @typedef {import('./constants').Constant} Constant
  * @typedef {import('./pinfo').PropertyDefinition} PropertyDefinition
  * @typedef {import('./pinfo').SimplePropertyDefinition} SimplePropertyDefinition
  * @typedef {import('./pinfo').ShorthandPropertyDefinition} ShorthandPropertyDefinition
  * @typedef {import('./pinfo').LonghandPropertyDefinition} LonghandPropertyDefinition
  * @typedef {import('./pinfo').MultiPropertyDefinition} MultiPropertyDefinition
  * @typedef {import('./pinfo').BehaviorMultiPropertyDefinition} BehaviorMultiPropertyDefinition
+ * 
+ * @typedef {(values: any[]) => string | Constant} KeyReader
  */
+
+/** @type {KeyReader} */
+export const keySimple = (values) => values[0];
+/** @type {KeyReader} */
+export const keyCompound = (values) => values[0] + values[1];
 
 export const flags = {
   text: 1 << 0,
@@ -54,7 +62,7 @@ export const properties = {
     feat: features.multi | features.shorthand | features.keyed,
     prop: 'attr',
     longhand: ['attr-value', 'attr-toggle'],
-    defaults: ['', true]
+    defaults: ['', true],
   },
   /** @type {LonghandPropertyDefinition} */
   'attr-value': {
@@ -104,7 +112,7 @@ export const properties = {
     feat: features.shorthand,
     prop: 'each',
     longhand: ['each-items', 'each-template', 'each-key'],
-    defaults: [[], {}, null]
+    defaults: [[], {}, null],
   },
   'each-items': {
     flag: flags.each,
@@ -137,7 +145,7 @@ export const properties = {
     prop: 'event',
     longhand: ['event-type', 'event-listener', 'event-capture', 'event-once',
       'event-passive', 'event-signal'],
-    defaults: [null, false, false, false, undefined]
+    defaults: [null, false, false, false, undefined],
   },
   'event-type': {
     flag: flags.event,
@@ -218,11 +226,12 @@ export const properties = {
     prop: 'storeRoot',
     read: () => null
   },
-  /** @type {SimplePropertyDefinition} */
+  /** @type {MultiPropertyDefinition} */
   'store-set': {
     flag: flags.storeSet,
-    feat: 0,
+    feat: features.multi | features.keyed,
     prop: 'storeSet',
+    key: keyCompound,
     read: () => null
-  }
+  },
 };

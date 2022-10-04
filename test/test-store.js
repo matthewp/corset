@@ -195,8 +195,8 @@ QUnit.test('Can be used to set vars', assert => {
     #app {
       store-root: app;
       store-set: app first "Wilbur";
-
-      --full-name: store-get(app, first) " " "Phillips";
+      store-set: app last "Phillips";
+      --full-name: store-get(app, first) " " store-get(app, last);
       text: var(--full-name);
     }
   `.update(root);
