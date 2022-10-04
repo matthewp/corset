@@ -86,14 +86,10 @@ function render(element, bindings, root, changeset) {
   }
 
   if(bflags & flags.storeSet) {
-    let binding = /** @type {Binding} */(bindings.storeSet);
-    if(binding.dirty(changeset)) {
-      let args = binding.update(changeset);
-      if(args) {
-        let [storeName, key, value] = args;
-        let map = lookup(element, storeDataSelector(storeName), storePropName(storeName));
-        map?.set(key, value);
-      }
+    let binding = /** @type {KeyedMultiBinding} */(bindings.storeSet);
+    for(let [storeName, key, value] of binding.changes(changeset)) {
+      let map = lookup(element, storeDataSelector(storeName), storePropName(storeName));
+      map?.set(key, value);
       invalid = true;
     }
   }

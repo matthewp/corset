@@ -1,3 +1,4 @@
+import type { Constant } from './constants';
 
 export type PropertyPropName = 'attr' |
   'attrValue' |
@@ -26,7 +27,8 @@ export interface MultiPropertyDefinition extends BasePropertyDefinition {
   read: ReadKeyedValue;
   longhand?: never;
   shorthand?: never;
-  prop: 'classToggle' | 'data' | 'prop';
+  prop: 'classToggle' | 'data' | 'prop' | 'storeSet';
+  key?: (values: any[]) => string | Constant;
 }
 
 export interface BehaviorMultiPropertyDefinition extends BasePropertyDefinition {
