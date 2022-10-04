@@ -27,8 +27,9 @@ export interface MultiPropertyDefinition extends BasePropertyDefinition {
   read: ReadKeyedValue;
   longhand?: never;
   shorthand?: never;
-  prop: 'classToggle' | 'data' | 'prop' | 'storeSet';
+  prop: 'classToggle' | 'data' | 'prop' | 'storeSet' | 'storeRoot';
   key?: (values: any[]) => string | Constant;
+  num?: number;
 }
 
 export interface BehaviorMultiPropertyDefinition extends BasePropertyDefinition {
@@ -36,6 +37,7 @@ export interface BehaviorMultiPropertyDefinition extends BasePropertyDefinition 
   prop: 'behavior';
   read?: never;
   shorthand?: never;
+  num?: number;
 }
 
 export interface ShorthandPropertyDefinition extends BasePropertyDefinition {
@@ -43,6 +45,7 @@ export interface ShorthandPropertyDefinition extends BasePropertyDefinition {
   longhand: string[];
   prop: 'each' | 'attr' | 'event';
   defaults: any[];
+  num?: number;
 }
 
 export interface LonghandPropertyDefinition extends BasePropertyDefinition {

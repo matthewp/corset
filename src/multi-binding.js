@@ -38,6 +38,7 @@ export class MultiBinding extends Binding {
 
     /** @type {number} */
     this.numberOfValues =
+      this.defn.num ||
       /** @type {ShorthandPropertyDefinition} */(defn).longhand?.length || 2;
 
     /** @type {number} */
@@ -163,7 +164,6 @@ export class MultiBinding extends Binding {
                 break;
               }
 
-              if(values.length === 1) break;
               this.#bookkeep(active, key);
               if(dirty) dirtyKeys.add(key);
               let valueList = getValueList(key, this.numberOfValuesWithKey);

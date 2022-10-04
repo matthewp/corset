@@ -219,12 +219,13 @@ export const properties = {
       return el.textContent;
     }
   },
-   /** @type {SimplePropertyDefinition} */
+   /** @type {MultiPropertyDefinition} */
   'store-root': {
     flag: flags.storeRoot,
-    feat: 0,
+    feat: features.multi | features.oldValues,
     prop: 'storeRoot',
-    read: () => null
+    read: () => null,
+    num: 1
   },
   /** @type {MultiPropertyDefinition} */
   'store-set': {

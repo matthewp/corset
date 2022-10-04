@@ -202,3 +202,24 @@ QUnit.test('Can be used to set vars', assert => {
   `.update(root);
   assert.equal(root.firstElementChild.textContent, 'Wilbur Phillips');
 });
+
+QUnit.test('Multiple store-roots for element', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app" class="app"></div>`;
+  sheet`
+    #app {
+      store-root: one;
+      store-set: one one two;
+    }
+
+    .app {
+      store-root: two;
+      store-set: two two three;
+    }
+
+    #app {
+      text: store-get(one, one) " " store-get(two, two);
+    }
+  `.update(root);
+  assert.equal(root.firstElementChild.textContent, 'two three');
+});
