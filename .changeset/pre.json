@@ -1,0 +1,8 @@
+{
+  "mode": "pre",
+  "tag": "next",
+  "initialVersions": {
+    "corset": "2.4.0"
+  },
+  "changesets": []
+}
