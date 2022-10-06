@@ -206,11 +206,13 @@ function render(element, bindings, root, changeset) {
   // Events last, does not affect the cascade.
   if(bflags & flags.event) {
     let binding = /** @type {KeyedMultiBinding} */(bindings.event);
-    for(let [eventName, listener, capture, once, passive, signal, _oldEventName, oldListener, oldCapture] of binding.changes(changeset)) {
+    for(let [eventName, listener, capture, once, passive, signal, target,
+      _oldEventName, oldListener, oldCapture, _o, _p, _s, oldTarget]
+      of binding.changes(changeset)) {
       if(oldListener !== undefined)
-        element.removeEventListener(eventName, root.getCallback(oldListener), oldCapture);
+        (oldTarget || element).removeEventListener(eventName, root.getCallback(oldListener), oldCapture);
       if(listener)
-        element.addEventListener(eventName, root.getCallback(listener), {
+        (target || element).addEventListener(eventName, root.getCallback(listener), {
           capture,
           once,
           passive,
@@ -251,14 +253,12 @@ function unmount(element, bindings, root) {
     for(let [OldBehavior] of binding.current()) {
       map.get(OldBehavior)?.unmount();
     }
-    // TODO allow multiple
-    ///** @type {Mountpoint} */(mountPoints.get(element)).unmount();
   }
 
   if(bflags & flags.event) {
     let eventBinding = /** @type {KeyedMultiBinding} */(bindings.event);
-    for(let [_key, eventName, listener] of eventBinding.current()) {
-      element.removeEventListener(eventName, root.getCallback(listener));
+    for(let [_key, eventName, listener, _c, _o, _p, _s, target] of eventBinding.current()) {
+      (target || element).removeEventListener(eventName, root.getCallback(listener));
     }
   }
 }

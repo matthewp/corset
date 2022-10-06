@@ -17,6 +17,9 @@ export const keySimple = (values) => values[0];
 /** @type {KeyReader} */
 export const keyCompound = (values) => values[0] + values[1];
 
+/** @param {any} a */
+const identity = a => a;
+
 export const flags = {
   text: 1 << 0,
   classToggle: 1 << 1,
@@ -144,8 +147,8 @@ export const properties = {
     feat: features.multi | features.keyed | features.oldValues | features.shorthand | features.labeled,
     prop: 'event',
     longhand: ['event-type', 'event-listener', 'event-capture', 'event-once',
-      'event-passive', 'event-signal'],
-    defaults: [null, false, false, false, undefined],
+      'event-passive', 'event-signal', 'event-target'],
+    defaults: [null, false, false, false, undefined, undefined],
   },
   'event-type': {
     flag: flags.event,
@@ -195,6 +198,14 @@ export const properties = {
     default: undefined,
     read: () => undefined
   },
+  'event-target': {
+    flag: flags.event,
+    feat: features.longhand | features.labeled,
+    shorthand: 'event',
+    index: 6,
+    default: undefined,
+    read: identity
+  },
   /** @type {BehaviorMultiPropertyDefinition} */
   behavior: {
     flag: flags.behavior,
@@ -215,9 +226,7 @@ export const properties = {
     flag: flags.text,
     feat: 0,
     prop: 'text',
-    read(el) {
-      return el.textContent;
-    }
+    read: el => el.textContent
   },
    /** @type {MultiPropertyDefinition} */
   'store-root': {

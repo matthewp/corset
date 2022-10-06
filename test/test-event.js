@@ -237,3 +237,60 @@ QUnit.test('Event can be labeled', assert => {
   root.firstElementChild.dispatchEvent(new Event('one'));
   assert.equal(count, 1);
 });
+
+QUnit.test('event-target allows specifying a different target', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app"></div>`;
+  let target = new EventTarget();
+  let events = [];
+  function bind(show) {
+    return sheet`
+      #app {
+        class-toggle: show ${show};
+      }
+
+      #app.show {
+        event: foo ${ev => events.push(ev)};
+        event-target: foo ${target};
+      }
+    `;
+  }
+  bind(true).update(root);
+
+  target.dispatchEvent(new CustomEvent('foo', { detail: { foo: 'bar' }}));
+  assert.equal(events.length, 1);
+  assert.deepEqual(events[0].detail, { foo: 'bar' });
+
+  bind(false).update(root);
+  target.dispatchEvent(new CustomEvent('foo', { detail: { foo: 'bar' }}));
+  assert.equal(events.length, 1);
+
+  target = window;
+  bind(true).update(root);
+  target.dispatchEvent(new CustomEvent('foo', { detail: { foo: 'bar' }}));
+  assert.equal(events.length, 2);
+
+  bind(false).update(root);
+  target.dispatchEvent(new CustomEvent('foo', { detail: { foo: 'bar' }}));
+  assert.equal(events.length, 2);
+});
+
+QUnit.test('event-target targets get unmounted on unmount()', assert => {
+  let root = document.createElement('main');
+  root.innerHTML = `<div id="app"></div>`;
+  let target = new EventTarget();
+  let events = [];
+  let sheet1 = sheet`
+    #app {
+      event-listener: foo ${ev => events.push(ev)};
+      event-target: foo ${target};
+    }
+  `;
+  sheet1.update(root);
+  target.dispatchEvent(new Event('foo'));
+  assert.equal(events.length, 1);
+
+  sheet1.unmount(root);
+  target.dispatchEvent(new Event('foo'));
+  assert.equal(events.length, 1);
+});
