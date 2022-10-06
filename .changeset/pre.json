@@ -4,5 +4,7 @@
   "initialVersions": {
     "corset": "2.4.0"
   },
-  "changesets": []
+  "changesets": [
+    "stupid-beds-draw"
+  ]
 }
